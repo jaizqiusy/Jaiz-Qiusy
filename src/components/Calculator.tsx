@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Scale, Percent, TrendingUp, DollarSign, Plus } from "lucide-react";
+import { Scale, Percent, TrendingUp, DollarSign, Plus, Zap } from "lucide-react";
 import { Calculation } from "../App";
 import { cn } from "../lib/utils";
 import { motion } from "motion/react";
@@ -82,7 +82,7 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
       <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
         <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
           <Scale className="text-green-600" size={20} />
-          Input Data Panen
+          Input Data Rendemen
         </h2>
         
         <form onSubmit={handleCalculate} className="space-y-4">
@@ -103,7 +103,7 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Input (Ton)</label>
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Input (M3)</label>
             <div className="relative">
               <input
                 type="number"
@@ -117,12 +117,12 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
                 className="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 focus:ring-2 focus:ring-green-500 transition-all text-lg font-medium"
                 required
               />
-              <div className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold">TON</div>
+              <div className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold">M3</div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Utama (Ton)</label>
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Utama (M3)</label>
             <div className="relative">
               <input
                 type="number"
@@ -136,7 +136,7 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
                 className="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 focus:ring-2 focus:ring-green-500 transition-all text-lg font-medium"
                 required
               />
-              <div className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold">TON</div>
+              <div className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold">M3</div>
             </div>
           </div>
 
@@ -154,7 +154,7 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
             type="submit"
             className="w-full bg-green-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-green-200 hover:bg-green-700 active:scale-95 transition-all"
           >
-            Hitung Estimasi
+            Hitung Rendemen
           </button>
         </form>
       </div>
@@ -162,7 +162,7 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
       {result && (
         <div className="bg-green-600 text-white p-6 rounded-3xl shadow-xl space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="flex justify-between items-start">
-            <h3 className="font-bold text-lg">Hasil Estimasi</h3>
+            <h3 className="font-bold text-lg">Hasil Perhitungan</h3>
             <div className="bg-white/20 p-2 rounded-lg">
               <TrendingUp size={20} />
             </div>
@@ -170,12 +170,12 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
-              <p className="text-xs font-medium text-green-100 uppercase tracking-wider mb-1">Yield</p>
+              <p className="text-xs font-medium text-green-100 uppercase tracking-wider mb-1">Rendemen Utama</p>
               <p className="text-2xl font-bold">{result.yield.toFixed(2)} <span className="text-sm font-normal">%</span></p>
             </div>
             <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
               <p className="text-xs font-medium text-green-100 uppercase tracking-wider mb-1">Output</p>
-              <p className="text-2xl font-bold">{result.output.toLocaleString("id-ID")} <span className="text-sm font-normal">T</span></p>
+              <p className="text-2xl font-bold">{result.output.toLocaleString("id-ID")} <span className="text-sm font-normal">M3</span></p>
             </div>
           </div>
 
@@ -191,13 +191,14 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
         </div>
       )}
 
-      <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 flex gap-3">
-        <div className="bg-blue-100 p-2 rounded-lg h-fit">
-          <DollarSign className="text-blue-600" size={18} />
+      <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex gap-3">
+        <div className="bg-amber-100 p-2 rounded-lg h-fit">
+          <Zap className="text-amber-600" size={18} />
         </div>
         <div>
-          <p className="text-sm font-bold text-blue-900">Info Harga Gula</p>
-          <p className="text-xs text-blue-700 leading-relaxed">Harga acuan gula saat ini adalah Rp 16.000/kg. Pastikan rendemen Anda sudah sesuai dengan hasil uji lab.</p>
+          <p className="text-sm font-bold text-amber-900">Motivasi Hari Ini</p>
+          <p className="text-xs text-amber-700 leading-relaxed">"Rendemen tinggi bukan sekadar angka, tapi bukti ketelitian dan kerja keras kita dalam mengoptimalkan setiap serpihan kayu."</p>
+          <p className="text-[10px] font-black text-amber-600 mt-1 uppercase tracking-widest">BERSAMA KITA BISA</p>
         </div>
       </div>
     </div>

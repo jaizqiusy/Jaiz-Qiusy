@@ -17,32 +17,45 @@ import { BarChart3, Calendar } from "lucide-react";
 
 interface PerformanceChartsProps {
   history: Calculation[];
+  selectedDate: string;
 }
 
-export default function PerformanceCharts({ history }: PerformanceChartsProps) {
-  const [timeframe, setTimeframe] = useState<"weekly" | "monthly" | "quarterly">("weekly");
+export default function PerformanceCharts({ history, selectedDate }: PerformanceChartsProps) {
+  const [timeframe, setTimeframe] = useState<"daily" | "weekly" | "monthly" | "quarterly">("weekly");
   const [metric, setMetric] = useState<"input" | "output" | "yield">("yield");
 
-  const now = new Date();
-  const days = timeframe === "weekly" ? 7 : timeframe === "monthly" ? 30 : 90;
-  const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+  const refDate = new Date(selectedDate);
+  refDate.setHours(23, 59, 59, 999);
+  
+  const days = timeframe === "daily" ? 0 : timeframe === "weekly" ? 6 : timeframe === "monthly" ? 29 : 89;
+  const startDate = new Date(selectedDate);
+  startDate.setHours(0, 0, 0, 0);
+  startDate.setDate(startDate.getDate() - days);
 
-  // Filter and sort history
+  // Filter and sort history relative to selectedDate
   const chartData = history
-    .filter(calc => new Date(calc.date) >= startDate)
+    .filter(calc => {
+      const calcDate = new Date(calc.date);
+      return calcDate >= startDate && calcDate <= refDate;
+    })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .map(calc => ({
-      date: new Date(calc.date).toLocaleDateString("id-ID", { day: 'numeric', month: 'short' }),
-      input: calc.input,
-      output: calc.output,
-      yield: calc.yield,
-      fullDate: new Date(calc.date).toLocaleDateString("id-ID")
-    }));
+    .map(calc => {
+      // Calculate yield as Utama / Input as requested
+      const yieldVal = calc.input > 0 ? (calc.utama / calc.input) * 100 : 0;
+      
+      return {
+        date: new Date(calc.date).toLocaleDateString("id-ID", { day: 'numeric', month: 'short' }),
+        input: calc.input,
+        output: calc.output,
+        yield: yieldVal,
+        fullDate: new Date(calc.date).toLocaleDateString("id-ID")
+      };
+    });
 
   const metricConfig = {
-    input: { label: "Input (Ton)", color: "#3b82f6", unit: "T" },
-    output: { label: "Output (Kg)", color: "#10b981", unit: "K" },
-    yield: { label: "Rendemen (%)", color: "#8b5cf6", unit: "%" }
+    input: { label: "Input (M3)", color: "#3b82f6", unit: "M3" },
+    output: { label: "Output (M3)", color: "#10b981", unit: "M3" },
+    yield: { label: "Utama / Input (%)", color: "#8b5cf6", unit: "%" }
   };
 
   return (
@@ -55,6 +68,15 @@ export default function PerformanceCharts({ history }: PerformanceChartsProps) {
           <h3 className="font-bold text-gray-800">Tren Performa</h3>
         </div>
         <div className="flex bg-gray-100 p-1 rounded-xl">
+          <button 
+            onClick={() => setTimeframe("daily")}
+            className={cn(
+              "px-3 py-1 text-[10px] font-bold rounded-lg transition-all",
+              timeframe === "daily" ? "bg-white text-gray-900 shadow-sm" : "text-gray-400"
+            )}
+          >
+            1D
+          </button>
           <button 
             onClick={() => setTimeframe("weekly")}
             className={cn(
@@ -125,7 +147,8 @@ export default function PerformanceCharts({ history }: PerformanceChartsProps) {
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 10, fill: '#9ca3af' }}
-                width={30}
+                tickFormatter={(value) => metric === 'yield' ? `${value}%` : value.toString()}
+                width={40}
               />
               <Tooltip 
                 contentStyle={{ 
@@ -157,7 +180,9 @@ export default function PerformanceCharts({ history }: PerformanceChartsProps) {
       
       <div className="mt-4 flex items-center justify-between text-[10px] text-gray-400 font-medium">
         <p>Menampilkan {chartData.length} titik data</p>
-        <p className="uppercase tracking-widest">{timeframe === "weekly" ? "Mingguan" : "Bulanan"}</p>
+        <p className="uppercase tracking-widest">
+          {timeframe === "daily" ? "Harian" : timeframe === "weekly" ? "Mingguan" : timeframe === "monthly" ? "Bulanan" : "Quarterly"}
+        </p>
       </div>
     </div>
   );

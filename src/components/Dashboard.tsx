@@ -138,7 +138,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
         <StatCard 
           label="Total Input"
           value={totalInput.toLocaleString("id-ID")}
-          unit="Ton"
+          unit="M3"
           icon={<Download className="text-white" size={24} />}
           gradient="from-blue-500 to-blue-600"
           iconBg="bg-blue-400/50"
@@ -146,7 +146,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
         <StatCard 
           label="Total Output"
           value={totalOutput.toLocaleString("id-ID")}
-          unit="Kg"
+          unit="M3"
           icon={<Upload className="text-white" size={24} />}
           gradient="from-green-500 to-green-600"
           iconBg="bg-green-400/50"
@@ -210,6 +210,11 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                   {item.yield.toFixed(1)}
                   <span className="text-[8px] font-bold ml-0.5">%</span>
                 </p>
+                {item.active && (
+                  <p className="text-[8px] font-bold text-gray-400 mt-1">
+                    {item.output.toFixed(1)} <span className="font-normal">M3</span>
+                  </p>
+                )}
               </div>
             </div>
           ))}
@@ -257,7 +262,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                   <span className="text-[10px] font-bold text-gray-400 uppercase mb-0.5">Output</span>
                   <p className="text-lg font-black text-gray-900 leading-none">
                     {item.output.toLocaleString("id-ID")}
-                    <span className="text-[10px] font-normal ml-1">T</span>
+                    <span className="text-[10px] font-normal ml-1">M3</span>
                   </p>
                 </div>
                 <div className={cn(
@@ -273,10 +278,10 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
       </div>
 
       {/* Performance Trends Section */}
-      <PerformanceCharts history={history} />
+      <PerformanceCharts history={history} selectedDate={selectedDate} />
 
       {/* Periodic Summary Section */}
-      <PeriodicSummary history={history} />
+      <PeriodicSummary history={history} selectedDate={selectedDate} />
     </div>
   );
 }

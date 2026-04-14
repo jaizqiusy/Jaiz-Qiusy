@@ -6,14 +6,15 @@ import { cn } from "../lib/utils";
 
 interface HistoryProps {
   history: Calculation[];
+  selectedDate: string;
   onDelete: (id: string) => void;
 }
 
-type Period = "weekly" | "monthly" | "quarterly";
+type Period = "daily" | "weekly" | "monthly" | "quarterly";
 
 const TARGET_MACHINES = [
-  "PONI A", "PONI B",
   "BS 1", "BS 2", "BS 3", "BS 4", "BS 5", "BS 6", "BS 7", "BS 8",
+  "PONI A", "PONI B",
   "BREAKDOWN"
 ];
 
@@ -31,7 +32,7 @@ function DetailTable({ data }: { data: Calculation[] }) {
           <tr>
             <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Tgl</th>
             <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Mesin</th>
-            <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">In (T)</th>
+            <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">In (M3)</th>
             <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Utm</th>
             <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Y-P</th>
             <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Trn</th>
@@ -112,7 +113,7 @@ function MachineCard({ summary, index }: MachineCardProps) {
       <div className="grid grid-cols-3 gap-3">
         <div className="flex flex-col">
           <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Input</p>
-          <p className="text-sm font-black">{summary.totalInput.toLocaleString("id-ID")} <span className="text-[10px] font-normal">T</span></p>
+          <p className="text-sm font-black">{summary.totalInput.toLocaleString("id-ID")} <span className="text-[10px] font-normal">M3</span></p>
         </div>
         <div className="flex flex-col">
           <p className="text-[9px] font-bold text-indigo-600 uppercase tracking-wider mb-1">Avg Yield</p>
@@ -120,7 +121,7 @@ function MachineCard({ summary, index }: MachineCardProps) {
         </div>
         <div className="flex flex-col">
           <p className="text-[9px] font-bold text-orange-600 uppercase tracking-wider mb-1">Total Output</p>
-          <p className="text-sm font-black text-orange-700">{summary.totalOutput.toLocaleString("id-ID")} <span className="text-[10px] font-normal">T</span></p>
+          <p className="text-sm font-black text-orange-700">{summary.totalOutput.toLocaleString("id-ID")} <span className="text-[10px] font-normal">M3</span></p>
         </div>
       </div>
 
@@ -139,23 +140,33 @@ function MachineCard({ summary, index }: MachineCardProps) {
   );
 }
 
-export default function History({ history }: HistoryProps) {
+export default function History({ history, selectedDate }: HistoryProps) {
   const [period, setPeriod] = useState<Period>("weekly");
   const [showDetailTable, setShowDetailTable] = useState(false);
 
   const { machineGroups, filteredHistory } = React.useMemo(() => {
-    const now = new Date();
-    let startDate = new Date();
+    // Use selectedDate as the reference point
+    const refDate = new Date(selectedDate);
+    refDate.setHours(23, 59, 59, 999);
+    
+    let startDate = new Date(selectedDate);
+    startDate.setHours(0, 0, 0, 0);
 
-    if (period === "weekly") {
-      startDate.setDate(now.getDate() - 7);
+    if (period === "daily") {
+      // For daily, we only want the selected date
+    } else if (period === "weekly") {
+      startDate.setDate(startDate.getDate() - 6);
     } else if (period === "monthly") {
-      startDate.setMonth(now.getMonth() - 1);
+      startDate.setMonth(startDate.getMonth() - 1);
     } else if (period === "quarterly") {
-      startDate.setMonth(now.getMonth() - 3);
+      startDate.setMonth(startDate.getMonth() - 3);
     }
 
-    const filtered = history.filter(calc => new Date(calc.date) >= startDate);
+    // Filter data that is within the period leading up to selectedDate
+    const filtered = history.filter(calc => {
+      const calcDate = new Date(calc.date);
+      return calcDate >= startDate && calcDate <= refDate;
+    });
 
     const summaryMap = new Map<string, {
       machine: string;
@@ -231,7 +242,7 @@ export default function History({ history }: HistoryProps) {
     <div className="space-y-6">
       {/* Period Selector */}
       <div className="bg-white p-2 rounded-2xl shadow-sm border border-gray-100 flex gap-1">
-        {(["weekly", "monthly", "quarterly"] as Period[]).map((p) => (
+        {(["daily", "weekly", "monthly", "quarterly"] as Period[]).map((p) => (
           <button
             key={p}
             onClick={() => setPeriod(p)}
@@ -242,7 +253,7 @@ export default function History({ history }: HistoryProps) {
                 : "text-gray-400 hover:bg-gray-50"
             )}
           >
-            {p === "weekly" ? "Mingguan" : p === "monthly" ? "Bulanan" : "Quarterly"}
+            {p === "daily" ? "Harian" : p === "weekly" ? "Mingguan" : p === "monthly" ? "Bulanan" : "Quarterly"}
           </button>
         ))}
       </div>
@@ -252,11 +263,16 @@ export default function History({ history }: HistoryProps) {
           <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600">
             <BarChart3 size={18} />
           </div>
-          <h2 className="text-lg font-black tracking-tight">Rekap Performa</h2>
+          <div>
+            <h2 className="text-lg font-black tracking-tight leading-none">Rekap Performa</h2>
+            <p className="text-[10px] font-bold text-gray-400 uppercase mt-1">
+              Ref: {new Date(selectedDate).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
           <Clock size={12} />
-          <span>{period === "weekly" ? "7 Hari" : period === "monthly" ? "30 Hari" : "90 Hari"}</span>
+          <span>{period === "daily" ? "1 Hari" : period === "weekly" ? "7 Hari" : period === "monthly" ? "30 Hari" : "90 Hari"}</span>
         </div>
       </div>
 
@@ -294,16 +310,6 @@ export default function History({ history }: HistoryProps) {
       </div>
 
       <div className="space-y-8">
-        {/* Poni Section */}
-        <section className="space-y-3">
-          <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Main Stations</h3>
-          <div className="grid grid-cols-1 gap-3">
-            {machineGroups.poni.map((summary, index) => (
-              <MachineCard key={summary.machine} summary={summary} index={index} />
-            ))}
-          </div>
-        </section>
-
         {/* BS Section */}
         <section className="space-y-3">
           <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">BS Line 1 - 8</h3>
@@ -314,12 +320,22 @@ export default function History({ history }: HistoryProps) {
           </div>
         </section>
 
+        {/* Poni Section */}
+        <section className="space-y-3">
+          <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Main Stations</h3>
+          <div className="grid grid-cols-1 gap-3">
+            {machineGroups.poni.map((summary, index) => (
+              <MachineCard key={summary.machine} summary={summary} index={index + 8} />
+            ))}
+          </div>
+        </section>
+
         {/* Breakdown Section */}
         <section className="space-y-3">
           <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">System Status</h3>
           <div className="grid grid-cols-1 gap-3">
             {machineGroups.breakdown.map((summary, index) => (
-              <MachineCard key={summary.machine} summary={summary} index={index} />
+              <MachineCard key={summary.machine} summary={summary} index={index + 10} />
             ))}
           </div>
         </section>

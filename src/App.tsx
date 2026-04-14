@@ -177,11 +177,11 @@ export default function App() {
                 </div>
               </div>
             </div>
-            <h1 className="text-2xl font-black tracking-tight uppercase">RendemenKu</h1>
+            <h1 className="text-2xl font-black tracking-tight uppercase">RENDEMENKU</h1>
           </div>
           
-          <p className="text-[10px] font-bold leading-tight opacity-90 max-w-[250px] uppercase tracking-wider">
-            Kerja itu jelas targetnya, ada ukurannya dan cek hasilnya
+          <p className="text-[10px] font-bold leading-tight opacity-90 max-w-[300px] uppercase tracking-wider">
+            TARGET JELAS • UKURAN PASTI • HASIL NYATA
           </p>
 
           <div className="absolute top-6 right-4 flex items-center gap-2">
@@ -261,7 +261,7 @@ export default function App() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <History history={history} onDelete={deleteCalculation} />
+              <History history={history} selectedDate={selectedDate} onDelete={deleteCalculation} />
             </motion.div>
           )}
         </AnimatePresence>

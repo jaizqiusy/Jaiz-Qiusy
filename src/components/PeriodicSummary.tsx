@@ -5,14 +5,20 @@ import { cn } from "../lib/utils";
 
 interface PeriodicSummaryProps {
   history: Calculation[];
+  selectedDate: string;
 }
 
-export default function PeriodicSummary({ history }: PeriodicSummaryProps) {
-  // Calculate Weekly, Monthly, and Quarterly Summaries
-  const now = new Date();
-  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  const oneQuarterAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+export default function PeriodicSummary({ history, selectedDate }: PeriodicSummaryProps) {
+  // Find reference values from the selected date
+  const referenceEntry = history.find(calc => {
+    const calcDate = calc.date.includes('T') ? calc.date.split('T')[0] : calc.date;
+    return calcDate === selectedDate;
+  });
+
+  const currentWeek = referenceEntry?.week;
+  const currentMonth = referenceEntry?.month;
+  const currentQuartal = referenceEntry?.quartal;
+  const currentYear = referenceEntry ? new Date(referenceEntry.date).getFullYear() : new Date(selectedDate).getFullYear();
 
   const getStats = (data: Calculation[]) => {
     // GAS logic: totalInput, totalOutput, totalUtama are from BS machines only
@@ -26,9 +32,21 @@ export default function PeriodicSummary({ history }: PeriodicSummaryProps) {
     return { input, output, rendemen, count: bsData.length };
   };
 
-  const weeklyStats = getStats(history.filter(calc => new Date(calc.date) >= oneWeekAgo));
-  const monthlyStats = getStats(history.filter(calc => new Date(calc.date) >= oneMonthAgo));
-  const quarterlyStats = getStats(history.filter(calc => new Date(calc.date) >= oneQuarterAgo));
+  const weeklyStats = getStats(history.filter(calc => 
+    currentWeek !== undefined && 
+    calc.week === currentWeek && 
+    new Date(calc.date).getFullYear() === currentYear
+  ));
+  const monthlyStats = getStats(history.filter(calc => 
+    currentMonth !== undefined && 
+    calc.month === currentMonth && 
+    new Date(calc.date).getFullYear() === currentYear
+  ));
+  const quarterlyStats = getStats(history.filter(calc => 
+    currentQuartal !== undefined && 
+    calc.quartal === currentQuartal && 
+    new Date(calc.date).getFullYear() === currentYear
+  ));
 
   return (
     <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5">
@@ -47,19 +65,19 @@ export default function PeriodicSummary({ history }: PeriodicSummaryProps) {
 
       <div className="space-y-6">
         <SummaryBlock 
-          title="Mingguan (7 Hari)" 
+          title={`Mingguan (Week ${currentWeek || "-"})`} 
           stats={weeklyStats} 
           color="indigo" 
         />
         <div className="h-px bg-gray-50" />
         <SummaryBlock 
-          title="Bulanan (30 Hari)" 
+          title={`Bulanan (Month ${currentMonth || "-"})`} 
           stats={monthlyStats} 
           color="blue" 
         />
         <div className="h-px bg-gray-50" />
         <SummaryBlock 
-          title="Quarterly (90 Hari)" 
+          title={`Quarterly (Q${currentQuartal || "-"})`} 
           stats={quarterlyStats} 
           color="purple" 
         />
@@ -82,11 +100,11 @@ function SummaryBlock({ title, stats, color }: {
       <div className="grid grid-cols-3 gap-2">
         <div className="bg-gray-50/50 p-2 rounded-xl text-center">
           <p className="text-[8px] font-bold text-gray-400 uppercase mb-1">Input</p>
-          <p className="text-xs font-black text-gray-800">{stats.input.toLocaleString("id-ID")} <span className="text-[8px] font-normal">T</span></p>
+          <p className="text-xs font-black text-gray-800">{stats.input.toLocaleString("id-ID")} <span className="text-[8px] font-normal">M3</span></p>
         </div>
         <div className="bg-gray-50/50 p-2 rounded-xl text-center">
           <p className="text-[8px] font-bold text-gray-400 uppercase mb-1">Output</p>
-          <p className="text-xs font-black text-gray-800">{stats.output.toLocaleString("id-ID")} <span className="text-[8px] font-normal">K</span></p>
+          <p className="text-xs font-black text-gray-800">{stats.output.toLocaleString("id-ID")} <span className="text-[8px] font-normal">M3</span></p>
         </div>
         <div className="bg-gray-50/50 p-2 rounded-xl text-center">
           <p className="text-[8px] font-bold text-gray-400 uppercase mb-1">Yield</p>
