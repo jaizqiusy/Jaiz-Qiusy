@@ -242,12 +242,19 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
       {/* Machine Detail Modal */}
       <AnimatePresence>
         {detailMachine && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setDetailMachine(null)}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm cursor-pointer"
+          >
             <motion.div 
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl cursor-default"
             >
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
@@ -260,12 +267,13 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Detail Performa Mesin</p>
                     </div>
                   </div>
-                  <button 
+                  <motion.button 
+                    whileTap={{ scale: 0.8, backgroundColor: "#f3f4f6" }}
                     onClick={() => setDetailMachine(null)}
-                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                    className="p-3 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-all"
                   >
-                    <X size={20} className="text-gray-500" />
-                  </button>
+                    <X size={24} className="text-gray-600" />
+                  </motion.button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
@@ -294,20 +302,34 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                   </div>
                 </div>
 
-                <div className="bg-purple-600 p-6 rounded-[28px] text-white shadow-lg shadow-purple-200 mb-6">
-                  <div className="flex justify-between items-center mb-2">
-                    <p className="text-[10px] font-bold text-purple-100 uppercase tracking-widest">Rendemen Utama</p>
-                    <TrendingUp size={16} className="text-purple-200" />
+                <div className="space-y-3 mb-6">
+                  <div className="bg-purple-600 p-5 rounded-[28px] text-white shadow-lg shadow-purple-200">
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="text-[10px] font-bold text-purple-100 uppercase tracking-widest">Rendemen Utama</p>
+                      <TrendingUp size={14} className="text-purple-200" />
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <p className="text-4xl font-black tracking-tighter">
+                        {detailMachine.yield.toFixed(2)}
+                        <span className="text-lg font-bold ml-0.5">%</span>
+                      </p>
+                    </div>
+                    <p className="text-[9px] font-medium text-purple-200 mt-1">Berdasarkan Utama / Input</p>
                   </div>
-                  <motion.p 
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
-                    className="text-5xl font-black tracking-tighter"
-                  >
-                    {detailMachine.yield.toFixed(2)}
-                    <span className="text-xl font-bold ml-1">%</span>
-                  </motion.p>
-                  <p className="text-[10px] font-medium text-purple-200 mt-2">Performa dihitung berdasarkan Utama / Input</p>
+
+                  <div className="bg-indigo-600 p-5 rounded-[28px] text-white shadow-lg shadow-indigo-200">
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="text-[10px] font-bold text-indigo-100 uppercase tracking-widest">Rendemen Total</p>
+                      <Scale size={14} className="text-indigo-200" />
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <p className="text-4xl font-black tracking-tighter">
+                        {(detailMachine.input > 0 ? (detailMachine.output / detailMachine.input) * 100 : 0).toFixed(2)}
+                        <span className="text-lg font-bold ml-0.5">%</span>
+                      </p>
+                    </div>
+                    <p className="text-[9px] font-medium text-indigo-200 mt-1">Berdasarkan Total Output / Input</p>
+                  </div>
                 </div>
 
                 <div className="space-y-3">
@@ -329,15 +351,16 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                   </div>
                 </div>
 
-                <button 
+                <motion.button 
+                  whileTap={{ scale: 0.96, y: 2 }}
                   onClick={() => setDetailMachine(null)}
-                  className="w-full mt-6 py-4 bg-gray-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-gray-800 transition-colors"
+                  className="w-full mt-6 py-4 bg-gray-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 active:shadow-none"
                 >
                   Tutup Detail
-                </button>
+                </motion.button>
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -396,12 +419,6 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
           ))}
         </div>
       </div>
-
-      {/* Performance Trends Section */}
-      <PerformanceCharts history={history} selectedDate={selectedDate} />
-
-      {/* Periodic Summary Section */}
-      <PeriodicSummary history={history} selectedDate={selectedDate} />
     </div>
   );
 }
