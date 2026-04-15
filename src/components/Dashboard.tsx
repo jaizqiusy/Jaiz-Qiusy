@@ -11,7 +11,7 @@ import {
   Upload,
   Zap,
   LayoutGrid,
-  X,
+  ArrowLeft,
   Info,
   Activity
 } from "lucide-react";
@@ -31,6 +31,23 @@ interface DashboardProps {
 export default function Dashboard({ history, filteredHistory, selectedDate, onDateChange }: DashboardProps) {
   const [selectedMachine, setSelectedMachine] = useState("ALL");
   const [detailMachine, setDetailMachine] = useState<any | null>(null);
+
+  // Handle back button to close modal
+  React.useEffect(() => {
+    if (detailMachine) {
+      const handlePopState = () => {
+        setDetailMachine(null);
+      };
+      
+      // Push a dummy state so the back button can be intercepted
+      window.history.pushState({ modalOpen: true }, "");
+      window.addEventListener("popstate", handlePopState);
+      
+      return () => {
+        window.removeEventListener("popstate", handlePopState);
+      };
+    }
+  }, [detailMachine]);
 
   const machines = [
     "ALL",
@@ -281,7 +298,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                     onClick={() => setDetailMachine(null)}
                     className="p-3 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-all"
                   >
-                    <X size={24} className="text-gray-600" />
+                    <ArrowLeft size={24} className="text-gray-600" />
                   </motion.button>
                 </div>
 
