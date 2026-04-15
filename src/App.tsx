@@ -102,6 +102,11 @@ export default function App() {
       setHistory(prev => {
         const existingIds = new Set(prev.map(p => p.id));
         const newItems = mappedHistory.filter(m => !existingIds.has(m.id));
+        
+        if (newItems.length > 0) {
+          sendNotification();
+        }
+
         const merged = [...newItems, ...prev].sort((a, b) => b.timestamp - a.timestamp);
         
         // If current selected date has no data, try to select the latest date from merged data
@@ -148,6 +153,29 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("rendemen_history", JSON.stringify(history));
   }, [history]);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if ("Notification" in window) {
+      if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+        Notification.requestPermission();
+      }
+    }
+  }, []);
+
+  const sendNotification = () => {
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification("CEK DONG RENDEMENKU", {
+        body: "Data produksi terbaru telah masuk! Silakan periksa laporan hari ini.",
+        icon: "/favicon.ico"
+      });
+      
+      // Vibration is handled separately via navigator
+      if ("vibrate" in navigator) {
+        navigator.vibrate([200, 100, 200]);
+      }
+    }
+  };
 
   const addCalculation = (calc: Omit<Calculation, "id" | "date" | "timestamp">) => {
     const newCalc: Calculation = {
