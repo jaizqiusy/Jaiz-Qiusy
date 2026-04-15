@@ -277,76 +277,76 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                   </motion.button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  <div className="bg-blue-50 p-3.5 rounded-2xl border border-blue-100">
-                    <p className="text-[9px] font-bold text-blue-400 uppercase tracking-widest mb-1">Total Input</p>
-                    <p className="text-xl font-black text-blue-700">{detailMachine.input.toFixed(2)} <span className="text-[10px] font-normal">M3</span></p>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <div className="bg-blue-50 p-2 rounded-2xl border border-blue-100">
+                    <p className="text-[8px] font-bold text-blue-400 uppercase tracking-widest mb-0.5">Total Input</p>
+                    <p className="text-lg font-black text-blue-700">{detailMachine.input.toFixed(2)} <span className="text-[8px] font-normal">M3</span></p>
                   </div>
-                  <div className="bg-green-50 p-3.5 rounded-2xl border border-green-100">
-                    <p className="text-[9px] font-bold text-green-400 uppercase tracking-widest mb-1">Total Output</p>
-                    <p className="text-xl font-black text-green-700">{detailMachine.output.toFixed(2)} <span className="text-[10px] font-normal">M3</span></p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 mb-3">
-                  <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-center">
-                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter mb-1">Utama</p>
-                    <p className="text-xs font-black text-gray-800">{detailMachine.utama.toFixed(2)}</p>
-                  </div>
-                  <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-center">
-                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter mb-1">Turunan</p>
-                    <p className="text-xs font-black text-gray-800">{detailMachine.turunan.toFixed(2)}</p>
-                  </div>
-                  <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-center">
-                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter mb-1">Lokal</p>
-                    <p className="text-xs font-black text-gray-800">{detailMachine.lokal.toFixed(2)}</p>
+                  <div className="bg-green-50 p-2 rounded-2xl border border-green-100">
+                    <p className="text-[8px] font-bold text-green-400 uppercase tracking-widest mb-0.5">Total Output</p>
+                    <p className="text-lg font-black text-green-700">{detailMachine.output.toFixed(2)} <span className="text-[8px] font-normal">M3</span></p>
                   </div>
                 </div>
 
-                <div className="space-y-2.5 mb-5">
-                  <div className="bg-purple-600 p-4 rounded-[24px] text-white shadow-lg shadow-purple-200">
+                <div className="grid grid-cols-3 gap-2 mb-2">
+                  <div className="bg-gray-50 p-1.5 rounded-xl border border-gray-100 text-center">
+                    <p className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mb-0.5">Utama</p>
+                    <p className="text-[10px] font-black text-gray-800">{detailMachine.utama.toFixed(2)}</p>
+                  </div>
+                  <div className="bg-gray-50 p-1.5 rounded-xl border border-gray-100 text-center">
+                    <p className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mb-0.5">Turunan</p>
+                    <p className="text-[10px] font-black text-gray-800">{detailMachine.turunan.toFixed(2)}</p>
+                  </div>
+                  <div className="bg-gray-50 p-1.5 rounded-xl border border-gray-100 text-center">
+                    <p className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mb-0.5">Lokal</p>
+                    <p className="text-[10px] font-black text-gray-800">{detailMachine.lokal.toFixed(2)}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  <div className="bg-purple-600 p-3 rounded-[20px] text-white shadow-lg shadow-purple-200">
                     <div className="flex justify-between items-center mb-1">
-                      <p className="text-[9px] font-bold text-purple-100 uppercase tracking-widest">Rendemen Utama</p>
-                      <TrendingUp size={12} className="text-purple-200" />
+                      <p className="text-[8px] font-bold text-purple-100 uppercase tracking-widest">Utama</p>
+                      <TrendingUp size={10} className="text-purple-200" />
                     </div>
-                    <div className="flex items-baseline gap-1">
-                      <p className="text-3xl font-black tracking-tighter">
+                    <div className="flex items-baseline gap-0.5">
+                      <p className="text-xl font-black tracking-tighter">
                         {detailMachine.yield.toFixed(2)}
-                        <span className="text-base font-bold ml-0.5">%</span>
+                        <span className="text-[10px] font-bold ml-0.5">%</span>
                       </p>
                     </div>
-                    <p className="text-[8px] font-medium text-purple-200 mt-1">Berdasarkan Utama / Input</p>
+                    <p className="text-[7px] font-medium text-purple-200 mt-1 leading-tight">Utama / Input</p>
                   </div>
 
-                  <div className="bg-indigo-600 p-4 rounded-[24px] text-white shadow-lg shadow-indigo-200">
+                  <div className="bg-indigo-600 p-3 rounded-[20px] text-white shadow-lg shadow-indigo-200">
                     <div className="flex justify-between items-center mb-1">
-                      <p className="text-[9px] font-bold text-indigo-100 uppercase tracking-widest">Rendemen Total</p>
-                      <Scale size={12} className="text-indigo-200" />
+                      <p className="text-[8px] font-bold text-indigo-100 uppercase tracking-widest">Total</p>
+                      <Scale size={10} className="text-indigo-200" />
                     </div>
-                    <div className="flex items-baseline gap-1">
-                      <p className="text-3xl font-black tracking-tighter">
+                    <div className="flex items-baseline gap-0.5">
+                      <p className="text-xl font-black tracking-tighter">
                         {(detailMachine.input > 0 ? (detailMachine.output / detailMachine.input) * 100 : 0).toFixed(2)}
-                        <span className="text-base font-bold ml-0.5">%</span>
+                        <span className="text-[10px] font-bold ml-0.5">%</span>
                       </p>
                     </div>
-                    <p className="text-[8px] font-medium text-indigo-200 mt-1">Berdasarkan Total Output / Input</p>
+                    <p className="text-[7px] font-medium text-indigo-200 mt-1 leading-tight">Total / Input</p>
                   </div>
                 </div>
 
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between p-3.5 bg-gray-50 rounded-xl">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Status Mesin</span>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-xl">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-1 bg-green-500 rounded-full" />
+                      <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Status Mesin</span>
                     </div>
-                    <span className="text-[10px] font-black text-green-600 uppercase tracking-widest">Running</span>
+                    <span className="text-[9px] font-black text-green-600 uppercase tracking-widest">Running</span>
                   </div>
-                  <div className="flex items-center justify-between p-3.5 bg-gray-50 rounded-xl">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-1.5 h-1.5 bg-purple-500 rounded-full" />
-                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Tanggal Data</span>
+                  <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-xl">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-1 bg-purple-500 rounded-full" />
+                      <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Tanggal Data</span>
                     </div>
-                    <span className="text-[10px] font-black text-gray-800 uppercase tracking-widest">
+                    <span className="text-[9px] font-black text-gray-800 uppercase tracking-widest">
                       {new Date(selectedDate).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>
                   </div>
@@ -355,7 +355,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                 <motion.button 
                   whileTap={{ scale: 0.96, y: 2 }}
                   onClick={() => setDetailMachine(null)}
-                  className="w-full mt-5 py-3.5 bg-gray-900 text-white rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 active:shadow-none"
+                  className="w-full mt-3 py-2.5 bg-gray-900 text-white rounded-xl font-black uppercase tracking-widest text-[9px] hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 active:shadow-none"
                 >
                   Tutup Detail
                 </motion.button>
