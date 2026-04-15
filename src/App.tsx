@@ -98,11 +98,11 @@ export default function App() {
         timestamp: new Date(item.tanggal).getTime() || Date.now()
       }));
       
-      // Merge with existing history, avoiding duplicates by ID
+      // Refresh logic: Replace all existing sheet entries with the new ones from the sheet
+      // while preserving manual entries (those not starting with 'sheet-')
       setHistory(prev => {
-        const existingIds = new Set(prev.map(p => p.id));
-        const newItems = mappedHistory.filter(m => !existingIds.has(m.id));
-        const merged = [...newItems, ...prev].sort((a, b) => b.timestamp - a.timestamp);
+        const manualEntries = prev.filter(p => !p.id.startsWith('sheet-'));
+        const merged = [...mappedHistory, ...manualEntries].sort((a, b) => b.timestamp - a.timestamp);
         
         // If current selected date has no data, try to select the latest date from merged data
         if (merged.length > 0) {
@@ -117,6 +117,13 @@ export default function App() {
       });
 
       setSyncSuccess(true);
+      setLastSync(new Date().toLocaleString("id-ID", { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      }));
       setTimeout(() => setSyncSuccess(false), 3000);
     } catch (err: any) {
       console.error("Sync Error:", err);
@@ -132,9 +139,12 @@ export default function App() {
     }
   };
 
+  const [lastSync, setLastSync] = useState<string | null>(null);
+
   // Load history from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem("rendemen_history");
+    const savedSync = localStorage.getItem("rendemen_last_sync");
     if (saved) {
       try {
         setHistory(JSON.parse(saved));
@@ -142,12 +152,17 @@ export default function App() {
         console.error("Failed to parse history", e);
       }
     }
+    if (savedSync) setLastSync(savedSync);
   }, []);
 
   // Save history to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem("rendemen_history", JSON.stringify(history));
   }, [history]);
+
+  useEffect(() => {
+    if (lastSync) localStorage.setItem("rendemen_last_sync", lastSync);
+  }, [lastSync]);
 
   const addCalculation = (calc: Omit<Calculation, "id" | "date" | "timestamp">) => {
     const newCalc: Calculation = {
@@ -185,12 +200,18 @@ export default function App() {
             TARGET JELAS • UKURAN PASTI • HASIL NYATA
           </p>
 
-          <div className="absolute top-6 right-4 flex items-center gap-2">
+          <div className="absolute top-6 right-4 flex items-center gap-3">
+            {lastSync && (
+              <div className="hidden xs:flex flex-col items-end">
+                <span className="text-[8px] font-bold opacity-60 uppercase tracking-tighter">Terakhir Sinkron</span>
+                <span className="text-[9px] font-black">{lastSync}</span>
+              </div>
+            )}
             <button 
               onClick={handleSync}
               disabled={isSyncing}
               className={cn(
-                "p-2 text-white/70 hover:text-white transition-all rounded-full hover:bg-white/10",
+                "p-2 text-white/70 hover:text-white transition-all rounded-full hover:bg-white/10 flex items-center gap-2",
                 isSyncing && "animate-spin text-white"
               )}
             >

@@ -13,7 +13,8 @@ import {
   LayoutGrid,
   X,
   Info,
-  Activity
+  Activity,
+  RefreshCw
 } from "lucide-react";
 import { Calculation } from "../App";
 import { cn } from "../lib/utils";
@@ -419,6 +420,26 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Reset Data Section */}
+      <div className="mt-8 pt-8 border-t border-gray-100">
+        <button 
+          onClick={() => {
+            if (window.confirm("Hapus semua data lokal dan sinkronisasi ulang dari awal?")) {
+              localStorage.removeItem("rendemen_history");
+              localStorage.removeItem("rendemen_last_sync");
+              window.location.reload();
+            }
+          }}
+          className="w-full py-3 px-4 bg-red-50 text-red-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition-all flex items-center justify-center gap-2"
+        >
+          <RefreshCw size={14} />
+          Reset Data Lokal & Refresh
+        </button>
+        <p className="text-[8px] text-gray-400 text-center mt-2 uppercase font-bold tracking-tighter">
+          Gunakan jika data terasa tidak sinkron atau ingin membersihkan cache
+        </p>
       </div>
     </div>
   );
