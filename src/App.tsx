@@ -14,7 +14,8 @@ import {
   TrendingUp,
   DollarSign,
   Scale,
-  RefreshCw
+  RefreshCw,
+  ArrowLeft
 } from "lucide-react";
 import { cn } from "./lib/utils";
 import { fetchSheetData } from "./services/sheetService";
@@ -149,6 +150,28 @@ export default function App() {
     localStorage.setItem("rendemen_history", JSON.stringify(history));
   }, [history]);
 
+  // Handle back button behavior
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (activeTab !== "dashboard") {
+        setActiveTab("dashboard");
+        // Maintain history state to prevent exiting
+        window.history.pushState(null, "", window.location.pathname);
+      } else {
+        // If already on dashboard, don't go back to "cloud" (blank/external page)
+        window.history.pushState(null, "", window.location.pathname);
+      }
+    };
+
+    // Initial push to history
+    window.history.pushState(null, "", window.location.pathname);
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [activeTab]);
+
   const addCalculation = (calc: Omit<Calculation, "id" | "date" | "timestamp">) => {
     const newCalc: Calculation = {
       ...calc,
@@ -184,6 +207,15 @@ export default function App() {
           <p className="text-[10px] font-bold leading-tight opacity-90 max-w-[300px] uppercase tracking-wider">
             TARGET JELAS • UKURAN PASTI • HASIL NYATA
           </p>
+
+          {activeTab !== "dashboard" && (
+            <button 
+              onClick={() => setActiveTab("dashboard")}
+              className="absolute top-6 left-4 p-2 text-white/70 hover:text-white transition-all rounded-full hover:bg-white/10"
+            >
+              <ArrowLeft size={20} />
+            </button>
+          )}
 
           <div className="absolute top-6 right-4 flex items-center gap-2">
             <button 
