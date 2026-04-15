@@ -47,13 +47,28 @@ export type Calculation = {
   timestamp: number;
 };
 
+const TABS = ["calculator", "dashboard", "history", "performance"] as const;
+type TabType = typeof TABS[number];
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState<"calculator" | "dashboard" | "history" | "performance">("dashboard");
+  const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [history, setHistory] = useState<Calculation[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncSuccess, setSyncSuccess] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+  };
+
+  const handleSwipe = (direction: number) => {
+    const currentIndex = TABS.indexOf(activeTab);
+    const nextIndex = currentIndex + direction;
+    if (nextIndex >= 0 && nextIndex < TABS.length) {
+      setActiveTab(TABS[nextIndex]);
+    }
+  };
 
   const filteredHistory = history.filter(calc => {
     // Ensure both are in YYYY-MM-DD format for comparison
@@ -245,86 +260,60 @@ export default function App() {
             <button onClick={() => setSyncSuccess(false)} className="font-bold">X</button>
           </motion.div>
         )}
-        <AnimatePresence mode="wait">
-          {activeTab === "calculator" && (
-            <motion.div
-              key="calculator"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Calculator onCalculate={addCalculation} />
-            </motion.div>
-          )}
-
+        
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.2 }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.2}
+          onDragEnd={(_, info) => {
+            if (info.offset.x > 100) handleSwipe(-1);
+            else if (info.offset.x < -100) handleSwipe(1);
+          }}
+          className="min-h-full"
+        >
+          {activeTab === "calculator" && <Calculator onCalculate={addCalculation} />}
           {activeTab === "dashboard" && (
-            <motion.div
-              key="dashboard"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Dashboard 
-                history={history} 
-                filteredHistory={filteredHistory}
-                selectedDate={selectedDate}
-                onDateChange={setSelectedDate}
-              />
-            </motion.div>
+            <Dashboard 
+              history={history} 
+              filteredHistory={filteredHistory}
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+            />
           )}
-
-          {activeTab === "history" && (
-            <motion.div
-              key="history"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <History history={history} selectedDate={selectedDate} onDelete={deleteCalculation} />
-            </motion.div>
-          )}
-
-          {activeTab === "performance" && (
-            <motion.div
-              key="performance"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Performance history={history} selectedDate={selectedDate} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+          {activeTab === "history" && <History history={history} selectedDate={selectedDate} onDelete={deleteCalculation} />}
+          {activeTab === "performance" && <Performance history={history} selectedDate={selectedDate} />}
+        </motion.div>
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 backdrop-blur-md border-t border-gray-100 px-6 py-4 flex justify-between items-center z-20">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/90 backdrop-blur-md border-t border-gray-100 px-4 py-3 flex justify-around items-center z-20">
         <NavButton 
           active={activeTab === "calculator"} 
-          onClick={() => setActiveTab("calculator")}
-          icon={<CalcIcon size={22} />}
+          onClick={() => handleTabChange("calculator")}
+          icon={<CalcIcon size={20} />}
           label="Hitung"
         />
         <NavButton 
           active={activeTab === "dashboard"} 
-          onClick={() => setActiveTab("dashboard")}
-          icon={<LayoutDashboard size={22} />}
+          onClick={() => handleTabChange("dashboard")}
+          icon={<LayoutDashboard size={20} />}
           label="Beranda"
         />
         <NavButton 
           active={activeTab === "history"} 
-          onClick={() => setActiveTab("history")}
-          icon={<HistoryIcon size={22} />}
+          onClick={() => handleTabChange("history")}
+          icon={<HistoryIcon size={20} />}
           label="Rekap"
         />
         <NavButton 
           active={activeTab === "performance"} 
-          onClick={() => setActiveTab("performance")}
-          icon={<TrendingUp size={22} />}
+          onClick={() => handleTabChange("performance")}
+          icon={<TrendingUp size={20} />}
           label="Performa"
         />
       </nav>
@@ -337,23 +326,21 @@ function NavButton({ active, onClick, icon, label }: { active: boolean, onClick:
     <button 
       onClick={onClick}
       className={cn(
-        "flex flex-col items-center gap-1 transition-all duration-300",
-        active ? "text-green-600 scale-110" : "text-gray-400 hover:text-gray-600"
+        "relative flex flex-col items-center gap-1 py-1 px-3 transition-all duration-300 z-10",
+        active ? "text-green-600" : "text-gray-400 hover:text-gray-600"
       )}
     >
-      <div className={cn(
-        "p-1 rounded-lg transition-colors",
-        active ? "bg-green-50" : "bg-transparent"
-      )}>
-        {icon}
-      </div>
-      <span className="text-[10px] font-bold uppercase tracking-widest">{label}</span>
       {active && (
         <motion.div 
-          layoutId="nav-indicator"
-          className="w-1 h-1 bg-green-600 rounded-full mt-0.5"
+          layoutId="nav-pill"
+          className="absolute inset-0 bg-green-50 rounded-2xl -z-10"
+          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
         />
       )}
+      <div className="p-0.5">
+        {icon}
+      </div>
+      <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
     </button>
   );
 }
