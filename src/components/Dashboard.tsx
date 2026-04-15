@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   TrendingUp, 
   Scale, 
@@ -39,6 +39,27 @@ interface DashboardProps {
 export default function Dashboard({ history, filteredHistory, selectedDate, onDateChange }: DashboardProps) {
   const [selectedMachine, setSelectedMachine] = useState("ALL");
   const [detailMachine, setDetailMachine] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (detailMachine) {
+      // Push a new state to history when modal opens
+      window.history.pushState({ modalOpen: true }, "");
+
+      const handlePopState = () => {
+        // If user presses back button, close the modal
+        setDetailMachine(null);
+      };
+
+      window.addEventListener("popstate", handlePopState);
+
+      return () => {
+        window.removeEventListener("popstate", handlePopState);
+        // If modal is closed manually (though here it's only via back button/state change),
+        // we might need to handle history if it's still there, 
+        // but popstate handles the back button case.
+      };
+    }
+  }, [detailMachine]);
 
   const machines = [
     "ALL",
@@ -285,13 +306,6 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Detail Performa Mesin</p>
                     </div>
                   </div>
-                  <motion.button 
-                    whileTap={{ backgroundColor: "#f3f4f6" }}
-                    onClick={() => setDetailMachine(null)}
-                    className="p-3 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-all"
-                  >
-                    <X size={24} className="text-gray-600" />
-                  </motion.button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
