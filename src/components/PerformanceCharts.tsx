@@ -152,10 +152,11 @@ export default function PerformanceCharts({ history, selectedDate }: Performance
               />
               <Tooltip 
                 contentStyle={{ 
-                  borderRadius: '16px', 
+                  borderRadius: '12px', 
                   border: 'none', 
                   boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-                  fontSize: '12px'
+                  fontSize: '10px',
+                  padding: '8px 12px'
                 }}
                 formatter={(value: number) => [`${value.toLocaleString("id-ID")} ${metricConfig[metric].unit}`, metricConfig[metric].label]}
               />
