@@ -11,7 +11,6 @@ import {
   Upload,
   Zap,
   LayoutGrid,
-  ArrowLeft,
   Info,
   Activity
 } from "lucide-react";
@@ -283,7 +282,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
               className="bg-white w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl cursor-default"
             >
               <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center mb-6">
                   <div className="flex items-center gap-3">
                     <div className="bg-purple-100 p-3 rounded-2xl text-purple-600">
                       <Activity size={24} />
@@ -293,13 +292,6 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Detail Performa Mesin</p>
                     </div>
                   </div>
-                  <motion.button 
-                    whileTap={{ scale: 0.8, backgroundColor: "#f3f4f6" }}
-                    onClick={() => setDetailMachine(null)}
-                    className="p-3 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-all"
-                  >
-                    <ArrowLeft size={24} className="text-gray-600" />
-                  </motion.button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
