@@ -189,7 +189,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F4F7FE] text-[#1a1a1a] font-sans flex flex-col max-w-md mx-auto shadow-2xl relative overflow-hidden">
       {/* Header - Purple Gradient */}
-      <header className="bg-gradient-to-b from-[#5E35B1] to-[#7E57C2] px-6 pt-10 pb-12 text-white relative">
+      <header className="bg-[#6B46C1] px-6 pt-10 pb-12 text-white relative">
         <div className="flex flex-col items-center text-center space-y-4">
           <div className="flex items-center gap-3">
             <div className="bg-white p-1.5 rounded-lg shadow-lg">
@@ -348,22 +348,19 @@ function NavButton({ active, onClick, icon, label }: { active: boolean, onClick:
     <button 
       onClick={onClick}
       className={cn(
-        "flex flex-col items-center gap-1 transition-all duration-300",
-        active ? "text-green-600 scale-110" : "text-gray-400 hover:text-gray-600"
+        "flex flex-col items-center gap-1.5 transition-all duration-300",
+        active ? "text-green-600" : "text-gray-400 hover:text-gray-600"
       )}
     >
       <div className={cn(
-        "p-1 rounded-lg transition-colors",
-        active ? "bg-green-50" : "bg-transparent"
+        "p-2 rounded-xl transition-all",
+        active ? "bg-white shadow-sm" : "bg-transparent"
       )}>
         {icon}
       </div>
-      <span className="text-[10px] font-bold uppercase tracking-widest">{label}</span>
+      <span className="text-[10px] font-black uppercase tracking-widest">{label}</span>
       {active && (
-        <motion.div 
-          layoutId="nav-indicator"
-          className="w-1 h-1 bg-green-600 rounded-full mt-0.5"
-        />
+        <div className="w-1 h-1 bg-green-600 rounded-full" />
       )}
     </button>
   );

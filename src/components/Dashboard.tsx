@@ -119,24 +119,26 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
   return (
     <div className="space-y-4 pb-6">
       {/* Date & Machine Filter */}
-      <div className="space-y-3">
-        <div className="bg-white rounded-2xl shadow-sm p-3 flex items-center justify-between border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="bg-purple-50 p-2 rounded-lg text-purple-500">
-              <CalendarIcon size={20} />
+      <div className="space-y-4">
+        <div className="bg-white rounded-3xl shadow-sm p-4 flex items-center justify-between border border-gray-100">
+          <div className="flex items-center gap-4">
+            <div className="bg-purple-50 p-3 rounded-2xl text-purple-500">
+              <CalendarIcon size={24} />
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Filter Tanggal</span>
-              <input 
-                type="date" 
-                value={selectedDate}
-                onChange={(e) => onDateChange(e.target.value)}
-                className="text-sm font-black text-gray-800 bg-transparent border-none focus:ring-0 p-0"
-              />
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Filter Tanggal</span>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="date" 
+                  value={selectedDate}
+                  onChange={(e) => onDateChange(e.target.value)}
+                  className="text-lg font-black text-gray-800 bg-transparent border-none focus:ring-0 p-0"
+                />
+              </div>
             </div>
           </div>
-          <div className="bg-gray-50 p-2 rounded-lg">
-            <ChevronDown size={16} className="text-gray-400" />
+          <div className="bg-gray-50 p-2.5 rounded-xl">
+            <ChevronDown size={20} className="text-gray-400" />
           </div>
         </div>
 
@@ -147,9 +149,9 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
               key={m}
               onClick={() => setSelectedMachine(m)}
               className={cn(
-                "px-4 py-2 rounded-xl text-[10px] font-black whitespace-nowrap transition-all border",
+                "px-6 py-3 rounded-2xl text-[10px] font-black whitespace-nowrap transition-all border",
                 selectedMachine === m 
-                  ? "bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-100" 
+                  ? "bg-[#9F7AEA] text-white border-[#9F7AEA] shadow-lg shadow-purple-100" 
                   : "bg-white text-gray-400 border-gray-100 hover:border-gray-200"
               )}
             >
@@ -166,16 +168,16 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
           value={totalInput.toLocaleString("id-ID")}
           unit="M3"
           icon={<Download className="text-white" size={24} />}
-          gradient="from-blue-500 to-blue-600"
-          iconBg="bg-blue-400/50"
+          gradient="from-[#2563EB] to-[#3B82F6]"
+          iconBg="bg-white/20"
         />
         <StatCard 
           label="Total Output"
           value={totalOutput.toLocaleString("id-ID")}
           unit="M3"
           icon={<Upload className="text-white" size={24} />}
-          gradient="from-green-500 to-green-600"
-          iconBg="bg-green-400/50"
+          gradient="from-[#059669] to-[#10B981]"
+          iconBg="bg-white/20"
         />
         <StatCard 
           label="Rendemen Utama"
@@ -183,16 +185,16 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
           unit="%"
           subLabel={selectedMachine === "ALL" ? "BS 1 - 8" : selectedMachine}
           icon={<TrendingUp className="text-white" size={24} />}
-          gradient="from-purple-500 to-purple-600"
-          iconBg="bg-purple-400/50"
+          gradient="from-[#7C3AED] to-[#8B5CF6]"
+          iconBg="bg-white/20"
         />
         <StatCard 
           label={selectedMachine === "ALL" ? "Mesin Berjalan" : "Status Mesin"}
           value={selectedMachine === "ALL" ? machinesRunning.toString() : (totalOutput > 0 ? "1" : "0")}
           unit={selectedMachine === "ALL" ? "Unit" : "Active"}
           icon={<Zap className="text-white" size={24} />}
-          gradient="from-orange-500 to-orange-600"
-          iconBg="bg-orange-400/50"
+          gradient="from-[#EA580C] to-[#F97316]"
+          iconBg="bg-white/20"
         />
       </div>
 
@@ -451,19 +453,19 @@ function StatCard({ label, value, unit, icon, gradient, iconBg, subLabel }: {
   subLabel?: string
 }) {
   return (
-    <div className={cn("p-4 rounded-3xl shadow-lg relative overflow-hidden bg-gradient-to-br", gradient)}>
-      <div className="flex justify-between items-start mb-2">
-        <p className="text-[10px] font-bold text-white/80 uppercase tracking-wider">{label}</p>
-        <div className={cn("p-2 rounded-xl backdrop-blur-md", iconBg)}>
+    <div className={cn("p-6 rounded-[32px] shadow-xl relative overflow-hidden bg-gradient-to-br", gradient)}>
+      <div className="flex justify-between items-start mb-6">
+        <p className="text-[10px] font-black text-white/90 uppercase tracking-widest">{label}</p>
+        <div className={cn("p-3 rounded-2xl backdrop-blur-md", iconBg)}>
           {icon}
         </div>
       </div>
-      <div className="mt-1">
-        <p className="text-3xl font-black text-white tracking-tight">{value}</p>
-        <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest">{unit}</p>
+      <div className="mt-2">
+        <p className="text-4xl font-black text-white tracking-tight leading-none">{value}</p>
+        <p className="text-[10px] font-bold text-white/80 uppercase tracking-widest mt-2">{unit}</p>
       </div>
       {subLabel && (
-        <p className="text-[10px] font-bold text-white/60 mt-2 uppercase">{subLabel}</p>
+        <p className="text-[10px] font-black text-white/60 mt-3 uppercase tracking-wider">{subLabel}</p>
       )}
     </div>
   );
