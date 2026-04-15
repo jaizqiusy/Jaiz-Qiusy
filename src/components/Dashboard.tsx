@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { 
   TrendingUp, 
   Scale, 
@@ -13,15 +13,7 @@ import {
   LayoutGrid,
   X,
   Info,
-  Activity,
-  Cpu,
-  Settings,
-  Layers,
-  Database,
-  HardDrive,
-  Terminal,
-  Box,
-  Gauge
+  Activity
 } from "lucide-react";
 import { Calculation } from "../App";
 import { cn } from "../lib/utils";
@@ -39,27 +31,6 @@ interface DashboardProps {
 export default function Dashboard({ history, filteredHistory, selectedDate, onDateChange }: DashboardProps) {
   const [selectedMachine, setSelectedMachine] = useState("ALL");
   const [detailMachine, setDetailMachine] = useState<any | null>(null);
-
-  useEffect(() => {
-    if (detailMachine) {
-      // Push a new state to history when modal opens
-      window.history.pushState({ modalOpen: true }, "");
-
-      const handlePopState = () => {
-        // If user presses back button, close the modal
-        setDetailMachine(null);
-      };
-
-      window.addEventListener("popstate", handlePopState);
-
-      return () => {
-        window.removeEventListener("popstate", handlePopState);
-        // If modal is closed manually (though here it's only via back button/state change),
-        // we might need to handle history if it's still there, 
-        // but popstate handles the back button case.
-      };
-    }
-  }, [detailMachine]);
 
   const machines = [
     "ALL",
@@ -107,20 +78,6 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
   });
 
   const machinesRunning = runningGridData.filter(r => r.active).length;
-
-  const getBsIcon = (name: string) => {
-    switch(name) {
-      case "BS1": return <Zap size={10} />;
-      case "BS2": return <Activity size={10} />;
-      case "BS3": return <Cpu size={10} />;
-      case "BS4": return <Gauge size={10} />;
-      case "BS5": return <Layers size={10} />;
-      case "BS6": return <Box size={10} />;
-      case "BS7": return <Database size={10} />;
-      case "BS8": return <Terminal size={10} />;
-      default: return <Activity size={10} />;
-    }
-  };
 
   // Main Machines (Poni A, Poni B, Breakdown)
   const mainMachines = [
@@ -242,23 +199,31 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
           {runningGridData.map((item) => (
             <motion.div 
               key={item.name} 
-              whileTap={item.active ? { backgroundColor: "#f9fafb" } : {}}
+              whileHover={item.active ? { scale: 1.02 } : {}}
+              whileTap={item.active ? { scale: 0.98 } : {}}
               onClick={() => item.active && setDetailMachine(item)}
               className={cn(
                 "flex flex-col items-center justify-center p-3 rounded-2xl border transition-all relative overflow-hidden",
                 item.active 
-                  ? "bg-white border-green-100 shadow-sm cursor-pointer hover:shadow-md active:shadow-none" 
+                  ? "bg-white border-green-100 shadow-sm cursor-pointer hover:shadow-md" 
                   : "bg-gray-50 border-gray-50 opacity-50"
               )}
             >
               {item.active && (
-                <div className="absolute top-0 right-0 w-7 h-7 bg-green-500/10 rounded-bl-2xl flex items-center justify-center text-green-600">
-                  {getBsIcon(item.name)}
+                <div className="absolute top-0 right-0 w-6 h-6 bg-green-500/10 rounded-bl-full flex items-center justify-center">
+                  <div className="w-1 h-1 bg-green-500 rounded-full" />
                 </div>
               )}
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-1">{item.name}</p>
               <div className="flex flex-col items-center">
-                <p 
+                <motion.p 
+                  initial={{ scale: 1 }}
+                  animate={item.active ? { scale: [1, 1.05, 1] } : { scale: 1 }}
+                  transition={{ 
+                    duration: 3, 
+                    repeat: Infinity, 
+                    ease: "easeInOut" 
+                  }}
                   className={cn(
                     "text-[14px] font-black leading-none",
                     item.active ? "text-gray-800" : "text-gray-300"
@@ -266,7 +231,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                 >
                   {item.yield.toFixed(1)}
                   <span className="text-[8px] font-bold ml-0.5">%</span>
-                </p>
+                </motion.p>
                 {item.active && (
                   <p className="text-[8px] font-bold text-gray-400 mt-1">
                     {item.output.toFixed(1)} <span className="font-normal">M3</span>
@@ -285,13 +250,18 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+            onClick={() => setDetailMachine(null)}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm cursor-pointer"
           >
             <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0, scale: 0.8, y: 40 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 40 }}
+              transition={{ 
+                type: "spring",
+                stiffness: 300,
+                damping: 25
+              }}
               onClick={(e) => e.stopPropagation()}
               className="bg-white w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl cursor-default"
             >
@@ -306,6 +276,13 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Detail Performa Mesin</p>
                     </div>
                   </div>
+                  <motion.button 
+                    whileTap={{ scale: 0.8, backgroundColor: "#f3f4f6" }}
+                    onClick={() => setDetailMachine(null)}
+                    className="p-3 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-all"
+                  >
+                    <X size={24} className="text-gray-600" />
+                  </motion.button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
@@ -382,6 +359,14 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                     </span>
                   </div>
                 </div>
+
+                <motion.button 
+                  whileTap={{ scale: 0.96, y: 2 }}
+                  onClick={() => setDetailMachine(null)}
+                  className="w-full mt-6 py-4 bg-gray-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 active:shadow-none"
+                >
+                  Tutup Detail
+                </motion.button>
               </div>
             </motion.div>
           </motion.div>
