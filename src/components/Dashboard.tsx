@@ -11,6 +11,7 @@ import {
   Upload,
   Zap,
   LayoutGrid,
+  X,
   Info,
   Activity
 } from "lucide-react";
@@ -30,23 +31,6 @@ interface DashboardProps {
 export default function Dashboard({ history, filteredHistory, selectedDate, onDateChange }: DashboardProps) {
   const [selectedMachine, setSelectedMachine] = useState("ALL");
   const [detailMachine, setDetailMachine] = useState<any | null>(null);
-
-  // Handle back button to close modal
-  React.useEffect(() => {
-    if (detailMachine) {
-      const handlePopState = () => {
-        setDetailMachine(null);
-      };
-      
-      // Push a dummy state so the back button can be intercepted
-      window.history.pushState({ modalOpen: true }, "");
-      window.addEventListener("popstate", handlePopState);
-      
-      return () => {
-        window.removeEventListener("popstate", handlePopState);
-      };
-    }
-  }, [detailMachine]);
 
   const machines = [
     "ALL",
@@ -119,26 +103,24 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
   return (
     <div className="space-y-4 pb-6">
       {/* Date & Machine Filter */}
-      <div className="space-y-4">
-        <div className="bg-white rounded-3xl shadow-sm p-4 flex items-center justify-between border border-gray-100">
-          <div className="flex items-center gap-4">
-            <div className="bg-purple-50 p-3 rounded-2xl text-purple-500">
-              <CalendarIcon size={24} />
+      <div className="space-y-3">
+        <div className="bg-white rounded-2xl shadow-sm p-3 flex items-center justify-between border border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="bg-purple-50 p-2 rounded-lg text-purple-500">
+              <CalendarIcon size={20} />
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Filter Tanggal</span>
-              <div className="flex items-center gap-2">
-                <input 
-                  type="date" 
-                  value={selectedDate}
-                  onChange={(e) => onDateChange(e.target.value)}
-                  className="text-lg font-black text-gray-800 bg-transparent border-none focus:ring-0 p-0"
-                />
-              </div>
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Filter Tanggal</span>
+              <input 
+                type="date" 
+                value={selectedDate}
+                onChange={(e) => onDateChange(e.target.value)}
+                className="text-sm font-black text-gray-800 bg-transparent border-none focus:ring-0 p-0"
+              />
             </div>
           </div>
-          <div className="bg-gray-50 p-2.5 rounded-xl">
-            <ChevronDown size={20} className="text-gray-400" />
+          <div className="bg-gray-50 p-2 rounded-lg">
+            <ChevronDown size={16} className="text-gray-400" />
           </div>
         </div>
 
@@ -149,9 +131,9 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
               key={m}
               onClick={() => setSelectedMachine(m)}
               className={cn(
-                "px-6 py-3 rounded-2xl text-[10px] font-black whitespace-nowrap transition-all border",
+                "px-4 py-2 rounded-xl text-[10px] font-black whitespace-nowrap transition-all border",
                 selectedMachine === m 
-                  ? "bg-[#9F7AEA] text-white border-[#9F7AEA] shadow-lg shadow-purple-100" 
+                  ? "bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-100" 
                   : "bg-white text-gray-400 border-gray-100 hover:border-gray-200"
               )}
             >
@@ -168,16 +150,16 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
           value={totalInput.toLocaleString("id-ID")}
           unit="M3"
           icon={<Download className="text-white" size={24} />}
-          gradient="from-[#2563EB] to-[#3B82F6]"
-          iconBg="bg-white/20"
+          gradient="from-blue-500 to-blue-600"
+          iconBg="bg-blue-400/50"
         />
         <StatCard 
           label="Total Output"
           value={totalOutput.toLocaleString("id-ID")}
           unit="M3"
           icon={<Upload className="text-white" size={24} />}
-          gradient="from-[#059669] to-[#10B981]"
-          iconBg="bg-white/20"
+          gradient="from-green-500 to-green-600"
+          iconBg="bg-green-400/50"
         />
         <StatCard 
           label="Rendemen Utama"
@@ -185,16 +167,16 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
           unit="%"
           subLabel={selectedMachine === "ALL" ? "BS 1 - 8" : selectedMachine}
           icon={<TrendingUp className="text-white" size={24} />}
-          gradient="from-[#7C3AED] to-[#8B5CF6]"
-          iconBg="bg-white/20"
+          gradient="from-purple-500 to-purple-600"
+          iconBg="bg-purple-400/50"
         />
         <StatCard 
           label={selectedMachine === "ALL" ? "Mesin Berjalan" : "Status Mesin"}
           value={selectedMachine === "ALL" ? machinesRunning.toString() : (totalOutput > 0 ? "1" : "0")}
           unit={selectedMachine === "ALL" ? "Unit" : "Active"}
           icon={<Zap className="text-white" size={24} />}
-          gradient="from-[#EA580C] to-[#F97316]"
-          iconBg="bg-white/20"
+          gradient="from-orange-500 to-orange-600"
+          iconBg="bg-orange-400/50"
         />
       </div>
 
@@ -236,12 +218,8 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
               <div className="flex flex-col items-center">
                 <motion.p 
                   initial={{ scale: 1 }}
-                  animate={item.active ? { scale: [1, 1.05, 1] } : { scale: 1 }}
-                  transition={{ 
-                    duration: 3, 
-                    repeat: Infinity, 
-                    ease: "easeInOut" 
-                  }}
+                  animate={item.active ? { scale: [1, 1.1, 1] } : {}}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                   className={cn(
                     "text-[14px] font-black leading-none",
                     item.active ? "text-gray-800" : "text-gray-300"
@@ -264,27 +242,15 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
       {/* Machine Detail Modal */}
       <AnimatePresence>
         {detailMachine && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setDetailMachine(null)}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm cursor-pointer"
-          >
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.8, y: 40 }}
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: 40 }}
-              transition={{ 
-                type: "spring",
-                stiffness: 300,
-                damping: 25
-              }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl cursor-default"
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl"
             >
               <div className="p-6">
-                <div className="flex items-center mb-6">
+                <div className="flex justify-between items-center mb-6">
                   <div className="flex items-center gap-3">
                     <div className="bg-purple-100 p-3 rounded-2xl text-purple-600">
                       <Activity size={24} />
@@ -294,6 +260,12 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Detail Performa Mesin</p>
                     </div>
                   </div>
+                  <button 
+                    onClick={() => setDetailMachine(null)}
+                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                  >
+                    <X size={20} className="text-gray-500" />
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
@@ -322,34 +294,20 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                   </div>
                 </div>
 
-                <div className="space-y-3 mb-6">
-                  <div className="bg-purple-600 p-5 rounded-[28px] text-white shadow-lg shadow-purple-200">
-                    <div className="flex justify-between items-center mb-1">
-                      <p className="text-[10px] font-bold text-purple-100 uppercase tracking-widest">Rendemen Utama</p>
-                      <TrendingUp size={14} className="text-purple-200" />
-                    </div>
-                    <div className="flex items-baseline gap-1">
-                      <p className="text-4xl font-black tracking-tighter">
-                        {detailMachine.yield.toFixed(2)}
-                        <span className="text-lg font-bold ml-0.5">%</span>
-                      </p>
-                    </div>
-                    <p className="text-[9px] font-medium text-purple-200 mt-1">Berdasarkan Utama / Input</p>
+                <div className="bg-purple-600 p-6 rounded-[28px] text-white shadow-lg shadow-purple-200 mb-6">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-[10px] font-bold text-purple-100 uppercase tracking-widest">Rendemen Utama</p>
+                    <TrendingUp size={16} className="text-purple-200" />
                   </div>
-
-                  <div className="bg-indigo-600 p-5 rounded-[28px] text-white shadow-lg shadow-indigo-200">
-                    <div className="flex justify-between items-center mb-1">
-                      <p className="text-[10px] font-bold text-indigo-100 uppercase tracking-widest">Rendemen Total</p>
-                      <Scale size={14} className="text-indigo-200" />
-                    </div>
-                    <div className="flex items-baseline gap-1">
-                      <p className="text-4xl font-black tracking-tighter">
-                        {(detailMachine.input > 0 ? (detailMachine.output / detailMachine.input) * 100 : 0).toFixed(2)}
-                        <span className="text-lg font-bold ml-0.5">%</span>
-                      </p>
-                    </div>
-                    <p className="text-[9px] font-medium text-indigo-200 mt-1">Berdasarkan Total Output / Input</p>
-                  </div>
+                  <motion.p 
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    className="text-5xl font-black tracking-tighter"
+                  >
+                    {detailMachine.yield.toFixed(2)}
+                    <span className="text-xl font-bold ml-1">%</span>
+                  </motion.p>
+                  <p className="text-[10px] font-medium text-purple-200 mt-2">Performa dihitung berdasarkan Utama / Input</p>
                 </div>
 
                 <div className="space-y-3">
@@ -371,16 +329,15 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                   </div>
                 </div>
 
-                <motion.button 
-                  whileTap={{ scale: 0.96, y: 2 }}
+                <button 
                   onClick={() => setDetailMachine(null)}
-                  className="w-full mt-6 py-4 bg-gray-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 active:shadow-none"
+                  className="w-full mt-6 py-4 bg-gray-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-gray-800 transition-colors"
                 >
                   Tutup Detail
-                </motion.button>
+                </button>
               </div>
             </motion.div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
@@ -439,6 +396,12 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
           ))}
         </div>
       </div>
+
+      {/* Performance Trends Section */}
+      <PerformanceCharts history={history} selectedDate={selectedDate} />
+
+      {/* Periodic Summary Section */}
+      <PeriodicSummary history={history} selectedDate={selectedDate} />
     </div>
   );
 }
@@ -453,19 +416,19 @@ function StatCard({ label, value, unit, icon, gradient, iconBg, subLabel }: {
   subLabel?: string
 }) {
   return (
-    <div className={cn("p-6 rounded-[32px] shadow-xl relative overflow-hidden bg-gradient-to-br", gradient)}>
-      <div className="flex justify-between items-start mb-6">
-        <p className="text-[10px] font-black text-white/90 uppercase tracking-widest">{label}</p>
-        <div className={cn("p-3 rounded-2xl backdrop-blur-md", iconBg)}>
+    <div className={cn("p-4 rounded-3xl shadow-lg relative overflow-hidden bg-gradient-to-br", gradient)}>
+      <div className="flex justify-between items-start mb-2">
+        <p className="text-[10px] font-bold text-white/80 uppercase tracking-wider">{label}</p>
+        <div className={cn("p-2 rounded-xl backdrop-blur-md", iconBg)}>
           {icon}
         </div>
       </div>
-      <div className="mt-2">
-        <p className="text-4xl font-black text-white tracking-tight leading-none">{value}</p>
-        <p className="text-[10px] font-bold text-white/80 uppercase tracking-widest mt-2">{unit}</p>
+      <div className="mt-1">
+        <p className="text-3xl font-black text-white tracking-tight">{value}</p>
+        <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest">{unit}</p>
       </div>
       {subLabel && (
-        <p className="text-[10px] font-black text-white/60 mt-3 uppercase tracking-wider">{subLabel}</p>
+        <p className="text-[10px] font-bold text-white/60 mt-2 uppercase">{subLabel}</p>
       )}
     </div>
   );

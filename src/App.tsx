@@ -14,8 +14,7 @@ import {
   TrendingUp,
   DollarSign,
   Scale,
-  RefreshCw,
-  ArrowLeft
+  RefreshCw
 } from "lucide-react";
 import { cn } from "./lib/utils";
 import { fetchSheetData } from "./services/sheetService";
@@ -24,7 +23,6 @@ import { fetchSheetData } from "./services/sheetService";
 import Calculator from "./components/Calculator";
 import Dashboard from "./components/Dashboard";
 import History from "./components/History";
-import Performance from "./components/Performance";
 
 export type Calculation = {
   id: string;
@@ -49,7 +47,7 @@ export type Calculation = {
 };
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<"calculator" | "dashboard" | "history" | "performance">("dashboard");
+  const [activeTab, setActiveTab] = useState<"calculator" | "dashboard" | "history">("dashboard");
   const [history, setHistory] = useState<Calculation[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -150,28 +148,6 @@ export default function App() {
     localStorage.setItem("rendemen_history", JSON.stringify(history));
   }, [history]);
 
-  // Handle back button behavior
-  useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      if (activeTab !== "dashboard") {
-        setActiveTab("dashboard");
-        // Maintain history state to prevent exiting
-        window.history.pushState(null, "", window.location.pathname);
-      } else {
-        // If already on dashboard, don't go back to "cloud" (blank/external page)
-        window.history.pushState(null, "", window.location.pathname);
-      }
-    };
-
-    // Initial push to history
-    window.history.pushState(null, "", window.location.pathname);
-    window.addEventListener("popstate", handlePopState);
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, [activeTab]);
-
   const addCalculation = (calc: Omit<Calculation, "id" | "date" | "timestamp">) => {
     const newCalc: Calculation = {
       ...calc,
@@ -189,7 +165,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F4F7FE] text-[#1a1a1a] font-sans flex flex-col max-w-md mx-auto shadow-2xl relative overflow-hidden">
       {/* Header - Purple Gradient */}
-      <header className="bg-[#6B46C1] px-6 pt-10 pb-12 text-white relative">
+      <header className="bg-gradient-to-b from-[#5E35B1] to-[#7E57C2] px-6 pt-10 pb-12 text-white relative">
         <div className="flex flex-col items-center text-center space-y-4">
           <div className="flex items-center gap-3">
             <div className="bg-white p-1.5 rounded-lg shadow-lg">
@@ -207,15 +183,6 @@ export default function App() {
           <p className="text-[10px] font-bold leading-tight opacity-90 max-w-[300px] uppercase tracking-wider">
             TARGET JELAS • UKURAN PASTI • HASIL NYATA
           </p>
-
-          {activeTab !== "dashboard" && (
-            <button 
-              onClick={() => setActiveTab("dashboard")}
-              className="absolute top-6 left-4 p-2 text-white/70 hover:text-white transition-all rounded-full hover:bg-white/10"
-            >
-              <ArrowLeft size={20} />
-            </button>
-          )}
 
           <div className="absolute top-6 right-4 flex items-center gap-2">
             <button 
@@ -297,46 +264,28 @@ export default function App() {
               <History history={history} selectedDate={selectedDate} onDelete={deleteCalculation} />
             </motion.div>
           )}
-
-          {activeTab === "performance" && (
-            <motion.div
-              key="performance"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Performance history={history} selectedDate={selectedDate} />
-            </motion.div>
-          )}
         </AnimatePresence>
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 backdrop-blur-md border-t border-gray-100 px-6 py-4 flex justify-between items-center z-20">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 backdrop-blur-md border-t border-gray-100 px-8 py-4 flex justify-between items-center z-20">
         <NavButton 
           active={activeTab === "calculator"} 
           onClick={() => setActiveTab("calculator")}
-          icon={<CalcIcon size={22} />}
+          icon={<CalcIcon size={24} />}
           label="Hitung"
         />
         <NavButton 
           active={activeTab === "dashboard"} 
           onClick={() => setActiveTab("dashboard")}
-          icon={<LayoutDashboard size={22} />}
+          icon={<LayoutDashboard size={24} />}
           label="Beranda"
         />
         <NavButton 
           active={activeTab === "history"} 
           onClick={() => setActiveTab("history")}
-          icon={<HistoryIcon size={22} />}
+          icon={<HistoryIcon size={24} />}
           label="Rekap"
-        />
-        <NavButton 
-          active={activeTab === "performance"} 
-          onClick={() => setActiveTab("performance")}
-          icon={<TrendingUp size={22} />}
-          label="Performa"
         />
       </nav>
     </div>
@@ -348,19 +297,22 @@ function NavButton({ active, onClick, icon, label }: { active: boolean, onClick:
     <button 
       onClick={onClick}
       className={cn(
-        "flex flex-col items-center gap-1.5 transition-all duration-300",
-        active ? "text-green-600" : "text-gray-400 hover:text-gray-600"
+        "flex flex-col items-center gap-1 transition-all duration-300",
+        active ? "text-green-600 scale-110" : "text-gray-400 hover:text-gray-600"
       )}
     >
       <div className={cn(
-        "p-2 rounded-xl transition-all",
-        active ? "bg-white shadow-sm" : "bg-transparent"
+        "p-1 rounded-lg transition-colors",
+        active ? "bg-green-50" : "bg-transparent"
       )}>
         {icon}
       </div>
-      <span className="text-[10px] font-black uppercase tracking-widest">{label}</span>
+      <span className="text-[10px] font-bold uppercase tracking-widest">{label}</span>
       {active && (
-        <div className="w-1 h-1 bg-green-600 rounded-full" />
+        <motion.div 
+          layoutId="nav-indicator"
+          className="w-1 h-1 bg-green-600 rounded-full mt-0.5"
+        />
       )}
     </button>
   );
