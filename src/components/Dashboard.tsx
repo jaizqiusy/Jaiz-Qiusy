@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { 
   TrendingUp, 
   Scale, 
@@ -10,12 +10,16 @@ import {
   Download,
   Upload,
   Zap,
-  LayoutGrid
+  LayoutGrid,
+  X,
+  Info,
+  Activity
 } from "lucide-react";
 import { Calculation } from "../App";
 import { cn } from "../lib/utils";
 import PeriodicSummary from "./PeriodicSummary";
 import PerformanceCharts from "./PerformanceCharts";
+import { motion, AnimatePresence } from "motion/react";
 
 interface DashboardProps {
   history: Calculation[];
@@ -25,7 +29,8 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ history, filteredHistory, selectedDate, onDateChange }: DashboardProps) {
-  const [selectedMachine, setSelectedMachine] = React.useState("ALL");
+  const [selectedMachine, setSelectedMachine] = useState("ALL");
+  const [detailMachine, setDetailMachine] = useState<any | null>(null);
 
   const machines = [
     "ALL",
@@ -55,6 +60,8 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
     
     const tInput = machineEntries.reduce((acc, curr) => acc + curr.input, 0);
     const tUtama = machineEntries.reduce((acc, curr) => acc + curr.utama, 0);
+    const tTurunan = machineEntries.reduce((acc, curr) => acc + curr.turunan, 0);
+    const tLokal = machineEntries.reduce((acc, curr) => acc + curr.lokal, 0);
     const tOutput = machineEntries.reduce((acc, curr) => acc + curr.output, 0);
     const aYield = tInput > 0 ? (tUtama / tInput) * 100 : 0;
 
@@ -63,7 +70,10 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
       active: tOutput > 0,
       yield: aYield,
       input: tInput,
-      output: tOutput
+      output: tOutput,
+      utama: tUtama,
+      turunan: tTurunan,
+      lokal: tLokal
     };
   });
 
@@ -187,12 +197,15 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
 
         <div className="grid grid-cols-4 gap-2">
           {runningGridData.map((item) => (
-            <div 
+            <motion.div 
               key={item.name} 
+              whileHover={item.active ? { scale: 1.02 } : {}}
+              whileTap={item.active ? { scale: 0.98 } : {}}
+              onClick={() => item.active && setDetailMachine(item)}
               className={cn(
                 "flex flex-col items-center justify-center p-3 rounded-2xl border transition-all relative overflow-hidden",
                 item.active 
-                  ? "bg-white border-green-100 shadow-sm" 
+                  ? "bg-white border-green-100 shadow-sm cursor-pointer hover:shadow-md" 
                   : "bg-gray-50 border-gray-50 opacity-50"
               )}
             >
@@ -203,23 +216,153 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
               )}
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-1">{item.name}</p>
               <div className="flex flex-col items-center">
-                <p className={cn(
-                  "text-[14px] font-black leading-none",
-                  item.active ? "text-gray-800" : "text-gray-300"
-                )}>
+                <motion.p 
+                  initial={{ scale: 1 }}
+                  animate={item.active ? { scale: [1, 1.1, 1] } : {}}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  className={cn(
+                    "text-[14px] font-black leading-none",
+                    item.active ? "text-gray-800" : "text-gray-300"
+                  )}
+                >
                   {item.yield.toFixed(1)}
                   <span className="text-[8px] font-bold ml-0.5">%</span>
-                </p>
+                </motion.p>
                 {item.active && (
                   <p className="text-[8px] font-bold text-gray-400 mt-1">
                     {item.output.toFixed(1)} <span className="font-normal">M3</span>
                   </p>
                 )}
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
+
+      {/* Machine Detail Modal */}
+      <AnimatePresence>
+        {detailMachine && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setDetailMachine(null)}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm cursor-pointer"
+          >
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl cursor-default"
+            >
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-purple-100 p-3 rounded-2xl text-purple-600">
+                      <Activity size={24} />
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-black text-gray-800 leading-none">{detailMachine.name}</h4>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Detail Performa Mesin</p>
+                    </div>
+                  </div>
+                  <motion.button 
+                    whileTap={{ scale: 0.8, backgroundColor: "#f3f4f6" }}
+                    onClick={() => setDetailMachine(null)}
+                    className="p-3 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-all"
+                  >
+                    <X size={24} className="text-gray-600" />
+                  </motion.button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="bg-blue-50 p-4 rounded-3xl border border-blue-100">
+                    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">Total Input</p>
+                    <p className="text-2xl font-black text-blue-700">{detailMachine.input.toFixed(2)} <span className="text-xs font-normal">M3</span></p>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-3xl border border-green-100">
+                    <p className="text-[10px] font-bold text-green-400 uppercase tracking-widest mb-1">Total Output</p>
+                    <p className="text-2xl font-black text-green-700">{detailMachine.output.toFixed(2)} <span className="text-xs font-normal">M3</span></p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  <div className="bg-gray-50 p-3 rounded-2xl border border-gray-100 text-center">
+                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter mb-1">Utama</p>
+                    <p className="text-sm font-black text-gray-800">{detailMachine.utama.toFixed(2)}</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-2xl border border-gray-100 text-center">
+                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter mb-1">Turunan</p>
+                    <p className="text-sm font-black text-gray-800">{detailMachine.turunan.toFixed(2)}</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-2xl border border-gray-100 text-center">
+                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter mb-1">Lokal</p>
+                    <p className="text-sm font-black text-gray-800">{detailMachine.lokal.toFixed(2)}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 mb-6">
+                  <div className="bg-purple-600 p-5 rounded-[28px] text-white shadow-lg shadow-purple-200">
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="text-[10px] font-bold text-purple-100 uppercase tracking-widest">Rendemen Utama</p>
+                      <TrendingUp size={14} className="text-purple-200" />
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <p className="text-4xl font-black tracking-tighter">
+                        {detailMachine.yield.toFixed(2)}
+                        <span className="text-lg font-bold ml-0.5">%</span>
+                      </p>
+                    </div>
+                    <p className="text-[9px] font-medium text-purple-200 mt-1">Berdasarkan Utama / Input</p>
+                  </div>
+
+                  <div className="bg-indigo-600 p-5 rounded-[28px] text-white shadow-lg shadow-indigo-200">
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="text-[10px] font-bold text-indigo-100 uppercase tracking-widest">Rendemen Total</p>
+                      <Scale size={14} className="text-indigo-200" />
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <p className="text-4xl font-black tracking-tighter">
+                        {(detailMachine.input > 0 ? (detailMachine.output / detailMachine.input) * 100 : 0).toFixed(2)}
+                        <span className="text-lg font-bold ml-0.5">%</span>
+                      </p>
+                    </div>
+                    <p className="text-[9px] font-medium text-indigo-200 mt-1">Berdasarkan Total Output / Input</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-green-500 rounded-full" />
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Status Mesin</span>
+                    </div>
+                    <span className="text-xs font-black text-green-600 uppercase tracking-widest">Running</span>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full" />
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Tanggal Data</span>
+                    </div>
+                    <span className="text-xs font-black text-gray-800 uppercase tracking-widest">
+                      {new Date(selectedDate).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                  </div>
+                </div>
+
+                <motion.button 
+                  whileTap={{ scale: 0.96, y: 2 }}
+                  onClick={() => setDetailMachine(null)}
+                  className="w-full mt-6 py-4 bg-gray-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 active:shadow-none"
+                >
+                  Tutup Detail
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Production Stations Section */}
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5">
@@ -276,12 +419,6 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
           ))}
         </div>
       </div>
-
-      {/* Performance Trends Section */}
-      <PerformanceCharts history={history} selectedDate={selectedDate} />
-
-      {/* Periodic Summary Section */}
-      <PeriodicSummary history={history} selectedDate={selectedDate} />
     </div>
   );
 }

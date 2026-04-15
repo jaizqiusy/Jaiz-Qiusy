@@ -23,6 +23,7 @@ import { fetchSheetData } from "./services/sheetService";
 import Calculator from "./components/Calculator";
 import Dashboard from "./components/Dashboard";
 import History from "./components/History";
+import Performance from "./components/Performance";
 
 export type Calculation = {
   id: string;
@@ -47,7 +48,7 @@ export type Calculation = {
 };
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<"calculator" | "dashboard" | "history">("dashboard");
+  const [activeTab, setActiveTab] = useState<"calculator" | "dashboard" | "history" | "performance">("dashboard");
   const [history, setHistory] = useState<Calculation[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -264,28 +265,46 @@ export default function App() {
               <History history={history} selectedDate={selectedDate} onDelete={deleteCalculation} />
             </motion.div>
           )}
+
+          {activeTab === "performance" && (
+            <motion.div
+              key="performance"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Performance history={history} selectedDate={selectedDate} />
+            </motion.div>
+          )}
         </AnimatePresence>
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 backdrop-blur-md border-t border-gray-100 px-8 py-4 flex justify-between items-center z-20">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 backdrop-blur-md border-t border-gray-100 px-6 py-4 flex justify-between items-center z-20">
         <NavButton 
           active={activeTab === "calculator"} 
           onClick={() => setActiveTab("calculator")}
-          icon={<CalcIcon size={24} />}
+          icon={<CalcIcon size={22} />}
           label="Hitung"
         />
         <NavButton 
           active={activeTab === "dashboard"} 
           onClick={() => setActiveTab("dashboard")}
-          icon={<LayoutDashboard size={24} />}
+          icon={<LayoutDashboard size={22} />}
           label="Beranda"
         />
         <NavButton 
           active={activeTab === "history"} 
           onClick={() => setActiveTab("history")}
-          icon={<HistoryIcon size={24} />}
+          icon={<HistoryIcon size={22} />}
           label="Rekap"
+        />
+        <NavButton 
+          active={activeTab === "performance"} 
+          onClick={() => setActiveTab("performance")}
+          icon={<TrendingUp size={22} />}
+          label="Performa"
         />
       </nav>
     </div>
