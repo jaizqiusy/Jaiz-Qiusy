@@ -299,16 +299,12 @@ export default function App() {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.2 }}
-          drag
-          dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.2}
           onDragEnd={(_, info) => {
-            // Horizontal swipe
             if (info.offset.x > 100) handleSwipe(-1);
             else if (info.offset.x < -100) handleSwipe(1);
-            // Vertical swipe
-            else if (info.offset.y > 100) handleSwipe(-1);
-            else if (info.offset.y < -100) handleSwipe(1);
           }}
           className="min-h-full"
         >
