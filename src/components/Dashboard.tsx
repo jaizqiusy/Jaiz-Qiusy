@@ -90,11 +90,17 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
     
     const tInput = machineEntries.reduce((acc, curr) => acc + curr.input, 0);
     const tUtama = machineEntries.reduce((acc, curr) => acc + curr.utama, 0);
+    const tTurunan = machineEntries.reduce((acc, curr) => acc + curr.turunan, 0);
+    const tLokal = machineEntries.reduce((acc, curr) => acc + curr.lokal, 0);
     const tOutput = machineEntries.reduce((acc, curr) => acc + curr.output, 0);
     const aYield = tInput > 0 ? (tUtama / tInput) * 100 : 0;
 
     return {
       ...m,
+      input: tInput,
+      utama: tUtama,
+      turunan: tTurunan,
+      lokal: tLokal,
       output: tOutput,
       yield: aYield,
       active: tOutput > 0
@@ -382,10 +388,18 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
         
         <div className="grid grid-cols-1 gap-3">
           {mainMachines.map((item) => (
-            <div key={item.id} className={cn(
-              "flex items-center justify-between p-4 rounded-2xl border transition-all",
-              item.active ? "bg-white border-gray-100 shadow-sm" : "bg-gray-50 border-gray-50 opacity-60"
-            )}>
+            <motion.div 
+              key={item.id} 
+              whileHover={item.active ? { scale: 1.01 } : {}}
+              whileTap={item.active ? { scale: 0.99 } : {}}
+              onClick={() => item.active && setDetailMachine(item)}
+              className={cn(
+                "flex items-center justify-between p-4 rounded-2xl border transition-all",
+                item.active 
+                  ? "bg-white border-gray-100 shadow-sm cursor-pointer hover:shadow-md" 
+                  : "bg-gray-50 border-gray-50 opacity-60"
+              )}
+            >
               <div className="flex items-center gap-4">
                 <div className={cn(
                   item.bg, 
@@ -417,7 +431,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                   {item.yield.toFixed(2)}% YIELD
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
