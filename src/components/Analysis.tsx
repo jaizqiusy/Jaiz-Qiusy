@@ -33,8 +33,10 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
   const avgAchievement = bsData.length > 0 ? (bsData.reduce((acc, curr) => acc + curr.achievement, 0) / bsData.length) * 100 : 0;
 
   // Analysis Logic
-  const topMachine = [...bsData].sort((a, b) => b.yield_total - a.yield_total)[0];
-  const lowMachine = [...bsData].sort((a, b) => a.yield_total - b.yield_total)[0];
+  const topMachine = [...bsData].sort((a, b) => b.yield_primary - a.yield_primary)[0];
+  const lowMachine = [...bsData].sort((a, b) => a.yield_primary - b.yield_primary)[0];
+  const topOutputMachine = [...bsData].sort((a, b) => b.output - a.output)[0];
+  const lowOutputMachine = [...bsData].sort((a, b) => a.output - b.output)[0];
 
   return (
     <div className="space-y-4 pb-6">
@@ -92,40 +94,92 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
             <div className="space-y-3">
               <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Highlights</h4>
               
-              {topMachine && (
-                <div className="bg-green-50 border border-green-100 p-4 rounded-2xl flex items-center gap-4">
-                  <div className="bg-green-500 p-2.5 rounded-xl text-white shadow-lg shadow-green-100">
-                    <TrendingUp size={20} />
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-black text-green-600 uppercase tracking-wider mb-0.5">Performa Tertinggi</p>
-                    <p className="text-sm font-black text-gray-800">
-                      {topMachine.machine} <span className="text-gray-400 font-bold mx-1">•</span> {topMachine.yield_total.toFixed(2)}% Yield
-                    </p>
-                  </div>
-                </div>
-              )}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Rendemen Highlights */}
+                <div className="space-y-3">
+                  {topMachine && (
+                    <div className="bg-green-50 border border-green-100 p-3 rounded-2xl flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="bg-green-500 p-1.5 rounded-lg text-white">
+                          <TrendingUp size={14} />
+                        </div>
+                        <p className="text-[8px] font-black text-green-600 uppercase tracking-wider">Rendemen Utama ↑</p>
+                      </div>
+                      <div className="flex flex-col">
+                        <p className="text-3xl font-black text-gray-900 tracking-tighter">{topMachine.machine}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-bold text-gray-500">{(topMachine.yield_primary * 100).toFixed(2)}%</p>
+                          <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest">Yield</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-              {lowMachine && lowMachine !== topMachine && (
-                <div className="bg-orange-50 border border-orange-100 p-4 rounded-2xl flex items-center gap-4">
-                  <div className="bg-orange-500 p-2.5 rounded-xl text-white shadow-lg shadow-orange-100">
-                    <TrendingDown size={20} />
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-black text-orange-600 uppercase tracking-wider mb-0.5">Perlu Perhatian</p>
-                    <p className="text-sm font-black text-gray-800">
-                      {lowMachine.machine} <span className="text-gray-400 font-bold mx-1">•</span> {lowMachine.yield_total.toFixed(2)}% Yield
-                    </p>
-                  </div>
+                  {lowMachine && (
+                    <div className="bg-orange-50 border border-orange-100 p-3 rounded-2xl flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="bg-orange-500 p-1.5 rounded-lg text-white">
+                          <TrendingDown size={14} />
+                        </div>
+                        <p className="text-[8px] font-black text-orange-600 uppercase tracking-wider">Rendemen Utama ↓</p>
+                      </div>
+                      <div className="flex flex-col">
+                        <p className="text-3xl font-black text-gray-900 tracking-tighter">{lowMachine.machine}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-bold text-gray-500">{(lowMachine.yield_primary * 100).toFixed(2)}%</p>
+                          <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest">Yield</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+
+                {/* Output Highlights */}
+                <div className="space-y-3">
+                  {topOutputMachine && (
+                    <div className="bg-blue-50 border border-blue-100 p-3 rounded-2xl flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="bg-blue-500 p-1.5 rounded-lg text-white">
+                          <TrendingUp size={14} />
+                        </div>
+                        <p className="text-[8px] font-black text-blue-600 uppercase tracking-wider">Output Tertinggi</p>
+                      </div>
+                      <div className="flex flex-col">
+                        <p className="text-3xl font-black text-gray-900 tracking-tighter">{topOutputMachine.machine}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-bold text-gray-500">{topOutputMachine.output.toLocaleString()}</p>
+                          <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest">M3 Output</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {lowOutputMachine && (
+                    <div className="bg-slate-50 border border-slate-100 p-3 rounded-2xl flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="bg-slate-500 p-1.5 rounded-lg text-white">
+                          <TrendingDown size={14} />
+                        </div>
+                        <p className="text-[8px] font-black text-slate-600 uppercase tracking-wider">Output Terendah</p>
+                      </div>
+                      <div className="flex flex-col">
+                        <p className="text-3xl font-black text-gray-900 tracking-tighter">{lowOutputMachine.machine}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-bold text-gray-500">{lowOutputMachine.output.toLocaleString()}</p>
+                          <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest">M3 Output</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Detailed Breakdown */}
             <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
               <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Breakdown Mesin</h4>
               <div className="space-y-3">
-                {bsData.sort((a, b) => b.yield_total - a.yield_total).map((item) => (
+                {[...bsData].sort((a, b) => a.output - b.output).map((item) => (
                   <div key={item.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-[10px] font-black text-gray-800 border border-gray-100">
@@ -141,9 +195,9 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                     <div className="text-right">
                       <p className={cn(
                         "text-xs font-black",
-                        item.yield_total >= 50 ? "text-green-600" : "text-orange-600"
+                        item.yield_total * 100 >= 50 ? "text-green-600" : "text-orange-600"
                       )}>
-                        {item.yield_total.toFixed(2)}%
+                        {(item.yield_total * 100).toFixed(2)}%
                       </p>
                       <div className="flex items-center justify-end gap-1">
                         {item.achievement >= 100 ? (

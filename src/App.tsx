@@ -15,7 +15,9 @@ import {
   DollarSign,
   Scale,
   RefreshCw,
-  BarChart3
+  BarChart3,
+  Package,
+  Layers
 } from "lucide-react";
 import { cn } from "./lib/utils";
 import { fetchSheetData } from "./services/sheetService";
@@ -49,7 +51,7 @@ export type Calculation = {
   timestamp: number;
 };
 
-const TABS = ["calculator", "dashboard", "history", "performance", "analysis"] as const;
+const TABS = ["calculator", "dashboard", "analysis", "performance", "history"] as const;
 type TabType = typeof TABS[number];
 
 export default function App() {
@@ -213,9 +215,37 @@ export default function App() {
             <h1 className="text-2xl font-black tracking-tight uppercase">RENDEMENKU</h1>
           </div>
           
-          <p className="text-[10px] font-bold leading-tight opacity-90 max-w-[300px] uppercase tracking-wider">
-            TARGET JELAS • UKURAN PASTI • HASIL NYATA
-          </p>
+          <div className="flex items-center gap-4">
+            {/* Container Icon - Left of Slogan */}
+            <div className="flex flex-col items-center">
+              <div className="bg-white/20 p-0.5 rounded-lg backdrop-blur-sm border border-white/10 overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=100&auto=format&fit=crop" 
+                  alt="Container"
+                  className="w-6 h-6 object-cover rounded-md"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <span className="text-[7px] font-black mt-0.5">20 CONT</span>
+            </div>
+
+            <p className="text-[10px] font-bold leading-tight opacity-90 max-w-[200px] uppercase tracking-wider">
+              TARGET JELAS • UKURAN PASTI • HASIL NYATA
+            </p>
+
+            {/* Wood Pile Icon - Right of Slogan */}
+            <div className="flex flex-col items-center">
+              <div className="bg-white/20 p-0.5 rounded-lg backdrop-blur-sm border border-white/10 overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1516467508483-a7212febe31a?q=80&w=100&auto=format&fit=crop" 
+                  alt="Wood"
+                  className="w-6 h-6 object-cover rounded-md"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <span className="text-[7px] font-black mt-0.5">765 M3</span>
+            </div>
+          </div>
 
           <div className="absolute top-6 right-4 flex items-center gap-3">
             {lastSync && (
@@ -269,12 +299,16 @@ export default function App() {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.2 }}
-          drag="x"
-          dragConstraints={{ left: 0, right: 0 }}
+          drag
+          dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
           dragElastic={0.2}
           onDragEnd={(_, info) => {
+            // Horizontal swipe
             if (info.offset.x > 100) handleSwipe(-1);
             else if (info.offset.x < -100) handleSwipe(1);
+            // Vertical swipe
+            else if (info.offset.y > 100) handleSwipe(-1);
+            else if (info.offset.y < -100) handleSwipe(1);
           }}
           className="min-h-full"
         >
@@ -308,10 +342,10 @@ export default function App() {
           label="Beranda"
         />
         <NavButton 
-          active={activeTab === "history"} 
-          onClick={() => handleTabChange("history")}
-          icon={<HistoryIcon size={20} />}
-          label="Rekap"
+          active={activeTab === "analysis"} 
+          onClick={() => handleTabChange("analysis")}
+          icon={<BarChart3 size={20} />}
+          label="Analisa"
         />
         <NavButton 
           active={activeTab === "performance"} 
@@ -320,10 +354,10 @@ export default function App() {
           label="Performa"
         />
         <NavButton 
-          active={activeTab === "analysis"} 
-          onClick={() => handleTabChange("analysis")}
-          icon={<BarChart3 size={20} />}
-          label="Analisa"
+          active={activeTab === "history"} 
+          onClick={() => handleTabChange("history")}
+          icon={<HistoryIcon size={20} />}
+          label="Rekap"
         />
       </nav>
     </div>
