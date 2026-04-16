@@ -14,7 +14,8 @@ import {
   TrendingUp,
   DollarSign,
   Scale,
-  RefreshCw
+  RefreshCw,
+  BarChart3
 } from "lucide-react";
 import { cn } from "./lib/utils";
 import { fetchSheetData } from "./services/sheetService";
@@ -24,6 +25,7 @@ import Calculator from "./components/Calculator";
 import Dashboard from "./components/Dashboard";
 import History from "./components/History";
 import Performance from "./components/Performance";
+import Analysis from "./components/Analysis";
 
 export type Calculation = {
   id: string;
@@ -47,7 +49,7 @@ export type Calculation = {
   timestamp: number;
 };
 
-const TABS = ["calculator", "dashboard", "history", "performance"] as const;
+const TABS = ["calculator", "dashboard", "history", "performance", "analysis"] as const;
 type TabType = typeof TABS[number];
 
 export default function App() {
@@ -287,6 +289,7 @@ export default function App() {
           )}
           {activeTab === "history" && <History history={history} selectedDate={selectedDate} onDelete={deleteCalculation} />}
           {activeTab === "performance" && <Performance history={history} selectedDate={selectedDate} />}
+          {activeTab === "analysis" && <Analysis history={history} selectedDate={selectedDate} />}
         </motion.div>
       </main>
 
@@ -315,6 +318,12 @@ export default function App() {
           onClick={() => handleTabChange("performance")}
           icon={<TrendingUp size={20} />}
           label="Performa"
+        />
+        <NavButton 
+          active={activeTab === "analysis"} 
+          onClick={() => handleTabChange("analysis")}
+          icon={<BarChart3 size={20} />}
+          label="Analisa"
         />
       </nav>
     </div>
