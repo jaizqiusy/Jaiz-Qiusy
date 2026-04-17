@@ -43,11 +43,11 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
       {/* Header Analysis */}
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5">
         <div className="flex items-center gap-3 mb-4">
-          <div className="bg-indigo-50 p-2.5 rounded-2xl text-indigo-600">
+          <div className="bg-indigo-100 p-2.5 rounded-2xl text-indigo-900">
             <BarChart3 size={24} />
           </div>
           <div>
-            <h3 className="text-lg font-black text-gray-800 leading-none">Analisa Harian</h3>
+            <h3 className="text-lg font-black text-gray-800 leading-none">Review Harian</h3>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
               {new Date(selectedDate).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
@@ -57,7 +57,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
         {bsData.length === 0 ? (
           <div className="py-10 text-center">
             <AlertCircle className="mx-auto text-gray-300 mb-2" size={32} />
-            <p className="text-xs font-bold text-gray-400 uppercase">Tidak ada data untuk dianalisa</p>
+            <p className="text-xs font-bold text-gray-400 uppercase">Tidak ada data untuk direview</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -65,7 +65,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                 <div className="flex items-center gap-2 mb-2">
-                  <Target size={14} className="text-purple-500" />
+                  <Target size={14} className="text-purple-800" />
                   <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Avg Achievement</span>
                 </div>
                 <p className="text-2xl font-black text-gray-800">{avgAchievement.toFixed(2)}%</p>

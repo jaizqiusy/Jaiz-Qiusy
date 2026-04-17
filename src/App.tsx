@@ -200,7 +200,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F4F7FE] text-[#1a1a1a] font-sans flex flex-col max-w-md mx-auto shadow-2xl relative overflow-hidden">
       {/* Header - Purple Gradient */}
-      <header className="bg-gradient-to-b from-[#5E35B1] to-[#7E57C2] px-6 pt-10 pb-12 text-white relative">
+      <header className="bg-gradient-to-b from-[#311B92] to-[#512DA8] px-6 pt-10 pb-12 text-white relative">
         <div className="flex flex-col items-center text-center space-y-4">
           <div className="flex items-center gap-3">
             <div className="bg-white p-1.5 rounded-lg shadow-lg">
@@ -341,7 +341,7 @@ export default function App() {
           active={activeTab === "analysis"} 
           onClick={() => handleTabChange("analysis")}
           icon={<BarChart3 size={20} />}
-          label="Analisa"
+          label="Review"
         />
         <NavButton 
           active={activeTab === "performance"} 

@@ -113,7 +113,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
       <div className="space-y-3">
         <div className="bg-white rounded-2xl shadow-sm p-3 flex items-center justify-between border border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="bg-purple-50 p-2 rounded-lg text-purple-500">
+            <div className="bg-purple-100 p-2 rounded-lg text-purple-900">
               <CalendarIcon size={20} />
             </div>
             <div className="flex flex-col">
@@ -140,7 +140,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
               className={cn(
                 "px-4 py-2 rounded-xl text-[10px] font-black whitespace-nowrap transition-all border",
                 selectedMachine === m 
-                  ? "bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-100" 
+                  ? "bg-purple-900 text-white border-purple-900 shadow-md shadow-purple-100" 
                   : "bg-white text-gray-400 border-gray-100 hover:border-gray-200"
               )}
             >
@@ -157,7 +157,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
           value={totalInput.toLocaleString("id-ID")}
           unit="M3"
           icon={<Download className="text-white" size={24} />}
-          gradient="from-blue-500 to-blue-600"
+          gradient="from-blue-600 to-blue-800"
           iconBg="bg-blue-400/50"
         />
         <StatCard 
@@ -165,7 +165,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
           value={totalOutput.toLocaleString("id-ID")}
           unit="M3"
           icon={<Upload className="text-white" size={24} />}
-          gradient="from-green-500 to-green-600"
+          gradient="from-green-600 to-green-800"
           iconBg="bg-green-400/50"
         />
         <StatCard 
@@ -174,7 +174,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
           unit="%"
           subLabel={selectedMachine === "ALL" ? "BS 1 - 8" : selectedMachine}
           icon={<TrendingUp className="text-white" size={24} />}
-          gradient="from-purple-500 to-purple-600"
+          gradient="from-purple-800 to-purple-950"
           iconBg="bg-purple-400/50"
         />
         <StatCard 
@@ -182,67 +182,152 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
           value={selectedMachine === "ALL" ? machinesRunning.toString() : (totalOutput > 0 ? "1" : "0")}
           unit={selectedMachine === "ALL" ? "Unit" : "Active"}
           icon={<Zap className="text-white" size={24} />}
-          gradient="from-orange-500 to-orange-600"
+          gradient="from-orange-600 to-orange-800"
           iconBg="bg-orange-400/50"
         />
       </div>
 
-      {/* Mesin Berjalan Section */}
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <div className="bg-yellow-50 p-2 rounded-xl">
-              <Zap className="text-yellow-500 fill-yellow-500" size={20} />
+      {/* Unified Production Monitor Frame */}
+      <div className="bg-white rounded-[32px] shadow-md border border-gray-100 overflow-hidden mb-6">
+        {/* Unified Header */}
+        <div className="p-6 pb-2 flex items-center justify-between bg-slate-50/50">
+          <div className="flex items-center gap-3">
+            <div className="bg-slate-900 p-2.5 rounded-2xl text-white shadow-lg shadow-slate-200">
+              <Activity size={22} strokeWidth={2.5} />
             </div>
-            <h3 className="font-bold text-gray-800">Mesin Berjalan</h3>
+            <div>
+              <h3 className="text-xl font-black text-gray-800 leading-none">Status Produksi</h3>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1.5 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                Monitoring Real-time
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5 bg-green-50 px-3 py-1 rounded-full">
-            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-[10px] font-black text-green-600 uppercase tracking-wider">{machinesRunning} Active</span>
+          <div className="flex flex-col items-end">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Unit</span>
+            <span className="text-lg font-black text-slate-800 leading-none">{machinesRunning + mainMachines.filter(m => m.active).length}</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-2">
-          {runningGridData.map((item) => (
-            <motion.div 
-              key={item.name} 
-              whileHover={item.active ? { scale: 1.02 } : {}}
-              whileTap={item.active ? { scale: 0.98 } : {}}
-              onClick={() => item.active && setDetailMachine(item)}
-              className={cn(
-                "flex flex-col items-center justify-center p-3 rounded-2xl border transition-all relative overflow-hidden",
-                item.active 
-                  ? "bg-white border-green-100 shadow-sm cursor-pointer hover:shadow-md" 
-                  : "bg-gray-50 border-gray-50 opacity-50"
-              )}
-            >
-              {item.active && (
-                <div className="absolute top-0 right-0 w-6 h-6 bg-green-500/10 rounded-bl-full flex items-center justify-center">
-                  <div className="w-1 h-1 bg-green-500 rounded-full" />
-                </div>
-              )}
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-1">{item.name}</p>
-              <div className="flex flex-col items-center">
-                <motion.p 
-                  initial={{ scale: 1 }}
-                  animate={item.active ? { scale: [1, 1.1, 1] } : {}}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  className={cn(
-                    "text-[14px] font-black leading-none",
-                    item.active ? "text-gray-800" : "text-gray-300"
-                  )}
-                >
-                  {item.yield.toFixed(1)}
-                  <span className="text-[8px] font-bold ml-0.5">%</span>
-                </motion.p>
-                {item.active && (
-                  <p className="text-[8px] font-bold text-gray-400 mt-1">
-                    {item.output.toFixed(1)} <span className="font-normal">M3</span>
-                  </p>
-                )}
+        {/* Section 1: BS Machines Grid */}
+        <div className="p-6 border-b border-gray-50">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="bg-yellow-50 p-1.5 rounded-lg">
+                <Zap id="zap-icon-new" className="text-yellow-600 fill-yellow-600" size={14} />
               </div>
-            </motion.div>
-          ))}
+              <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-widest">BS Line 1 - 8</h4>
+            </div>
+            <div className="text-[9px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md uppercase">
+              {machinesRunning}/8 Active
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 gap-2.5">
+            {runningGridData.map((item) => (
+              <motion.div 
+                key={item.name} 
+                whileHover={item.active ? { scale: 1.05 } : {}}
+                whileTap={item.active ? { scale: 0.95 } : {}}
+                onClick={() => item.active && setDetailMachine(item)}
+                className={cn(
+                  "flex flex-col items-center justify-center p-3.5 rounded-[22px] border transition-all relative group",
+                  item.active 
+                    ? "bg-white border-green-100 shadow-sm cursor-pointer hover:border-green-300 hover:shadow-md" 
+                    : "bg-gray-50 border-gray-50 opacity-40 grayscale"
+                )}
+              >
+                {item.active && (
+                  <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-green-500 rounded-full" />
+                )}
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1.5 group-hover:text-slate-600 transition-colors">{item.name}</p>
+                <div className="flex flex-col items-center">
+                  <p className={cn(
+                      "text-[16px] font-black leading-none tracking-tight",
+                      item.active ? "text-slate-800" : "text-slate-300"
+                    )}
+                  >
+                    {item.yield.toFixed(1)}
+                    <span className="text-[9px] font-bold ml-0.5">%</span>
+                  </p>
+                  {item.active && (
+                    <div className="flex items-center gap-0.5 mt-1.5 text-[8px] font-black text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded-full">
+                      <span>{item.output.toFixed(1)}</span>
+                      <span className="font-bold opacity-60 ml-0.5">M3</span>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* Section 2: Main Units List */}
+        <div className="p-6 bg-slate-50/20">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="bg-blue-50 p-1.5 rounded-lg">
+                <LayoutGrid id="grid-icon-new" className="text-blue-600" size={14} />
+              </div>
+              <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Main Station Status</h4>
+            </div>
+            <div className="bg-blue-100 text-blue-600 text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+              High Capacity
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            {mainMachines.map((item) => (
+              <motion.div 
+                key={item.id} 
+                whileHover={item.active ? { x: 4, backgroundColor: "#fff" } : {}}
+                whileTap={item.active ? { scale: 0.98 } : {}}
+                onClick={() => item.active && setDetailMachine(item)}
+                className={cn(
+                  "flex items-center justify-between p-4 rounded-[24px] border transition-all",
+                  item.active 
+                    ? "bg-white border-gray-100 shadow-sm cursor-pointer hover:border-gray-200" 
+                    : "bg-gray-50 border-gray-50 opacity-40 grayscale"
+                )}
+              >
+                <div className="flex items-center gap-4">
+                  <div className={cn(
+                    item.bg, 
+                    item.color, 
+                    "p-3 rounded-2xl font-black text-sm w-12 h-12 flex items-center justify-center shadow-inner border border-white/50"
+                  )}>
+                    {item.id}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-black text-slate-800 uppercase tracking-tight">{item.name}</p>
+                      {item.active && <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />}
+                    </div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                      {item.line}
+                      <span className="w-1 h-1 bg-slate-200 rounded-full" />
+                      Status: {item.active ? "Active" : "Down"}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="flex flex-col items-end">
+                    <span className="text-[9px] font-black text-slate-400 uppercase mb-1">Total Output</span>
+                    <p className="text-xl font-black text-slate-900 leading-none tracking-tighter">
+                      {item.output.toLocaleString("id-ID")}
+                      <span className="text-[10px] font-bold ml-1 opacity-40">M3</span>
+                    </p>
+                  </div>
+                  <div className={cn(
+                    "mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black",
+                    item.active ? "bg-green-50 text-green-600 ring-1 ring-green-500/10" : "bg-gray-100 text-gray-400"
+                  )}>
+                    {item.yield.toFixed(2)}% YIELD
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -267,7 +352,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
               <div className="p-5">
                 <div className="flex justify-between items-center mb-5">
                   <div className="flex items-center gap-2.5">
-                    <div className="bg-purple-100 p-2.5 rounded-2xl text-purple-600">
+                    <div className="bg-purple-200 p-2.5 rounded-2xl text-purple-900">
                       <Activity size={20} />
                     </div>
                     <div>
@@ -311,10 +396,10 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 mb-4">
-                  <div className="bg-purple-600 p-3 rounded-[20px] text-white shadow-lg shadow-purple-200">
+                  <div className="bg-purple-900 p-3 rounded-[20px] text-white shadow-lg shadow-purple-200">
                     <div className="flex justify-between items-center mb-1">
-                      <p className="text-[8px] font-bold text-purple-100 uppercase tracking-widest">Utama</p>
-                      <TrendingUp size={10} className="text-purple-200" />
+                      <p className="text-[8px] font-bold text-purple-200 uppercase tracking-widest">Utama</p>
+                      <TrendingUp size={10} className="text-purple-300" />
                     </div>
                     <div className="flex items-baseline gap-0.5">
                       <p className="text-xl font-black tracking-tighter">
@@ -322,13 +407,13 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                         <span className="text-[10px] font-bold ml-0.5">%</span>
                       </p>
                     </div>
-                    <p className="text-[7px] font-medium text-purple-200 mt-1 leading-tight">Utama / Input</p>
+                    <p className="text-[7px] font-medium text-purple-300 mt-1 leading-tight">Utama / Input</p>
                   </div>
 
-                  <div className="bg-indigo-600 p-3 rounded-[20px] text-white shadow-lg shadow-indigo-200">
+                  <div className="bg-indigo-900 p-3 rounded-[20px] text-white shadow-lg shadow-indigo-200">
                     <div className="flex justify-between items-center mb-1">
-                      <p className="text-[8px] font-bold text-indigo-100 uppercase tracking-widest">Total</p>
-                      <Scale size={10} className="text-indigo-200" />
+                      <p className="text-[8px] font-bold text-indigo-200 uppercase tracking-widest">Total</p>
+                      <Scale size={10} className="text-indigo-300" />
                     </div>
                     <div className="flex items-baseline gap-0.5">
                       <p className="text-xl font-black tracking-tighter">
@@ -336,7 +421,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                         <span className="text-[10px] font-bold ml-0.5">%</span>
                       </p>
                     </div>
-                    <p className="text-[7px] font-medium text-indigo-200 mt-1 leading-tight">Total / Input</p>
+                    <p className="text-[7px] font-medium text-indigo-300 mt-1 leading-tight">Total / Input</p>
                   </div>
                 </div>
 
@@ -372,69 +457,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
         )}
       </AnimatePresence>
 
-      {/* Production Stations Section */}
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <div className="bg-blue-50 p-2 rounded-xl">
-              <LayoutGrid className="text-blue-500" size={20} />
-            </div>
-            <h3 className="font-bold text-gray-800">Status Produksi</h3>
-          </div>
-          <div className="bg-blue-100 text-blue-600 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-            Main Units
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 gap-3">
-          {mainMachines.map((item) => (
-            <motion.div 
-              key={item.id} 
-              whileHover={item.active ? { scale: 1.01 } : {}}
-              whileTap={item.active ? { scale: 0.99 } : {}}
-              onClick={() => item.active && setDetailMachine(item)}
-              className={cn(
-                "flex items-center justify-between p-4 rounded-2xl border transition-all",
-                item.active 
-                  ? "bg-white border-gray-100 shadow-sm cursor-pointer hover:shadow-md" 
-                  : "bg-gray-50 border-gray-50 opacity-60"
-              )}
-            >
-              <div className="flex items-center gap-4">
-                <div className={cn(
-                  item.bg, 
-                  item.color, 
-                  "p-3 rounded-xl font-black text-xs w-12 h-12 flex items-center justify-center shadow-sm"
-                )}>
-                  {item.id}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-black text-gray-800">{item.name}</p>
-                    {item.active && <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />}
-                  </div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{item.line}</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="flex flex-col items-end">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase mb-0.5">Output</span>
-                  <p className="text-lg font-black text-gray-900 leading-none">
-                    {item.output.toLocaleString("id-ID")}
-                    <span className="text-[10px] font-normal ml-1">M3</span>
-                  </p>
-                </div>
-                <div className={cn(
-                  "mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black",
-                  item.active ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400"
-                )}>
-                  {item.yield.toFixed(2)}% YIELD
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
+
 
       {/* Reset Data Section */}
       <div className="mt-8 pt-8 border-t border-gray-100">

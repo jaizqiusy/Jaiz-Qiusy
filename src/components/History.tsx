@@ -45,11 +45,11 @@ function DetailTable({ data }: { data: Calculation[] }) {
         </thead>
         <tbody className="divide-y divide-gray-50">
           {data.map((item) => (
-            <tr key={item.id} className="hover:bg-indigo-50/30 transition-colors">
+            <tr key={item.id} className="hover:bg-indigo-100/30 transition-colors">
               <td className="px-3 py-2.5 font-bold whitespace-nowrap">
                 {new Date(item.date).toLocaleDateString("id-ID", { day: '2-digit', month: '2-digit' })}
               </td>
-              <td className="px-3 py-2.5 font-black text-indigo-600 whitespace-nowrap">{item.machine}</td>
+              <td className="px-3 py-2.5 font-black text-indigo-900 whitespace-nowrap">{item.machine}</td>
               <td className="px-3 py-2.5">{item.input.toFixed(2)}</td>
               <td className="px-3 py-2.5">{item.utama.toFixed(2)}</td>
               <td className="px-3 py-2.5 font-bold">{(item.yield_primary * 100).toFixed(1)}%</td>
@@ -78,11 +78,11 @@ function MachineCard({ summary, index }: MachineCardProps) {
       transition={{ delay: index * 0.03 }}
       className={cn(
         "bg-white p-5 rounded-3xl shadow-sm border transition-all relative overflow-hidden",
-        hasData ? "border-gray-100 hover:border-indigo-200" : "border-gray-50 opacity-60"
+        hasData ? "border-gray-100 hover:border-indigo-300" : "border-gray-50 opacity-60"
       )}
     >
       {!hasData && (
-        <div className="absolute top-3 right-4 bg-gray-100 px-2 py-0.5 rounded text-[8px] font-bold text-gray-400 uppercase">
+        <div className="absolute top-3 right-4 bg-gray-200 px-2 py-0.5 rounded text-[8px] font-bold text-gray-400 uppercase">
           No Data
         </div>
       )}
@@ -91,7 +91,7 @@ function MachineCard({ summary, index }: MachineCardProps) {
         <div className="flex items-center gap-3">
           <div className={cn(
             "p-3 rounded-2xl font-black text-sm w-12 h-12 flex items-center justify-center",
-            hasData ? "bg-indigo-50 text-indigo-600" : "bg-gray-50 text-gray-300"
+            hasData ? "bg-indigo-100 text-indigo-900" : "bg-gray-50 text-gray-300"
           )}>
             {summary.machine.split(" ").pop()}
           </div>
@@ -116,8 +116,8 @@ function MachineCard({ summary, index }: MachineCardProps) {
           <p className="text-sm font-black">{summary.totalInput.toLocaleString("id-ID")} <span className="text-[10px] font-normal">M3</span></p>
         </div>
         <div className="flex flex-col">
-          <p className="text-[9px] font-bold text-indigo-600 uppercase tracking-wider mb-1">Avg Yield</p>
-          <p className="text-sm font-black text-indigo-700">{avgYield.toFixed(2)}%</p>
+          <p className="text-[9px] font-bold text-indigo-800 uppercase tracking-wider mb-1">Avg Yield</p>
+          <p className="text-sm font-black text-indigo-900">{avgYield.toFixed(2)}%</p>
         </div>
         <div className="flex flex-col">
           <p className="text-[9px] font-bold text-orange-600 uppercase tracking-wider mb-1">Total Output</p>
@@ -231,7 +231,7 @@ export default function History({ history, selectedDate }: HistoryProps) {
         <div className="text-center space-y-2">
           <p className="font-black text-gray-900 text-lg">Data Rekap Kosong</p>
           <p className="text-xs max-w-[200px] mx-auto leading-relaxed">
-            Tekan tombol <span className="text-indigo-600 font-bold">Sinkronisasi</span> di pojok kanan atas untuk mengambil data dari Google Sheets.
+            Tekan tombol <span className="text-indigo-800 font-bold">Sinkronisasi</span> di pojok kanan atas untuk mengambil data dari Google Sheets.
           </p>
         </div>
       </div>
@@ -249,7 +249,7 @@ export default function History({ history, selectedDate }: HistoryProps) {
             className={cn(
               "flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
               period === p 
-                ? "bg-indigo-600 text-white shadow-md shadow-indigo-100" 
+                ? "bg-indigo-900 text-white shadow-md shadow-indigo-100" 
                 : "text-gray-400 hover:bg-gray-50"
             )}
           >
@@ -260,7 +260,7 @@ export default function History({ history, selectedDate }: HistoryProps) {
 
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600">
+          <div className="bg-indigo-100 p-2 rounded-lg text-indigo-900">
             <BarChart3 size={18} />
           </div>
           <div>
@@ -283,12 +283,12 @@ export default function History({ history, selectedDate }: HistoryProps) {
           className={cn(
             "w-full flex items-center justify-between p-4 rounded-2xl border transition-all",
             showDetailTable 
-              ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100" 
-              : "bg-white text-gray-700 border-gray-100 hover:border-indigo-200"
+              ? "bg-indigo-900 text-white border-indigo-900 shadow-lg shadow-indigo-100" 
+              : "bg-white text-gray-700 border-gray-100 hover:border-indigo-300"
           )}
         >
           <div className="flex items-center gap-3">
-            <Table size={18} className={showDetailTable ? "text-white" : "text-indigo-600"} />
+            <Table size={18} className={showDetailTable ? "text-white" : "text-indigo-900"} />
             <span className="text-xs font-black uppercase tracking-widest">Tampilkan Rekap Detail</span>
           </div>
           {showDetailTable ? <ChevronUp size={18} /> : <ChevronDown size={18} />}

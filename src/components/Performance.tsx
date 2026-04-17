@@ -17,7 +17,7 @@ export default function Performance({ history, selectedDate }: PerformanceProps)
           <div className="bg-blue-50 p-2 rounded-xl text-blue-500">
             <Activity size={20} />
           </div>
-          <h2 className="text-xl font-black text-gray-800 uppercase tracking-tight">Analisis Performa</h2>
+          <h2 className="text-xl font-black text-gray-800 uppercase tracking-tight">Review Performa</h2>
         </div>
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed">
           Pantau tren dan ringkasan efisiensi produksi secara berkala untuk pengambilan keputusan yang lebih tepat.
@@ -28,9 +28,9 @@ export default function Performance({ history, selectedDate }: PerformanceProps)
       
       <PeriodicSummary history={history} selectedDate={selectedDate} />
       
-      <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[32px] p-6 text-white shadow-xl shadow-indigo-100">
+      <div className="bg-gradient-to-br from-indigo-900 to-purple-950 rounded-[32px] p-6 text-white shadow-xl shadow-indigo-200">
         <div className="flex items-center gap-2 mb-4">
-          <TrendingUp size={20} className="text-indigo-200" />
+          <TrendingUp size={20} className="text-indigo-300" />
           <h3 className="font-bold uppercase tracking-wider text-xs">Insight Produksi</h3>
         </div>
         <p className="text-sm font-medium leading-relaxed opacity-90">

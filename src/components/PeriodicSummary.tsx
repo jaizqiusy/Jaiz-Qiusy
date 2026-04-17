@@ -52,8 +52,8 @@ export default function PeriodicSummary({ history, selectedDate }: PeriodicSumma
     <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <div className="bg-indigo-50 p-2 rounded-xl">
-            <BarChart3 className="text-indigo-500" size={20} />
+          <div className="bg-indigo-100 p-2 rounded-xl">
+            <BarChart3 className="text-indigo-900" size={20} />
           </div>
           <h3 className="font-bold text-gray-800">Ringkasan Berkala</h3>
         </div>
@@ -108,7 +108,7 @@ function SummaryBlock({ title, stats, color }: {
         </div>
         <div className="bg-gray-50/50 p-2 rounded-xl text-center">
           <p className="text-[8px] font-bold text-gray-400 uppercase mb-1">Yield</p>
-          <p className={cn("text-xs font-black", `text-${color}-600`)}>{stats.rendemen.toFixed(2)}%</p>
+          <p className={cn("text-xs font-black", `text-${color}-800`)}>{stats.rendemen.toFixed(2)}%</p>
         </div>
       </div>
     </div>
