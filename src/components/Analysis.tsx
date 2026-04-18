@@ -75,25 +75,6 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
           <div className="space-y-4">
             {/* Detailed Machine Status Grid */}
             <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm overflow-hidden">
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-2">
-                  <div className="bg-slate-900 p-1.5 rounded-lg text-white">
-                    <Activity size={14} />
-                  </div>
-                  <h4 className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Detail Performa Mesin</h4>
-                </div>
-                <div className="flex items-center gap-4">
-                   <div className="text-right">
-                      <p className="text-[8px] font-bold text-gray-400 uppercase leading-none mb-1">Avg Point</p>
-                      <p className="text-sm font-black text-slate-800 leading-none">{avgAchievement.toFixed(0)}</p>
-                   </div>
-                   <div className="text-right border-l border-gray-100 pl-4">
-                      <p className="text-[8px] font-bold text-gray-400 uppercase leading-none mb-1">Avg Utama</p>
-                      <p className="text-sm font-black text-indigo-600 leading-none">{avgYield.toFixed(2)}%</p>
-                   </div>
-                </div>
-              </div>
-
               <div className="overflow-x-auto -mx-5 px-5">
                 <table className="w-full text-left border-collapse min-w-[320px]">
                   <thead>
