@@ -64,6 +64,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
     const tTurunan = machineEntries.reduce((acc, curr) => acc + curr.turunan, 0);
     const tLokal = machineEntries.reduce((acc, curr) => acc + curr.lokal, 0);
     const tOutput = machineEntries.reduce((acc, curr) => acc + curr.output, 0);
+    const tAchievement = machineEntries.length > 0 ? (machineEntries.reduce((acc, curr) => acc + curr.achievement, 0) / machineEntries.length) * 100 : 0;
     const aYield = tInput > 0 ? (tUtama / tInput) * 100 : 0;
 
     return {
@@ -74,7 +75,8 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
       output: tOutput,
       utama: tUtama,
       turunan: tTurunan,
-      lokal: tLokal
+      lokal: tLokal,
+      achievement: tAchievement
     };
   });
 
@@ -93,6 +95,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
     const tTurunan = machineEntries.reduce((acc, curr) => acc + curr.turunan, 0);
     const tLokal = machineEntries.reduce((acc, curr) => acc + curr.lokal, 0);
     const tOutput = machineEntries.reduce((acc, curr) => acc + curr.output, 0);
+    const tAchievement = machineEntries.length > 0 ? (machineEntries.reduce((acc, curr) => acc + curr.achievement, 0) / machineEntries.length) * 100 : 0;
     const aYield = tInput > 0 ? (tUtama / tInput) * 100 : 0;
 
     return {
@@ -103,7 +106,8 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
       lokal: tLokal,
       output: tOutput,
       yield: aYield,
-      active: tOutput > 0
+      active: tOutput > 0,
+      achievement: tAchievement
     };
   });
 
@@ -169,7 +173,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
           iconBg="bg-green-400/50"
         />
         <StatCard 
-          label="Rendemen Utama"
+          label="UTAMA"
           value={avgRendemen.toFixed(2)}
           unit="%"
           subLabel={selectedMachine === "ALL" ? "BS 1 - 8" : selectedMachine}
@@ -240,20 +244,40 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                 {item.active && (
                   <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-green-500 rounded-full" />
                 )}
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1.5 group-hover:text-slate-600 transition-colors">{item.name}</p>
-                <div className="flex flex-col items-center">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1.5 group-hover:text-slate-600 transition-colors uppercase">{item.name}</p>
+                <div className="flex flex-col items-center w-full">
                   <p className={cn(
-                      "text-[16px] font-black leading-none tracking-tight",
+                      "text-[12px] font-black leading-none tracking-tight mb-2",
                       item.active ? "text-slate-800" : "text-slate-300"
                     )}
                   >
                     {item.yield.toFixed(1)}
-                    <span className="text-[9px] font-bold ml-0.5">%</span>
+                    <span className="text-[8px] font-bold ml-0.5">%</span>
                   </p>
+                  
                   {item.active && (
-                    <div className="flex items-center gap-0.5 mt-1.5 text-[8px] font-black text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded-full">
-                      <span>{item.output.toFixed(1)}</span>
-                      <span className="font-bold opacity-60 ml-0.5">M3</span>
+                    <div className="grid grid-cols-2 gap-x-1.5 gap-y-1 w-full text-[6px] font-black">
+                      <div className="flex flex-col items-center bg-blue-50/50 rounded-lg py-1 border border-blue-100/30">
+                        <span className="text-[5px] text-gray-400 origin-top">INPUT</span>
+                        <span className="text-blue-700">{item.input.toFixed(1)}</span>
+                      </div>
+                      <div className="flex flex-col items-center bg-green-50/50 rounded-lg py-1 border border-green-100/30">
+                        <span className="text-[5px] text-gray-400 origin-top">OUT</span>
+                        <span className="text-green-700">{item.output.toFixed(1)}</span>
+                      </div>
+                      <div className="flex flex-col items-center bg-purple-50/50 rounded-lg py-1 border border-purple-100/30">
+                        <span className="text-[5px] text-gray-400 origin-top">YIELD</span>
+                        <span className="text-purple-700">{item.yield.toFixed(0)}%</span>
+                      </div>
+                      <div className="flex flex-col items-center bg-orange-50/50 rounded-lg py-1 border border-orange-100/30">
+                        <span className="text-[5px] text-gray-400 origin-top">POINT</span>
+                        <span className="text-orange-700">{item.achievement.toFixed(0)}</span>
+                      </div>
+                    </div>
+                  )}
+                  {!item.active && (
+                    <div className="h-6 flex items-center justify-center">
+                      <span className="text-[8px] text-gray-300 font-bold tracking-widest uppercase">Off</span>
                     </div>
                   )}
                 </div>
@@ -303,10 +327,22 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                       <p className="text-sm font-black text-slate-800 uppercase tracking-tight">{item.name}</p>
                       {item.active && <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />}
                     </div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                      {item.line}
-                      <span className="w-1 h-1 bg-slate-200 rounded-full" />
-                      Status: {item.active ? "Active" : "Down"}
+                    <div className="mt-1 flex flex-wrap gap-2">
+                       <div className="flex items-center gap-1 bg-gray-50 px-1.5 py-0.5 rounded-md border border-gray-100">
+                          <span className="text-[7px] font-bold text-gray-400 uppercase">Input</span>
+                          <span className="text-[9px] font-black text-gray-700">{item.input.toFixed(2)}</span>
+                       </div>
+                       <div className="flex items-center gap-1 bg-gray-50 px-1.5 py-0.5 rounded-md border border-gray-100">
+                          <span className="text-[7px] font-bold text-gray-400 uppercase">Yield</span>
+                          <span className="text-[9px] font-black text-purple-700">{item.yield.toFixed(2)}%</span>
+                       </div>
+                       <div className="flex items-center gap-1 bg-gray-50 px-1.5 py-0.5 rounded-md border border-gray-100">
+                          <span className="text-[7px] font-bold text-gray-400 uppercase">Point</span>
+                          <span className="text-[9px] font-black text-orange-700">{item.achievement.toFixed(1)}</span>
+                       </div>
+                    </div>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1 mt-1">
+                      {item.line} • Status: {item.active ? "Active" : "Down"}
                     </p>
                   </div>
                 </div>

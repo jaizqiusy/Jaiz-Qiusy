@@ -40,7 +40,7 @@ function DetailTable({ data }: { data: Calculation[] }) {
             <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Lkl</th>
             <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Tot</th>
             <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Y-T</th>
-            <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Ach</th>
+            <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Point</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
@@ -58,7 +58,7 @@ function DetailTable({ data }: { data: Calculation[] }) {
               <td className="px-3 py-2.5">{item.lokal.toFixed(2)}</td>
               <td className="px-3 py-2.5 font-bold">{item.output.toFixed(2)}</td>
               <td className="px-3 py-2.5 font-black text-green-600">{(item.yield_total * 100).toFixed(1)}%</td>
-              <td className="px-3 py-2.5">{(item.achievement * 100).toFixed(1)}%</td>
+              <td className="px-3 py-2.5">{(item.achievement * 100).toFixed(0)}</td>
             </tr>
           ))}
         </tbody>

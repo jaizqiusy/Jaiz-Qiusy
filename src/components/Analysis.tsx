@@ -26,6 +26,18 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
   // BS Machines Data
   const bsData = filteredData.filter(item => /^BS\s*[1-8]$/i.test(item.machine) || /^BS[1-8]$/i.test(item.machine));
   
+  // Main Machines (Poni A, Poni B, Breakdown)
+  const mainStations = [
+    { search: "PONIA", label: "PONI A", short: "PA" },
+    { search: "PONIB", label: "PONI B", short: "PB" },
+    { search: "BREAKDOWN", label: "BREAKDOWN", short: "BD" }
+  ].map(m => {
+    const entry = filteredData.find(item => item.machine.replace(/\s/g, "").toUpperCase() === m.search);
+    return entry ? { ...entry, machine: m.label, short: m.short } : null;
+  }).filter(Boolean) as Calculation[];
+
+  const allDisplayData = [...bsData, ...mainStations];
+  
   const totalInput = bsData.reduce((acc, curr) => acc + curr.input, 0);
   const totalOutput = bsData.reduce((acc, curr) => acc + curr.output, 0);
   const totalUtama = bsData.reduce((acc, curr) => acc + curr.utama, 0);
@@ -61,32 +73,81 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Summary Grid */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <Target size={14} className="text-purple-800" />
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Avg Achievement</span>
+            {/* Detailed Machine Status Grid */}
+            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm overflow-hidden">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2">
+                  <div className="bg-slate-900 p-1.5 rounded-lg text-white">
+                    <Activity size={14} />
+                  </div>
+                  <h4 className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Detail Performa Mesin</h4>
                 </div>
-                <p className="text-2xl font-black text-gray-800">{avgAchievement.toFixed(2)}%</p>
-                <div className="mt-2 w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
-                  <div 
-                    className={cn(
-                      "h-full rounded-full transition-all duration-1000",
-                      avgAchievement >= 100 ? "bg-green-500" : avgAchievement >= 85 ? "bg-blue-500" : "bg-orange-500"
-                    )}
-                    style={{ width: `${Math.min(avgAchievement, 100)}%` }}
-                  />
+                <div className="flex items-center gap-4">
+                   <div className="text-right">
+                      <p className="text-[8px] font-bold text-gray-400 uppercase leading-none mb-1">Avg Point</p>
+                      <p className="text-sm font-black text-slate-800 leading-none">{avgAchievement.toFixed(0)}</p>
+                   </div>
+                   <div className="text-right border-l border-gray-100 pl-4">
+                      <p className="text-[8px] font-bold text-gray-400 uppercase leading-none mb-1">Avg Utama</p>
+                      <p className="text-sm font-black text-indigo-600 leading-none">{avgYield.toFixed(2)}%</p>
+                   </div>
                 </div>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <Activity size={14} className="text-blue-500" />
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Avg Rendemen</span>
-                </div>
-                <p className="text-2xl font-black text-gray-800">{avgYield.toFixed(2)}%</p>
-                <p className="text-[8px] font-bold text-gray-400 mt-1 uppercase">Total Utama / Total Input</p>
+              <div className="overflow-x-auto -mx-5 px-5">
+                <table className="w-full text-left border-collapse min-w-[320px]">
+                  <thead>
+                    <tr className="bg-slate-50/50 text-[9px] font-black text-gray-400 uppercase tracking-widest border-y border-gray-100">
+                      <th className="px-3 py-4 first:rounded-l-2xl">Mesin</th>
+                      <th className="px-3 py-4 text-center">Input</th>
+                      <th className="px-3 py-4 text-center">Utama</th>
+                      <th className="px-3 py-4 text-center">Output</th>
+                      <th className="px-3 py-4 text-center last:rounded-r-2xl">Point</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {allDisplayData.sort((a, b) => {
+                      const isBSA = a.machine.startsWith("BS");
+                      const isBSB = b.machine.startsWith("BS");
+                      
+                      if (isBSA && !isBSB) return -1;
+                      if (!isBSA && isBSB) return 1;
+                      
+                      if (isBSA && isBSB) {
+                        const numA = parseInt(a.machine.replace(/\D/g, "")) || 0;
+                        const numB = parseInt(b.machine.replace(/\D/g, "")) || 0;
+                        return numA - numB;
+                      }
+                      
+                      return a.machine.localeCompare(b.machine);
+                    }).map((item) => (
+                      <tr key={item.id} className="hover:bg-indigo-50/30 transition-colors">
+                        <td className="px-3 py-4">
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-7 h-7 rounded-xl bg-gray-100 flex items-center justify-center text-[10px] font-black text-slate-800 shadow-sm border border-white">
+                              {item.machine.startsWith("BS") ? item.machine.replace("BS", "").trim() : (item as any).short || item.machine.substring(0, 2)}
+                            </span>
+                            <span className="text-[11px] font-black text-slate-800 uppercase tracking-tight leading-none">{item.machine}</span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-4 text-center">
+                          <span className="text-[12px] font-black text-blue-600 tracking-tighter">{item.input.toFixed(1)}</span>
+                          <span className="text-[7px] font-bold text-gray-300 ml-0.5 uppercase">M3</span>
+                        </td>
+                        <td className="px-3 py-4 text-center">
+                          <span className="text-[12px] font-black text-indigo-700 tracking-tighter">{(item.yield_primary * 100).toFixed(1)}%</span>
+                        </td>
+                        <td className="px-3 py-4 text-center">
+                          <span className="text-[12px] font-black text-green-700 tracking-tighter">{item.output.toFixed(1)}</span>
+                          <span className="text-[7px] font-bold text-gray-300 ml-0.5 uppercase">M3</span>
+                        </td>
+                        <td className="px-3 py-4 text-center">
+                          <span className="text-[12px] font-black text-orange-600">{(item.achievement * 100).toFixed(0)}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
 
@@ -103,7 +164,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                         <div className="bg-green-500 p-1.5 rounded-lg text-white">
                           <TrendingUp size={14} />
                         </div>
-                        <p className="text-[8px] font-black text-green-600 uppercase tracking-wider">Rendemen Utama ↑</p>
+                        <p className="text-[8px] font-black text-green-600 uppercase tracking-wider">UTAMA ↑</p>
                       </div>
                       <div className="flex flex-col">
                         <p className="text-3xl font-black text-gray-900 tracking-tighter">{topMachine.machine}</p>
@@ -121,7 +182,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                         <div className="bg-orange-500 p-1.5 rounded-lg text-white">
                           <TrendingDown size={14} />
                         </div>
-                        <p className="text-[8px] font-black text-orange-600 uppercase tracking-wider">Rendemen Utama ↓</p>
+                        <p className="text-[8px] font-black text-orange-600 uppercase tracking-wider">UTAMA ↓</p>
                       </div>
                       <div className="flex flex-col">
                         <p className="text-3xl font-black text-gray-900 tracking-tighter">{lowMachine.machine}</p>
@@ -175,43 +236,6 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
               </div>
             </div>
 
-            {/* Detailed Breakdown */}
-            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-              <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Breakdown Mesin</h4>
-              <div className="space-y-3">
-                {[...bsData].sort((a, b) => a.output - b.output).map((item) => (
-                  <div key={item.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-[10px] font-black text-gray-800 border border-gray-100">
-                        {item.machine.replace("BS", "")}
-                      </div>
-                      <div>
-                        <p className="text-xs font-black text-gray-800">{item.machine}</p>
-                        <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">
-                          Out: {item.output.toLocaleString()} M3
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className={cn(
-                        "text-xs font-black",
-                        item.yield_total * 100 >= 50 ? "text-green-600" : "text-orange-600"
-                      )}>
-                        {(item.yield_total * 100).toFixed(2)}%
-                      </p>
-                      <div className="flex items-center justify-end gap-1">
-                        {item.achievement >= 100 ? (
-                          <CheckCircle2 size={8} className="text-green-500" />
-                        ) : (
-                          <div className="w-1 h-1 bg-gray-300 rounded-full" />
-                        )}
-                        <span className="text-[8px] font-bold text-gray-400">{(item.achievement * 100).toFixed(0)}% Target</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         )}
       </div>
