@@ -30,7 +30,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
   const mainStations = [
     { search: "PONIA", label: "PONI A", short: "PA" },
     { search: "PONIB", label: "PONI B", short: "PB" },
-    { search: "BREAKDOWN", label: "BREAKDOWN", short: "BD" }
+    { search: "BREAKDOWN", label: "BREAK", short: "BD" }
   ].map(m => {
     const entry = filteredData.find(item => item.machine.replace(/\s/g, "").toUpperCase() === m.search);
     return entry ? { ...entry, machine: m.label, short: m.short } : null;
@@ -75,15 +75,15 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
           <div className="space-y-4">
             {/* Detailed Machine Status Grid */}
             <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto -mx-5 px-5">
-                <table className="w-full text-left border-collapse min-w-[320px]">
+              <div className="overflow-x-auto -mx-5 px-3">
+                <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-slate-50/50 text-[9px] font-black text-gray-400 uppercase tracking-widest border-y border-gray-100">
-                      <th className="px-3 py-4 first:rounded-l-2xl">Mesin</th>
-                      <th className="px-3 py-4 text-center">Input</th>
-                      <th className="px-3 py-4 text-center">Utama</th>
-                      <th className="px-3 py-4 text-center">Output</th>
-                      <th className="px-3 py-4 text-center last:rounded-r-2xl">Point</th>
+                    <tr className="bg-slate-50/50 text-[8px] font-black text-gray-400 uppercase tracking-wider border-y border-gray-100">
+                      <th className="px-1 py-4 first:rounded-l-2xl">Mesin</th>
+                      <th className="px-1 py-4 text-center">Input</th>
+                      <th className="px-1 py-4 text-center">Utama</th>
+                      <th className="px-1 py-4 text-center">Output</th>
+                      <th className="px-1 py-4 text-center last:rounded-r-2xl">Point</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
@@ -103,22 +103,20 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                       return a.machine.localeCompare(b.machine);
                     }).map((item) => (
                       <tr key={item.id} className="hover:bg-indigo-50/30 transition-colors">
-                        <td className="px-3 py-4">
-                          <span className="text-[11px] font-black text-slate-800 uppercase tracking-tight leading-none">{item.machine}</span>
+                        <td className="px-1 py-4">
+                          <span className="text-[10px] font-black text-slate-800 uppercase tracking-tighter leading-none">{item.machine}</span>
                         </td>
-                        <td className="px-3 py-4 text-center">
-                          <span className="text-[12px] font-black text-blue-600 tracking-tighter">{item.input.toFixed(1)}</span>
-                          <span className="text-[7px] font-bold text-gray-300 ml-0.5 uppercase">M3</span>
+                        <td className="px-1 py-4 text-center">
+                          <span className="text-[11px] font-black text-blue-600 tracking-tighter">{item.input.toFixed(1)}</span>
                         </td>
-                        <td className="px-3 py-4 text-center">
-                          <span className="text-[12px] font-black text-indigo-700 tracking-tighter">{(item.yield_primary * 100).toFixed(1)}%</span>
+                        <td className="px-1 py-4 text-center">
+                          <span className="text-[11px] font-black text-indigo-700 tracking-tighter">{(item.yield_primary * 100).toFixed(1)}%</span>
                         </td>
-                        <td className="px-3 py-4 text-center">
-                          <span className="text-[12px] font-black text-green-700 tracking-tighter">{item.output.toFixed(1)}</span>
-                          <span className="text-[7px] font-bold text-gray-300 ml-0.5 uppercase">M3</span>
+                        <td className="px-1 py-4 text-center">
+                          <span className="text-[11px] font-black text-green-700 tracking-tighter">{item.output.toFixed(1)}</span>
                         </td>
-                        <td className="px-3 py-4 text-center">
-                          <span className="text-[12px] font-black text-orange-600">{(item.achievement * 100).toFixed(0)}</span>
+                        <td className="px-1 py-4 text-center">
+                          <span className="text-[11px] font-black text-orange-600">{(item.achievement * 100).toFixed(0)}</span>
                         </td>
                       </tr>
                     ))}

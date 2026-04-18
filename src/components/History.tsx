@@ -15,7 +15,7 @@ type Period = "daily" | "weekly" | "monthly" | "quarterly";
 const TARGET_MACHINES = [
   "BS 1", "BS 2", "BS 3", "BS 4", "BS 5", "BS 6", "BS 7", "BS 8",
   "PONI A", "PONI B",
-  "BREAKDOWN"
+  "BREAK"
 ];
 
 interface MachineCardProps {
@@ -182,7 +182,7 @@ export default function History({ history, selectedDate }: HistoryProps) {
     TARGET_MACHINES.forEach(m => {
       summaryMap.set(m, {
         machine: m,
-        line: m.startsWith("BS") ? "BS LINE" : (m === "BREAKDOWN" ? "SYSTEM" : "PONI LINE"),
+        line: m.startsWith("BS") ? "BS LINE" : (m === "BREAKDOWN" || m === "BREAK" ? "SYSTEM" : "PONI LINE"),
         totalInput: 0,
         totalUtama: 0,
         totalOutput: 0,
@@ -216,7 +216,7 @@ export default function History({ history, selectedDate }: HistoryProps) {
       machineGroups: {
         poni: allSummaries.filter(s => s.machine.startsWith("PONI")),
         bs: allSummaries.filter(s => s.machine.startsWith("BS")),
-        breakdown: allSummaries.filter(s => s.machine === "BREAKDOWN")
+        breakdown: allSummaries.filter(s => s.machine === "BREAKDOWN" || s.machine === "BREAK")
       },
       filteredHistory: filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     };

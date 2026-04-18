@@ -36,7 +36,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
   const machines = [
     "ALL",
     "BS 1", "BS 2", "BS 3", "BS 4", "BS 5", "BS 6", "BS 7", "BS 8",
-    "PONI A", "PONI B", "BREAKDOWN"
+    "PONI A", "PONI B", "BREAK"
   ];
 
   // Calculate stats for the selected date based on GAS logic
@@ -86,7 +86,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
   const mainMachines = [
     { id: "PA", name: "Poni A", line: "Line 1", color: "text-blue-600", bg: "bg-blue-100", search: "PONIA" },
     { id: "PB", name: "Poni B", line: "Line 2", color: "text-green-600", bg: "bg-green-100", search: "PONIB" },
-    { id: "BD", name: "Breakdown", line: "System", color: "text-red-600", bg: "bg-red-100", search: "BREAKDOWN" }
+    { id: "BD", name: "Break", line: "System", color: "text-red-600", bg: "bg-red-100", search: "BREAKDOWN" }
   ].map(m => {
     const machineEntries = filteredHistory.filter(item => item.machine.replace(/\s/g, "").toUpperCase() === m.search);
     

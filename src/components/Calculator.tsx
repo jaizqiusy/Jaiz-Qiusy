@@ -82,7 +82,7 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
       <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
         <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
           <Scale className="text-green-600" size={20} />
-          Input Data Rendemen
+          Input Data UTAMA
         </h2>
         
         <form onSubmit={handleCalculate} className="space-y-4">
@@ -98,7 +98,7 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
               ))}
               <option value="PONIA">PONI A</option>
               <option value="PONIB">PONI B</option>
-              <option value="BREAKDOWN">BREAKDOWN</option>
+              <option value="BREAKDOWN">BREAK</option>
             </select>
           </div>
 
@@ -154,7 +154,7 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
             type="submit"
             className="w-full bg-green-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-green-200 hover:bg-green-700 active:scale-95 transition-all"
           >
-            Hitung Rendemen
+            Hitung UTAMA
           </button>
         </form>
       </div>
@@ -170,7 +170,7 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
-              <p className="text-xs font-medium text-green-100 uppercase tracking-wider mb-1">Rendemen Utama</p>
+              <p className="text-xs font-medium text-green-100 uppercase tracking-wider mb-1">UTAMA</p>
               <p className="text-2xl font-bold">{result.yield.toFixed(2)} <span className="text-sm font-normal">%</span></p>
             </div>
             <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
