@@ -104,12 +104,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                     }).map((item) => (
                       <tr key={item.id} className="hover:bg-indigo-50/30 transition-colors">
                         <td className="px-3 py-4">
-                          <div className="flex items-center gap-2.5">
-                            <span className="w-7 h-7 rounded-xl bg-gray-100 flex items-center justify-center text-[10px] font-black text-slate-800 shadow-sm border border-white">
-                              {item.machine.startsWith("BS") ? item.machine.replace("BS", "").trim() : (item as any).short || item.machine.substring(0, 2)}
-                            </span>
-                            <span className="text-[11px] font-black text-slate-800 uppercase tracking-tight leading-none">{item.machine}</span>
-                          </div>
+                          <span className="text-[11px] font-black text-slate-800 uppercase tracking-tight leading-none">{item.machine}</span>
                         </td>
                         <td className="px-3 py-4 text-center">
                           <span className="text-[12px] font-black text-blue-600 tracking-tighter">{item.input.toFixed(1)}</span>
