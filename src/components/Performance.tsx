@@ -12,14 +12,14 @@ interface PerformanceProps {
 export default function Performance({ history, selectedDate }: PerformanceProps) {
   return (
     <div className="space-y-4 pb-6">
-      <div className="bg-white rounded-3xl shadow-sm p-5 border border-gray-100">
+      <div className="bg-slate-900 rounded-3xl shadow-sm p-5 border border-slate-800">
         <div className="flex items-center gap-3 mb-2">
-          <div className="bg-blue-50 p-2 rounded-xl text-blue-500">
+          <div className="bg-emerald-900/10 p-2 rounded-xl text-emerald-400 border border-emerald-900/20">
             <Activity size={20} />
           </div>
-          <h2 className="text-xl font-black text-gray-800 uppercase tracking-tight">Review Performa</h2>
+          <h2 className="text-xl font-black text-slate-100 uppercase tracking-tight">Review Performa</h2>
         </div>
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed">
+        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
           Pantau tren dan ringkasan efisiensi produksi secara berkala untuk pengambilan keputusan yang lebih tepat.
         </p>
       </div>
@@ -28,9 +28,9 @@ export default function Performance({ history, selectedDate }: PerformanceProps)
       
       <PeriodicSummary history={history} selectedDate={selectedDate} />
       
-      <div className="bg-gradient-to-br from-indigo-900 to-purple-950 rounded-[32px] p-6 text-white shadow-xl shadow-indigo-200">
+      <div className="bg-gradient-to-br from-emerald-600 to-emerald-900 rounded-[32px] p-6 text-white shadow-xl shadow-black/20 border border-emerald-500/20">
         <div className="flex items-center gap-2 mb-4">
-          <TrendingUp size={20} className="text-indigo-300" />
+          <TrendingUp size={20} className="text-emerald-100" />
           <h3 className="font-bold uppercase tracking-wider text-xs">Insight Produksi</h3>
         </div>
         <p className="text-sm font-medium leading-relaxed opacity-90">
@@ -43,7 +43,7 @@ export default function Performance({ history, selectedDate }: PerformanceProps)
           </div>
           <div className="text-center">
             <p className="text-[10px] font-bold text-white/60 uppercase mb-1">Periode</p>
-            <p className="text-xl font-black">2026</p>
+            <p className="text-xl font-black">{new Date().getFullYear()}</p>
           </div>
           <div className="text-center">
             <p className="text-[10px] font-bold text-white/60 uppercase mb-1">Status</p>

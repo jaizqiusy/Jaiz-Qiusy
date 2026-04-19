@@ -26,39 +26,39 @@ interface MachineCardProps {
 
 function DetailTable({ data }: { data: Calculation[] }) {
   return (
-    <div className="overflow-x-auto bg-white rounded-2xl border border-gray-100 shadow-sm no-scrollbar">
+    <div className="overflow-x-auto bg-slate-950/40 rounded-2xl border border-slate-800 shadow-sm no-scrollbar">
       <table className="w-full text-[10px] text-left border-collapse">
-        <thead className="bg-gray-50 text-gray-400 uppercase font-black tracking-tighter sticky top-0 z-10">
+        <thead className="bg-slate-900 text-slate-500 uppercase font-black tracking-tighter sticky top-0 z-10">
           <tr>
-            <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Tgl</th>
-            <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Mesin</th>
-            <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">In (M3)</th>
-            <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Utm</th>
-            <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Y-P</th>
-            <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Trn</th>
-            <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Y-S</th>
-            <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Lkl</th>
-            <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Tot</th>
-            <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Y-T</th>
-            <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Point</th>
+            <th className="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Tgl</th>
+            <th className="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Mesin</th>
+            <th className="px-3 py-3 border-b border-slate-800 whitespace-nowrap">In (M3)</th>
+            <th className="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Utm</th>
+            <th className="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Y-P</th>
+            <th className="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Trn</th>
+            <th className="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Y-S</th>
+            <th className="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Lkl</th>
+            <th className="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Tot</th>
+            <th className="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Y-T</th>
+            <th className="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Point</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50">
+        <tbody className="divide-y divide-slate-800/50">
           {data.map((item) => (
-            <tr key={item.id} className="hover:bg-indigo-100/30 transition-colors">
-              <td className="px-3 py-2.5 font-bold whitespace-nowrap">
+            <tr key={item.id} className="hover:bg-emerald-900/10 transition-colors">
+              <td className="px-3 py-2.5 font-bold whitespace-nowrap text-slate-300">
                 {new Date(item.date).toLocaleDateString("id-ID", { day: '2-digit', month: '2-digit' })}
               </td>
-              <td className="px-3 py-2.5 font-black text-indigo-900 whitespace-nowrap">{item.machine}</td>
-              <td className="px-3 py-2.5">{item.input.toFixed(2)}</td>
-              <td className="px-3 py-2.5">{item.utama.toFixed(2)}</td>
-              <td className="px-3 py-2.5 font-bold">{(item.yield_primary * 100).toFixed(1)}%</td>
-              <td className="px-3 py-2.5">{item.turunan.toFixed(2)}</td>
-              <td className="px-3 py-2.5">{(item.yield_secondary * 100).toFixed(1)}%</td>
-              <td className="px-3 py-2.5">{item.lokal.toFixed(2)}</td>
-              <td className="px-3 py-2.5 font-bold">{item.output.toFixed(2)}</td>
-              <td className="px-3 py-2.5 font-black text-green-600">{(item.yield_total * 100).toFixed(1)}%</td>
-              <td className="px-3 py-2.5">{(item.achievement * 100).toFixed(0)}</td>
+              <td className="px-3 py-2.5 font-black text-emerald-400 whitespace-nowrap">{item.machine}</td>
+              <td className="px-3 py-2.5 text-slate-400">{item.input.toFixed(2)}</td>
+              <td className="px-3 py-2.5 text-slate-400">{item.utama.toFixed(2)}</td>
+              <td className="px-3 py-2.5 font-bold text-slate-200">{(item.yield_primary * 100).toFixed(1)}%</td>
+              <td className="px-3 py-2.5 text-slate-400">{item.turunan.toFixed(2)}</td>
+              <td className="px-3 py-2.5 text-slate-400">{(item.yield_secondary * 100).toFixed(1)}%</td>
+              <td className="px-3 py-2.5 text-slate-400">{item.lokal.toFixed(2)}</td>
+              <td className="px-3 py-2.5 font-bold text-slate-200">{item.output.toFixed(2)}</td>
+              <td className="px-3 py-2.5 font-black text-emerald-500">{(item.yield_total * 100).toFixed(1)}%</td>
+              <td className="px-3 py-2.5 text-slate-200 font-mono">{(item.achievement * 100).toFixed(0)}</td>
             </tr>
           ))}
         </tbody>
@@ -77,12 +77,12 @@ function MachineCard({ summary, index }: MachineCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03 }}
       className={cn(
-        "bg-white p-5 rounded-3xl shadow-sm border transition-all relative overflow-hidden",
-        hasData ? "border-gray-100 hover:border-indigo-300" : "border-gray-50 opacity-60"
+        "bg-slate-900 p-5 rounded-3xl shadow-sm border transition-all relative overflow-hidden",
+        hasData ? "border-slate-800 hover:border-emerald-500/30" : "border-slate-900 opacity-60"
       )}
     >
       {!hasData && (
-        <div className="absolute top-3 right-4 bg-gray-200 px-2 py-0.5 rounded text-[8px] font-bold text-gray-400 uppercase">
+        <div className="absolute top-3 right-4 bg-slate-800 px-2 py-0.5 rounded text-[8px] font-bold text-slate-600 uppercase border border-slate-700">
           No Data
         </div>
       )}
@@ -90,20 +90,20 @@ function MachineCard({ summary, index }: MachineCardProps) {
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
           <div className={cn(
-            "p-3 rounded-2xl font-black text-sm w-12 h-12 flex items-center justify-center",
-            hasData ? "bg-indigo-100 text-indigo-900" : "bg-gray-50 text-gray-300"
+            "p-3 rounded-2xl font-black text-sm w-12 h-12 flex items-center justify-center border",
+            hasData ? "bg-slate-800 text-emerald-400 border-slate-700" : "bg-slate-950 text-slate-700 border-slate-900"
           )}>
             {summary.machine.split(" ").pop()}
           </div>
           <div>
-            <p className="text-sm font-black text-gray-800">{summary.machine}</p>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{summary.line}</p>
+            <p className="text-sm font-black text-slate-100">{summary.machine}</p>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{summary.line}</p>
           </div>
         </div>
         {hasData && summary.latestDate && (
           <div className="text-right">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Terakhir</p>
-            <p className="text-[10px] font-black text-gray-600">
+            <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Terakhir</p>
+            <p className="text-[10px] font-black text-slate-400">
               {new Date(summary.latestDate).toLocaleDateString("id-ID", { day: 'numeric', month: 'short' })}
             </p>
           </div>
@@ -112,28 +112,28 @@ function MachineCard({ summary, index }: MachineCardProps) {
 
       <div className="grid grid-cols-3 gap-3">
         <div className="flex flex-col">
-          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Input</p>
-          <p className="text-sm font-black">{summary.totalInput.toLocaleString("id-ID")} <span className="text-[10px] font-normal">M3</span></p>
+          <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Input</p>
+          <p className="text-sm font-black text-slate-100">{summary.totalInput.toLocaleString("id-ID")} <span className="text-[10px] font-normal opacity-50">M3</span></p>
         </div>
         <div className="flex flex-col">
-          <p className="text-[9px] font-bold text-indigo-800 uppercase tracking-wider mb-1">Avg Yield</p>
-          <p className="text-sm font-black text-indigo-900">{avgYield.toFixed(2)}%</p>
+          <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Avg Yield</p>
+          <p className="text-sm font-black text-emerald-400">{avgYield.toFixed(2)}%</p>
         </div>
         <div className="flex flex-col">
-          <p className="text-[9px] font-bold text-orange-600 uppercase tracking-wider mb-1">Total Output</p>
-          <p className="text-sm font-black text-orange-700">{summary.totalOutput.toLocaleString("id-ID")} <span className="text-[10px] font-normal">M3</span></p>
+          <p className="text-[9px] font-bold text-amber-600 uppercase tracking-wider mb-1">Total Output</p>
+          <p className="text-sm font-black text-amber-500">{summary.totalOutput.toLocaleString("id-ID")} <span className="text-[10px] font-normal opacity-50">M3</span></p>
         </div>
       </div>
 
       {hasData && (
-        <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
+        <div className="mt-4 pt-4 border-t border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <TrendingUp size={12} className="text-green-500" />
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+            <TrendingUp size={12} className="text-emerald-500" />
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
               {summary.count} Kali Produksi
             </p>
           </div>
-          <ChevronRight size={16} className="text-gray-300 group-hover:text-indigo-500 transition-colors" />
+          <ChevronRight size={16} className="text-slate-700" />
         </div>
       )}
     </motion.div>
@@ -224,14 +224,14 @@ export default function History({ history, selectedDate }: HistoryProps) {
 
   if (history.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-gray-400 space-y-6">
-        <div className="bg-white p-8 rounded-full shadow-inner border border-gray-50">
-          <Calendar size={64} className="text-gray-200" />
+      <div className="flex flex-col items-center justify-center py-20 text-slate-600 space-y-6">
+        <div className="bg-slate-900 p-8 rounded-full shadow-inner border border-slate-800">
+          <Calendar size={64} className="text-slate-800" />
         </div>
         <div className="text-center space-y-2">
-          <p className="font-black text-gray-900 text-lg">Data Rekap Kosong</p>
+          <p className="font-black text-slate-100 text-lg">Data Rekap Kosong</p>
           <p className="text-xs max-w-[200px] mx-auto leading-relaxed">
-            Tekan tombol <span className="text-indigo-800 font-bold">Sinkronisasi</span> di pojok kanan atas untuk mengambil data dari Google Sheets.
+            Tekan tombol <span className="text-emerald-500 font-bold">Sinkronisasi</span> di pojok kanan atas untuk mengambil data dari Google Sheets.
           </p>
         </div>
       </div>
@@ -241,7 +241,7 @@ export default function History({ history, selectedDate }: HistoryProps) {
   return (
     <div className="space-y-6">
       {/* Period Selector */}
-      <div className="bg-white p-2 rounded-2xl shadow-sm border border-gray-100 flex gap-1">
+      <div className="bg-slate-900 p-2 rounded-2xl shadow-sm border border-slate-800 flex gap-1">
         {(["daily", "weekly", "monthly", "quarterly"] as Period[]).map((p) => (
           <button
             key={p}
@@ -249,8 +249,8 @@ export default function History({ history, selectedDate }: HistoryProps) {
             className={cn(
               "flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
               period === p 
-                ? "bg-indigo-900 text-white shadow-md shadow-indigo-100" 
-                : "text-gray-400 hover:bg-gray-50"
+                ? "bg-emerald-600 text-white shadow-md shadow-emerald-950/20" 
+                : "text-slate-500 hover:bg-slate-800"
             )}
           >
             {p === "daily" ? "Harian" : p === "weekly" ? "Mingguan" : p === "monthly" ? "Bulanan" : "Quarterly"}
@@ -260,17 +260,17 @@ export default function History({ history, selectedDate }: HistoryProps) {
 
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <div className="bg-indigo-100 p-2 rounded-lg text-indigo-900">
+          <div className="bg-emerald-900/30 p-2 rounded-lg text-emerald-400 border border-emerald-900/30">
             <BarChart3 size={18} />
           </div>
           <div>
-            <h2 className="text-lg font-black tracking-tight leading-none">Rekap Performa</h2>
-            <p className="text-[10px] font-bold text-gray-400 uppercase mt-1">
+            <h2 className="text-lg font-black tracking-tight leading-none text-slate-100">Rekap Performa</h2>
+            <p className="text-[10px] font-bold text-slate-500 uppercase mt-1">
               Ref: {new Date(selectedDate).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+        <div className="flex items-center gap-1 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
           <Clock size={12} />
           <span>{period === "daily" ? "1 Hari" : period === "weekly" ? "7 Hari" : period === "monthly" ? "30 Hari" : "90 Hari"}</span>
         </div>
@@ -283,12 +283,12 @@ export default function History({ history, selectedDate }: HistoryProps) {
           className={cn(
             "w-full flex items-center justify-between p-4 rounded-2xl border transition-all",
             showDetailTable 
-              ? "bg-indigo-900 text-white border-indigo-900 shadow-lg shadow-indigo-100" 
-              : "bg-white text-gray-700 border-gray-100 hover:border-indigo-300"
+              ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-950/40" 
+              : "bg-slate-900 text-slate-300 border-slate-800 hover:border-emerald-500/30"
           )}
         >
           <div className="flex items-center gap-3">
-            <Table size={18} className={showDetailTable ? "text-white" : "text-indigo-900"} />
+            <Table size={18} className={showDetailTable ? "text-white" : "text-emerald-400"} />
             <span className="text-xs font-black uppercase tracking-widest">Tampilkan Rekap Detail</span>
           </div>
           {showDetailTable ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -312,7 +312,7 @@ export default function History({ history, selectedDate }: HistoryProps) {
       <div className="space-y-8">
         {/* BS Section */}
         <section className="space-y-3">
-          <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">BS Line 1 - 8</h3>
+          <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-1">BS Line 1 - 8</h3>
           <div className="grid grid-cols-1 gap-3">
             {machineGroups.bs.map((summary, index) => (
               <MachineCard key={summary.machine} summary={summary} index={index} />
@@ -322,7 +322,7 @@ export default function History({ history, selectedDate }: HistoryProps) {
 
         {/* Poni Section */}
         <section className="space-y-3">
-          <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Main Stations</h3>
+          <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-1">Main Stations</h3>
           <div className="grid grid-cols-1 gap-3">
             {machineGroups.poni.map((summary, index) => (
               <MachineCard key={summary.machine} summary={summary} index={index + 8} />
@@ -332,7 +332,7 @@ export default function History({ history, selectedDate }: HistoryProps) {
 
         {/* Breakdown Section */}
         <section className="space-y-3">
-          <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">System Status</h3>
+          <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-1">System Status</h3>
           <div className="grid grid-cols-1 gap-3">
             {machineGroups.breakdown.map((summary, index) => (
               <MachineCard key={summary.machine} summary={summary} index={index + 10} />

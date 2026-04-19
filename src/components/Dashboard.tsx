@@ -114,38 +114,38 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
   return (
     <div className="space-y-4 pb-6">
       {/* Date & Machine Filter */}
-      <div className="space-y-3">
-        <div className="bg-white rounded-2xl shadow-sm p-3 flex items-center justify-between border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="bg-purple-100 p-2 rounded-lg text-purple-900">
-              <CalendarIcon size={20} />
+      <div className="space-y-2">
+        <div className="bg-slate-900 rounded-xl shadow-sm px-3 py-2 flex items-center justify-between border border-slate-800">
+          <div className="flex items-center gap-2">
+            <div className="bg-slate-800 p-1.5 rounded-lg text-emerald-400">
+              <CalendarIcon size={16} />
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Filter Tanggal</span>
               <input 
                 type="date" 
                 value={selectedDate}
                 onChange={(e) => onDateChange(e.target.value)}
-                className="text-sm font-black text-gray-800 bg-transparent border-none focus:ring-0 p-0"
+                className="text-xs font-black text-slate-100 bg-transparent border-none focus:ring-0 p-0"
               />
             </div>
           </div>
-          <div className="bg-gray-50 p-2 rounded-lg">
-            <ChevronDown size={16} className="text-gray-400" />
+          <div className="flex items-center gap-1.5">
+            <div className="bg-emerald-950/30 px-2 py-0.5 rounded text-[8px] font-black text-emerald-400 uppercase border border-emerald-900/30">Live</div>
+            <ChevronDown size={14} className="text-slate-600" />
           </div>
         </div>
 
         {/* Machine Filter Chips */}
-        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+        <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
           {machines.map(m => (
             <button
               key={m}
               onClick={() => setSelectedMachine(m)}
               className={cn(
-                "px-4 py-2 rounded-xl text-[10px] font-black whitespace-nowrap transition-all border",
+                "px-3 py-1.5 rounded-lg text-[9px] font-black whitespace-nowrap transition-all border",
                 selectedMachine === m 
-                  ? "bg-purple-900 text-white border-purple-900 shadow-md shadow-purple-100" 
-                  : "bg-white text-gray-400 border-gray-100 hover:border-gray-200"
+                  ? "bg-emerald-600 text-white border-emerald-600 shadow-sm" 
+                  : "bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700"
               )}
             >
               {m}
@@ -192,94 +192,70 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
       </div>
 
       {/* Unified Production Monitor Frame */}
-      <div className="bg-white rounded-[32px] shadow-md border border-gray-100 overflow-hidden mb-6">
+      <div className="bg-slate-900 rounded-[32px] shadow-md border border-slate-800 overflow-hidden mb-6">
         {/* Unified Header */}
-        <div className="p-6 pb-2 flex items-center justify-between bg-slate-50/50">
+        <div className="p-6 pb-2 flex items-center justify-between bg-slate-950/20">
           <div className="flex items-center gap-3">
-            <div className="bg-slate-900 p-2.5 rounded-2xl text-white shadow-lg shadow-slate-200">
+            <div className="bg-slate-800 p-2.5 rounded-2xl text-emerald-400 shadow-lg shadow-black/20 border border-slate-700">
               <Activity size={22} strokeWidth={2.5} />
             </div>
             <div>
-              <h3 className="text-xl font-black text-gray-800 leading-none">Status Produksi</h3>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1.5 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+              <h3 className="text-xl font-black text-slate-100 leading-none">Status Produksi</h3>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1.5 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                 Monitoring Real-time
               </p>
             </div>
           </div>
           <div className="flex flex-col items-end">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Unit</span>
-            <span className="text-lg font-black text-slate-800 leading-none">{machinesRunning + mainMachines.filter(m => m.active).length}</span>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Total Unit</span>
+            <span className="text-lg font-black text-slate-100 leading-none">{machinesRunning + mainMachines.filter(m => m.active).length}</span>
           </div>
         </div>
 
         {/* Section 1: BS Machines Grid */}
-        <div className="p-6 border-b border-gray-50">
+        <div className="p-6 border-b border-slate-800/50">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="bg-yellow-50 p-1.5 rounded-lg">
-                <Zap id="zap-icon-new" className="text-yellow-600 fill-yellow-600" size={14} />
+              <div className="bg-amber-900/20 p-1.5 rounded-lg border border-amber-900/30">
+                <Zap id="zap-icon-new" className="text-amber-500 fill-amber-500/10" size={14} />
               </div>
-              <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-widest">BS Line 1 - 8</h4>
+              <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">BS Line 1 - 8</h4>
             </div>
-            <div className="text-[9px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md uppercase">
+            <div className="text-[9px] font-bold text-emerald-400 bg-emerald-950/30 px-2 py-0.5 rounded-md uppercase border border-emerald-900/30">
               {machinesRunning}/8 Active
             </div>
           </div>
 
-          <div className="grid grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-4 gap-2">
             {runningGridData.map((item) => (
               <motion.div 
                 key={item.name} 
-                whileHover={item.active ? { scale: 1.05 } : {}}
+                whileHover={item.active ? { scale: 1.05, backgroundColor: "#065f4633" } : {}}
                 whileTap={item.active ? { scale: 0.95 } : {}}
                 onClick={() => item.active && setDetailMachine(item)}
                 className={cn(
-                  "flex flex-col items-center justify-center p-3.5 rounded-[22px] border transition-all relative group",
+                  "flex flex-col items-center justify-center p-3 rounded-[20px] border transition-all relative group",
                   item.active 
-                    ? "bg-white border-green-100 shadow-sm cursor-pointer hover:border-green-300 hover:shadow-md" 
-                    : "bg-gray-50 border-gray-50 opacity-40 grayscale"
+                    ? "bg-slate-800/50 border-slate-700 shadow-sm cursor-pointer hover:border-emerald-500/50" 
+                    : "bg-slate-900 border-slate-800 opacity-20 grayscale"
                 )}
               >
                 {item.active && (
-                  <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-green-500 rounded-full" />
+                  <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-emerald-500 rounded-full" />
                 )}
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1.5 group-hover:text-slate-600 transition-colors uppercase">{item.name}</p>
-                <div className="flex flex-col items-center w-full">
+                <div className="w-full bg-slate-900 py-1 border-b border-slate-700/50 rounded-t-xl mb-1.5 group-hover:bg-emerald-900/20 transition-colors text-center">
+                  <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest leading-none">{item.name}</p>
+                </div>
+                <div className="pb-1.5">
                   <p className={cn(
-                      "text-[12px] font-black leading-none tracking-tight mb-2",
-                      item.active ? "text-slate-800" : "text-slate-300"
+                      "text-[18px] font-black leading-none tracking-tighter",
+                      item.active ? "text-emerald-400" : "text-slate-700"
                     )}
                   >
                     {item.yield.toFixed(1)}
-                    <span className="text-[8px] font-bold ml-0.5">%</span>
+                    <span className="text-[9px] font-bold ml-0.5 text-slate-500">%</span>
                   </p>
-                  
-                  {item.active && (
-                    <div className="grid grid-cols-2 gap-x-1.5 gap-y-1 w-full text-[6px] font-black">
-                      <div className="flex flex-col items-center bg-blue-50/50 rounded-lg py-1 border border-blue-100/30">
-                        <span className="text-[5px] text-gray-400 origin-top">INPUT</span>
-                        <span className="text-blue-700">{item.input.toFixed(1)}</span>
-                      </div>
-                      <div className="flex flex-col items-center bg-green-50/50 rounded-lg py-1 border border-green-100/30">
-                        <span className="text-[5px] text-gray-400 origin-top">OUT</span>
-                        <span className="text-green-700">{item.output.toFixed(1)}</span>
-                      </div>
-                      <div className="flex flex-col items-center bg-purple-50/50 rounded-lg py-1 border border-purple-100/30">
-                        <span className="text-[5px] text-gray-400 origin-top">YIELD</span>
-                        <span className="text-purple-700">{item.yield.toFixed(0)}%</span>
-                      </div>
-                      <div className="flex flex-col items-center bg-orange-50/50 rounded-lg py-1 border border-orange-100/30">
-                        <span className="text-[5px] text-gray-400 origin-top">POINT</span>
-                        <span className="text-orange-700">{item.achievement.toFixed(0)}</span>
-                      </div>
-                    </div>
-                  )}
-                  {!item.active && (
-                    <div className="h-6 flex items-center justify-center">
-                      <span className="text-[8px] text-gray-300 font-bold tracking-widest uppercase">Off</span>
-                    </div>
-                  )}
                 </div>
               </motion.div>
             ))}
@@ -287,78 +263,62 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
         </div>
 
         {/* Section 2: Main Units List */}
-        <div className="p-6 bg-slate-50/20">
+        <div className="p-6 bg-slate-950/20">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="bg-blue-50 p-1.5 rounded-lg">
-                <LayoutGrid id="grid-icon-new" className="text-blue-600" size={14} />
+              <div className="bg-blue-900/20 p-1.5 rounded-lg border border-blue-900/30">
+                <LayoutGrid id="grid-icon-new" className="text-blue-400" size={14} />
               </div>
-              <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Main Station Status</h4>
+              <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Main Station Status</h4>
             </div>
-            <div className="bg-blue-100 text-blue-600 text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+            <div className="bg-blue-950/30 text-blue-400 text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-blue-900/30">
               High Capacity
             </div>
           </div>
           
-          <div className="space-y-3">
+          <div className="space-y-2">
             {mainMachines.map((item) => (
               <motion.div 
                 key={item.id} 
-                whileHover={item.active ? { x: 4, backgroundColor: "#fff" } : {}}
+                whileHover={item.active ? { x: 4, backgroundColor: "#1e293b" } : {}}
                 whileTap={item.active ? { scale: 0.98 } : {}}
                 onClick={() => item.active && setDetailMachine(item)}
                 className={cn(
-                  "flex items-center justify-between p-4 rounded-[24px] border transition-all",
+                  "flex items-center justify-between p-3 rounded-[20px] border transition-all",
                   item.active 
-                    ? "bg-white border-gray-100 shadow-sm cursor-pointer hover:border-gray-200" 
-                    : "bg-gray-50 border-gray-50 opacity-40 grayscale"
+                    ? "bg-slate-800/40 border-slate-700 shadow-sm cursor-pointer hover:border-emerald-500/30" 
+                    : "bg-slate-900 border-slate-900 opacity-20 grayscale"
                 )}
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   <div className={cn(
-                    item.bg, 
-                    item.color, 
-                    "p-3 rounded-2xl font-black text-sm w-12 h-12 flex items-center justify-center shadow-inner border border-white/50"
+                    "bg-slate-900 text-slate-100", 
+                    "p-2 rounded-xl font-black text-xs w-10 h-10 flex items-center justify-center shadow-inner border border-white/5 shadow-black"
                   )}>
                     {item.id}
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-black text-slate-800 uppercase tracking-tight">{item.name}</p>
-                      {item.active && <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />}
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-base font-black text-slate-100 leading-none tracking-tight">{item.name}</p>
+                      {item.active && <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />}
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2">
-                       <div className="flex items-center gap-1 bg-gray-50 px-1.5 py-0.5 rounded-md border border-gray-100">
-                          <span className="text-[7px] font-bold text-gray-400 uppercase">Input</span>
-                          <span className="text-[9px] font-black text-gray-700">{item.input.toFixed(2)}</span>
-                       </div>
-                       <div className="flex items-center gap-1 bg-gray-50 px-1.5 py-0.5 rounded-md border border-gray-100">
-                          <span className="text-[7px] font-bold text-gray-400 uppercase">Yield</span>
-                          <span className="text-[9px] font-black text-purple-700">{item.yield.toFixed(2)}%</span>
-                       </div>
-                       <div className="flex items-center gap-1 bg-gray-50 px-1.5 py-0.5 rounded-md border border-gray-100">
-                          <span className="text-[7px] font-bold text-gray-400 uppercase">Point</span>
-                          <span className="text-[9px] font-black text-orange-700">{item.achievement.toFixed(1)}</span>
-                       </div>
-                    </div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1 mt-1">
-                      {item.line} • Status: {item.active ? "Active" : "Down"}
+                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                      {item.line}
                     </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="flex flex-col items-end">
-                    <span className="text-[9px] font-black text-slate-400 uppercase mb-1">Total Output</span>
-                    <p className="text-xl font-black text-slate-900 leading-none tracking-tighter">
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="text-sm font-black text-slate-100 leading-none tracking-tighter">
                       {item.output.toLocaleString("id-ID")}
-                      <span className="text-[10px] font-bold ml-1 opacity-40">M3</span>
                     </p>
+                    <p className="text-[8px] font-black text-slate-500 uppercase mt-0.5">OUTPUT</p>
                   </div>
                   <div className={cn(
-                    "mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black",
-                    item.active ? "bg-green-50 text-green-600 ring-1 ring-green-500/10" : "bg-gray-100 text-gray-400"
+                    "min-w-[50px] text-center px-2 py-1.5 rounded-xl text-[10px] font-black",
+                    item.active ? "bg-indigo-900/30 text-indigo-300 border border-indigo-500/20" : "bg-slate-900 text-slate-500"
                   )}>
-                    {item.yield.toFixed(2)}% YIELD
+                    {item.yield.toFixed(1)}%
                   </div>
                 </div>
               </motion.div>
@@ -383,98 +343,96 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
               exit={{ opacity: 0, scale: 0.85, y: 10 }}
               transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white w-full max-w-[320px] rounded-[28px] overflow-hidden shadow-2xl cursor-default"
+              className="bg-slate-900 w-full max-w-[320px] rounded-[28px] overflow-hidden shadow-2xl border border-slate-800 cursor-default"
             >
               <div className="p-5">
                 <div className="flex justify-between items-center mb-5">
                   <div className="flex items-center gap-2.5">
-                    <div className="bg-purple-200 p-2.5 rounded-2xl text-purple-900">
+                    <div className="bg-emerald-900/30 p-2.5 rounded-2xl text-emerald-400">
                       <Activity size={20} />
                     </div>
                     <div>
-                      <h4 className="text-lg font-black text-gray-800 leading-none">{detailMachine.name}</h4>
-                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Detail Performa Mesin</p>
+                      <h4 className="text-lg font-black text-slate-100 leading-none">{detailMachine.name}</h4>
+                      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">Detail Performa Mesin</p>
                     </div>
                   </div>
                   <motion.button 
-                    whileTap={{ scale: 0.8, backgroundColor: "#f3f4f6" }}
+                    whileTap={{ scale: 0.8, backgroundColor: "#1e293b" }}
                     onClick={() => setDetailMachine(null)}
-                    className="p-2.5 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-all"
+                    className="p-2.5 bg-slate-800 border border-slate-700 rounded-2xl transition-all"
                   >
-                    <X size={20} className="text-gray-600" />
+                    <X size={20} className="text-slate-400" />
                   </motion.button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 mb-2">
-                  <div className="bg-blue-50 p-2 rounded-2xl border border-blue-100">
-                    <p className="text-[8px] font-bold text-blue-400 uppercase tracking-widest mb-0.5">Total Input</p>
-                    <p className="text-lg font-black text-blue-700">{detailMachine.input.toFixed(2)} <span className="text-[8px] font-normal">M3</span></p>
+                  <div className="bg-blue-900/20 p-2 rounded-2xl border border-blue-900/30">
+                    <p className="text-[8px] font-bold text-blue-500 uppercase tracking-widest mb-0.5">Total Input</p>
+                    <p className="text-lg font-black text-blue-300">{detailMachine.input.toFixed(2)} <span className="text-[8px] font-normal opacity-50">M3</span></p>
                   </div>
-                  <div className="bg-green-50 p-2 rounded-2xl border border-green-100">
-                    <p className="text-[8px] font-bold text-green-400 uppercase tracking-widest mb-0.5">Total Output</p>
-                    <p className="text-lg font-black text-green-700">{detailMachine.output.toFixed(2)} <span className="text-[8px] font-normal">M3</span></p>
+                  <div className="bg-emerald-900/20 p-2 rounded-2xl border border-emerald-900/30">
+                    <p className="text-[8px] font-bold text-emerald-500 uppercase tracking-widest mb-0.5">Total Output</p>
+                    <p className="text-lg font-black text-emerald-300">{detailMachine.output.toFixed(2)} <span className="text-[8px] font-normal opacity-50">M3</span></p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 mb-2">
-                  <div className="bg-gray-50 p-1.5 rounded-xl border border-gray-100 text-center">
-                    <p className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mb-0.5">Utama</p>
-                    <p className="text-[10px] font-black text-gray-800">{detailMachine.utama.toFixed(2)}</p>
+                  <div className="bg-slate-800/50 p-1.5 rounded-xl border border-slate-700/50 text-center">
+                    <p className="text-[7px] font-bold text-slate-500 uppercase tracking-tighter mb-0.5 whitespace-nowrap">Utama</p>
+                    <p className="text-[10px] font-black text-slate-100">{detailMachine.utama.toFixed(2)}</p>
                   </div>
-                  <div className="bg-gray-50 p-1.5 rounded-xl border border-gray-100 text-center">
-                    <p className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mb-0.5">Turunan</p>
-                    <p className="text-[10px] font-black text-gray-800">{detailMachine.turunan.toFixed(2)}</p>
+                  <div className="bg-slate-800/50 p-1.5 rounded-xl border border-slate-700/50 text-center">
+                    <p className="text-[7px] font-bold text-slate-500 uppercase tracking-tighter mb-0.5 whitespace-nowrap">Turunan</p>
+                    <p className="text-[10px] font-black text-slate-100">{detailMachine.turunan.toFixed(2)}</p>
                   </div>
-                  <div className="bg-gray-50 p-1.5 rounded-xl border border-gray-100 text-center">
-                    <p className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mb-0.5">Lokal</p>
-                    <p className="text-[10px] font-black text-gray-800">{detailMachine.lokal.toFixed(2)}</p>
+                  <div className="bg-slate-800/50 p-1.5 rounded-xl border border-slate-700/50 text-center">
+                    <p className="text-[7px] font-bold text-slate-500 uppercase tracking-tighter mb-0.5 whitespace-nowrap">Lokal</p>
+                    <p className="text-[10px] font-black text-slate-100">{detailMachine.lokal.toFixed(2)}</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 mb-4">
-                  <div className="bg-purple-900 p-3 rounded-[20px] text-white shadow-lg shadow-purple-200">
+                  <div className="bg-emerald-600 p-3 rounded-[20px] text-white shadow-lg shadow-emerald-900/20 border border-emerald-500/20">
                     <div className="flex justify-between items-center mb-1">
-                      <p className="text-[8px] font-bold text-purple-200 uppercase tracking-widest">Utama</p>
-                      <TrendingUp size={10} className="text-purple-300" />
+                      <p className="text-[8px] font-bold text-emerald-100 uppercase tracking-widest">Utama</p>
+                      <TrendingUp size={10} className="text-white/70" />
                     </div>
                     <div className="flex items-baseline gap-0.5">
                       <p className="text-xl font-black tracking-tighter">
                         {detailMachine.yield.toFixed(2)}
-                        <span className="text-[10px] font-bold ml-0.5">%</span>
+                        <span className="text-[10px] font-bold ml-0.5 text-white/70">%</span>
                       </p>
                     </div>
-                    <p className="text-[7px] font-medium text-purple-300 mt-1 leading-tight">Utama / Input</p>
                   </div>
 
-                  <div className="bg-indigo-900 p-3 rounded-[20px] text-white shadow-lg shadow-indigo-200">
+                  <div className="bg-slate-800 p-3 rounded-[20px] text-white shadow-lg border border-slate-700">
                     <div className="flex justify-between items-center mb-1">
-                      <p className="text-[8px] font-bold text-indigo-200 uppercase tracking-widest">Total</p>
-                      <Scale size={10} className="text-indigo-300" />
+                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Total</p>
+                      <Scale size={10} className="text-slate-500" />
                     </div>
                     <div className="flex items-baseline gap-0.5">
                       <p className="text-xl font-black tracking-tighter">
                         {(detailMachine.input > 0 ? (detailMachine.output / detailMachine.input) * 100 : 0).toFixed(2)}
-                        <span className="text-[10px] font-bold ml-0.5">%</span>
+                        <span className="text-[10px] font-bold ml-0.5 text-slate-500">%</span>
                       </p>
                     </div>
-                    <p className="text-[7px] font-medium text-indigo-300 mt-1 leading-tight">Total / Input</p>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-xl">
+                  <div className="flex items-center justify-between p-2.5 bg-slate-800/30 border border-slate-800 rounded-xl">
                     <div className="flex items-center gap-2">
-                      <div className="w-1 h-1 bg-green-500 rounded-full" />
-                      <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Status Mesin</span>
+                      <div className="w-1 h-1 bg-emerald-500 rounded-full" />
+                      <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Status Mesin</span>
                     </div>
-                    <span className="text-[9px] font-black text-green-600 uppercase tracking-widest">Running</span>
+                    <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Running</span>
                   </div>
-                  <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-xl">
+                  <div className="flex items-center justify-between p-2.5 bg-slate-800/30 border border-slate-800 rounded-xl">
                     <div className="flex items-center gap-2">
-                      <div className="w-1 h-1 bg-purple-500 rounded-full" />
-                      <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Tanggal Data</span>
+                      <div className="w-1 h-1 bg-amber-500 rounded-full" />
+                      <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Tanggal Data</span>
                     </div>
-                    <span className="text-[9px] font-black text-gray-800 uppercase tracking-widest">
+                    <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">
                       {new Date(selectedDate).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>
                   </div>
@@ -483,7 +441,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                 <motion.button 
                   whileTap={{ scale: 0.96, y: 2 }}
                   onClick={() => setDetailMachine(null)}
-                  className="w-full mt-3 py-2.5 bg-gray-900 text-white rounded-xl font-black uppercase tracking-widest text-[9px] hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 active:shadow-none"
+                  className="w-full mt-3 py-2.5 bg-emerald-600 text-white rounded-xl font-black uppercase tracking-widest text-[9px] hover:bg-emerald-500 transition-all shadow-lg shadow-black/20"
                 >
                   Tutup Detail
                 </motion.button>
@@ -496,7 +454,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
 
 
       {/* Reset Data Section */}
-      <div className="mt-8 pt-8 border-t border-gray-100">
+      <div className="mt-8 pt-8 border-t border-slate-900">
         <button 
           onClick={() => {
             if (window.confirm("Hapus semua data lokal dan sinkronisasi ulang dari awal?")) {
@@ -505,12 +463,12 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
               window.location.reload();
             }
           }}
-          className="w-full py-3 px-4 bg-red-50 text-red-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition-all flex items-center justify-center gap-2"
+          className="w-full py-3 px-4 bg-red-900/10 text-red-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-900/20 transition-all flex items-center justify-center gap-2 border border-red-900/20"
         >
           <RefreshCw size={14} />
           Reset Data Lokal & Refresh
         </button>
-        <p className="text-[8px] text-gray-400 text-center mt-2 uppercase font-bold tracking-tighter">
+        <p className="text-[8px] text-slate-600 text-center mt-2 uppercase font-bold tracking-tighter">
           Gunakan jika data terasa tidak sinkron atau ingin membersihkan cache
         </p>
       </div>
@@ -528,19 +486,19 @@ function StatCard({ label, value, unit, icon, gradient, iconBg, subLabel }: {
   subLabel?: string
 }) {
   return (
-    <div className={cn("p-4 rounded-3xl shadow-lg relative overflow-hidden bg-gradient-to-br", gradient)}>
-      <div className="flex justify-between items-start mb-2">
-        <p className="text-[10px] font-bold text-white/80 uppercase tracking-wider">{label}</p>
-        <div className={cn("p-2 rounded-xl backdrop-blur-md", iconBg)}>
-          {icon}
+    <div className={cn("p-3 rounded-2xl shadow-sm relative overflow-hidden bg-gradient-to-br", gradient)}>
+      <div className="flex justify-between items-center mb-1">
+        <p className="text-[9px] font-bold text-white/70 uppercase tracking-widest">{label}</p>
+        <div className={cn("p-1.5 rounded-lg backdrop-blur-md", iconBg)}>
+          {React.cloneElement(icon as React.ReactElement, { size: 16 })}
         </div>
       </div>
-      <div className="mt-1">
-        <p className="text-3xl font-black text-white tracking-tight">{value}</p>
-        <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest">{unit}</p>
+      <div className="flex items-baseline gap-1">
+        <p className="text-xl font-black text-white tracking-tighter">{value}</p>
+        <span className="text-[9px] font-bold text-white/60 uppercase">{unit}</span>
       </div>
       {subLabel && (
-        <p className="text-[10px] font-bold text-white/60 mt-2 uppercase">{subLabel}</p>
+        <p className="text-[8px] font-bold text-white/50 mt-1 uppercase truncate">{subLabel}</p>
       )}
     </div>
   );

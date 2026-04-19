@@ -53,14 +53,14 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
   return (
     <div className="space-y-4 pb-6">
       {/* Header Analysis */}
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5">
+      <div className="bg-slate-900 rounded-3xl shadow-sm border border-slate-800 p-5">
         <div className="flex items-center gap-3 mb-4">
-          <div className="bg-indigo-100 p-2.5 rounded-2xl text-indigo-900">
+          <div className="bg-emerald-900/30 p-2.5 rounded-2xl text-emerald-400">
             <BarChart3 size={24} />
           </div>
           <div>
-            <h3 className="text-lg font-black text-gray-800 leading-none">Review Harian</h3>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+            <h3 className="text-lg font-black text-slate-100 leading-none">Review Harian</h3>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
               {new Date(selectedDate).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
           </div>
@@ -68,17 +68,17 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
 
         {bsData.length === 0 ? (
           <div className="py-10 text-center">
-            <AlertCircle className="mx-auto text-gray-300 mb-2" size={32} />
-            <p className="text-xs font-bold text-gray-400 uppercase">Tidak ada data untuk direview</p>
+            <AlertCircle className="mx-auto text-slate-700 mb-2" size={32} />
+            <p className="text-xs font-bold text-slate-500 uppercase">Tidak ada data untuk direview</p>
           </div>
         ) : (
           <div className="space-y-4">
             {/* Detailed Machine Status Grid */}
-            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-slate-950/20 rounded-3xl p-5 border border-slate-800/50 shadow-sm overflow-hidden">
               <div className="overflow-x-auto -mx-5 px-3">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-slate-50/50 text-[8px] font-black text-gray-400 uppercase tracking-wider border-y border-gray-100">
+                    <tr className="bg-slate-950/40 text-[9px] font-black text-slate-500 uppercase tracking-[0.1em] border-y border-slate-800/50">
                       <th className="px-1 py-4 first:rounded-l-2xl">Mesin</th>
                       <th className="px-1 py-4 text-center">Input</th>
                       <th className="px-1 py-4 text-center">Utama</th>
@@ -86,7 +86,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                       <th className="px-1 py-4 text-center last:rounded-r-2xl">Point</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-slate-800/50">
                     {allDisplayData.sort((a, b) => {
                       const isBSA = a.machine.startsWith("BS");
                       const isBSB = b.machine.startsWith("BS");
@@ -102,21 +102,21 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                       
                       return a.machine.localeCompare(b.machine);
                     }).map((item) => (
-                      <tr key={item.id} className="hover:bg-indigo-50/30 transition-colors">
+                      <tr key={item.id} className="hover:bg-emerald-900/10 transition-colors">
                         <td className="px-1 py-4">
-                          <span className="text-[10px] font-black text-slate-800 uppercase tracking-tighter leading-none">{item.machine}</span>
+                          <span className="text-[11px] font-black text-slate-300 uppercase tracking-tighter leading-none">{item.machine}</span>
                         </td>
                         <td className="px-1 py-4 text-center">
-                          <span className="text-[11px] font-black text-blue-600 tracking-tighter">{item.input.toFixed(1)}</span>
+                          <span className="text-[12px] font-black text-blue-400 tracking-tighter">{item.input.toFixed(1)}</span>
                         </td>
                         <td className="px-1 py-4 text-center">
-                          <span className="text-[11px] font-black text-indigo-700 tracking-tighter">{(item.yield_primary * 100).toFixed(1)}%</span>
+                          <span className="text-[12px] font-black text-indigo-400 tracking-tighter">{(item.yield_primary * 100).toFixed(1)}%</span>
                         </td>
                         <td className="px-1 py-4 text-center">
-                          <span className="text-[11px] font-black text-green-700 tracking-tighter">{item.output.toFixed(1)}</span>
+                          <span className="text-[12px] font-black text-emerald-400 tracking-tighter">{item.output.toFixed(1)}</span>
                         </td>
                         <td className="px-1 py-4 text-center">
-                          <span className="text-[11px] font-black text-orange-600">{(item.achievement * 100).toFixed(0)}</span>
+                          <span className="text-[12px] font-black text-amber-500 font-mono">{(item.achievement * 100).toFixed(0)}</span>
                         </td>
                       </tr>
                     ))}
@@ -127,43 +127,43 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
 
             {/* Insight Cards */}
             <div className="space-y-3">
-              <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Highlights</h4>
+              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-1">Highlights</h4>
               
               <div className="grid grid-cols-2 gap-3">
                 {/* Rendemen Highlights */}
                 <div className="space-y-3">
                   {topMachine && (
-                    <div className="bg-green-50 border border-green-100 p-3 rounded-2xl flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <div className="bg-green-500 p-1.5 rounded-lg text-white">
-                          <TrendingUp size={14} />
-                        </div>
-                        <p className="text-[8px] font-black text-green-600 uppercase tracking-wider">UTAMA ↑</p>
-                      </div>
-                      <div className="flex flex-col">
-                        <p className="text-3xl font-black text-gray-900 tracking-tighter">{topMachine.machine}</p>
+                    <div className="bg-slate-800 border border-emerald-900/30 p-3 rounded-xl flex flex-col gap-2 shadow-sm relative overflow-hidden">
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                          <p className="text-sm font-bold text-gray-500">{(topMachine.yield_primary * 100).toFixed(2)}%</p>
-                          <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest">Yield</span>
+                           <div className="bg-emerald-600 p-1 rounded text-white">
+                             <TrendingUp size={10} />
+                           </div>
+                           <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">UTAMA ↑</p>
                         </div>
+                        <p className="text-lg font-black text-emerald-400 font-mono tracking-tighter">{(topMachine.yield_primary * 100).toFixed(1)}%</p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xl font-black text-slate-100 leading-none">{topMachine.machine}</p>
+                        <p className="text-[8px] font-bold text-slate-600 uppercase tracking-tighter">Yield Utama</p>
                       </div>
                     </div>
                   )}
 
                   {lowMachine && (
-                    <div className="bg-orange-50 border border-orange-100 p-3 rounded-2xl flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <div className="bg-orange-500 p-1.5 rounded-lg text-white">
-                          <TrendingDown size={14} />
-                        </div>
-                        <p className="text-[8px] font-black text-orange-600 uppercase tracking-wider">UTAMA ↓</p>
-                      </div>
-                      <div className="flex flex-col">
-                        <p className="text-3xl font-black text-gray-900 tracking-tighter">{lowMachine.machine}</p>
+                    <div className="bg-slate-800 border border-amber-900/30 p-3 rounded-xl flex flex-col gap-2 shadow-sm relative overflow-hidden">
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                          <p className="text-sm font-bold text-gray-500">{(lowMachine.yield_primary * 100).toFixed(2)}%</p>
-                          <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest">Yield</span>
+                           <div className="bg-amber-600 p-1 rounded text-white">
+                             <TrendingDown size={10} />
+                           </div>
+                           <p className="text-[8px] font-black text-amber-500 uppercase tracking-widest">UTAMA ↓</p>
                         </div>
+                        <p className="text-lg font-black text-amber-400 font-mono tracking-tighter">{(lowMachine.yield_primary * 100).toFixed(1)}%</p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xl font-black text-slate-100 leading-none">{lowMachine.machine}</p>
+                        <p className="text-[8px] font-bold text-slate-600 uppercase tracking-tighter">Yield Utama</p>
                       </div>
                     </div>
                   )}
@@ -172,37 +172,37 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                 {/* Output Highlights */}
                 <div className="space-y-3">
                   {topOutputMachine && (
-                    <div className="bg-blue-50 border border-blue-100 p-3 rounded-2xl flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <div className="bg-blue-500 p-1.5 rounded-lg text-white">
-                          <TrendingUp size={14} />
-                        </div>
-                        <p className="text-[8px] font-black text-blue-600 uppercase tracking-wider">Output Tertinggi</p>
-                      </div>
-                      <div className="flex flex-col">
-                        <p className="text-3xl font-black text-gray-900 tracking-tighter">{topOutputMachine.machine}</p>
+                    <div className="bg-slate-800 border border-blue-900/30 p-3 rounded-xl flex flex-col gap-2 shadow-sm relative overflow-hidden">
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                          <p className="text-sm font-bold text-gray-500">{topOutputMachine.output.toLocaleString()}</p>
-                          <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest">M3 Output</span>
+                           <div className="bg-blue-600 p-1 rounded text-white">
+                             <TrendingUp size={10} />
+                           </div>
+                           <p className="text-[8px] font-black text-blue-500 uppercase tracking-widest">OUTPUT ↑</p>
                         </div>
+                        <p className="text-lg font-black text-blue-400 font-mono tracking-tighter">{Math.round(topOutputMachine.output).toLocaleString()}</p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xl font-black text-slate-100 leading-none">{topOutputMachine.machine}</p>
+                        <p className="text-[8px] font-bold text-slate-600 uppercase tracking-tighter">M3 Output</p>
                       </div>
                     </div>
                   )}
 
                   {lowOutputMachine && (
-                    <div className="bg-slate-50 border border-slate-100 p-3 rounded-2xl flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <div className="bg-slate-500 p-1.5 rounded-lg text-white">
-                          <TrendingDown size={14} />
-                        </div>
-                        <p className="text-[8px] font-black text-slate-600 uppercase tracking-wider">Output Terendah</p>
-                      </div>
-                      <div className="flex flex-col">
-                        <p className="text-3xl font-black text-gray-900 tracking-tighter">{lowOutputMachine.machine}</p>
+                    <div className="bg-slate-800 border border-slate-700/50 p-3 rounded-xl flex flex-col gap-2 shadow-sm relative overflow-hidden">
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                          <p className="text-sm font-bold text-gray-500">{lowOutputMachine.output.toLocaleString()}</p>
-                          <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest">M3 Output</span>
+                           <div className="bg-slate-600 p-1 rounded text-white">
+                             <TrendingDown size={10} />
+                           </div>
+                           <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">OUTPUT ↓</p>
                         </div>
+                        <p className="text-lg font-black text-slate-300 font-mono tracking-tighter">{Math.round(lowOutputMachine.output).toLocaleString()}</p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xl font-black text-slate-100 leading-none">{lowOutputMachine.machine}</p>
+                        <p className="text-[8px] font-bold text-slate-600 uppercase tracking-tighter">M3 Output</p>
                       </div>
                     </div>
                   )}
