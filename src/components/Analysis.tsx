@@ -22,10 +22,69 @@ interface AnalysisProps {
 
 export default function Analysis({ history, selectedDate }: AnalysisProps) {
   const [zoomLevel, setZoomLevel] = React.useState(1);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const lastTouchDistance = React.useRef<number | null>(null);
 
   const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.1, 2));
   const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 0.1, 0.5));
   const handleResetZoom = () => setZoomLevel(1);
+
+  // Multi-touch gestures for Android/Mobile
+  React.useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      // Five-finger touch to reset zoom
+      if (e.touches.length === 5) {
+        handleResetZoom();
+        return;
+      }
+
+      if (e.touches.length === 2) {
+        const distance = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+        lastTouchDistance.current = distance;
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && lastTouchDistance.current !== null) {
+        // Prevent default browser zoom to use our custom zoom system
+        if (e.cancelable) e.preventDefault();
+        
+        const distance = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+        
+        const delta = distance - lastTouchDistance.current;
+        if (Math.abs(delta) > 10) { // Threshold to prevent jitter
+          setZoomLevel(prev => {
+            const nextZoom = prev + (delta > 0 ? 0.05 : -0.05);
+            return Math.min(Math.max(nextZoom, 0.5), 2);
+          });
+          lastTouchDistance.current = distance;
+        }
+      }
+    };
+
+    const handleTouchEnd = () => {
+      lastTouchDistance.current = null;
+    };
+
+    element.addEventListener("touchstart", handleTouchStart, { passive: false });
+    element.addEventListener("touchmove", handleTouchMove, { passive: false });
+    element.addEventListener("touchend", handleTouchEnd);
+
+    return () => {
+      element.removeEventListener("touchstart", handleTouchStart);
+      element.removeEventListener("touchmove", handleTouchMove);
+      element.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, []);
 
   const filteredData = history.filter(calc => {
     const calcDate = calc.date.includes('T') ? calc.date.split('T')[0] : calc.date;
@@ -60,9 +119,9 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
   const lowOutputMachine = [...bsData].sort((a, b) => a.output - b.output)[0];
 
   return (
-    <div className="space-y-4 pb-6">
+    <div className="space-y-4 pb-6" ref={containerRef}>
       {/* Header Analysis */}
-      <div className="bg-[#020617] rounded-3xl shadow-2xl border border-blue-900/30 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-[#020617] rounded-3xl shadow-2xl border border-blue-900/30 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div className="flex items-center gap-3">
           <div className="bg-blue-900/20 p-2.5 rounded-2xl text-blue-400">
             <BarChart3 size={24} />
@@ -76,36 +135,36 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
         </div>
 
         {/* Zoom Controls */}
-        <div className="flex items-center gap-2 self-end sm:self-auto">
-          <div className="flex bg-slate-900 rounded-xl p-1 border border-blue-900/30 overflow-hidden">
+        <div className="flex items-center gap-3 self-end sm:self-auto">
+          <div className="flex bg-slate-900/80 backdrop-blur-md rounded-2xl p-1.5 border border-blue-900/40 overflow-hidden shadow-lg">
             <button 
               onClick={handleZoomOut}
-              className="p-2 hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              className="p-3 hover:bg-slate-800 text-slate-400 hover:text-white transition-all active:scale-95 active:bg-slate-700"
               title="Zoom Out"
             >
-              <ZoomOut size={16} />
+              <ZoomOut size={20} />
             </button>
-            <div className="w-px bg-blue-900/30 self-stretch my-1" />
-            <div className="px-3 flex items-center justify-center">
-              <span className="text-[10px] font-black text-blue-400 font-mono w-10 text-center">
+            <div className="w-px bg-blue-900/30 self-stretch my-2" />
+            <div className="px-4 flex items-center justify-center min-w-[60px]">
+              <span className="text-xs font-black text-blue-400 font-mono text-center">
                 {Math.round(zoomLevel * 100)}%
               </span>
             </div>
-            <div className="w-px bg-blue-900/30 self-stretch my-1" />
+            <div className="w-px bg-blue-900/30 self-stretch my-2" />
             <button 
               onClick={handleZoomIn}
-              className="p-2 hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              className="p-3 hover:bg-slate-800 text-slate-400 hover:text-white transition-all active:scale-95 active:bg-slate-700"
               title="Zoom In"
             >
-              <ZoomIn size={16} />
+              <ZoomIn size={20} />
             </button>
           </div>
           <button 
             onClick={handleResetZoom}
-            className="p-3 bg-slate-900 rounded-xl border border-blue-900/30 text-slate-400 hover:text-white hover:border-blue-700 transition-all"
-            title="Reset Zoom"
+            className="p-4 bg-slate-900/80 backdrop-blur-md rounded-2xl border border-blue-900/40 text-slate-400 hover:text-white hover:border-blue-700 transition-all active:rotate-180 active:scale-90 shadow-lg"
+            title="Reset Zoom (or 5-finger touch)"
           >
-            <RotateCcw size={16} />
+            <RotateCcw size={18} />
           </button>
         </div>
       </div>
