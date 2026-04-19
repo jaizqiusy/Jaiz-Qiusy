@@ -79,19 +79,19 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-800">
-        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-slate-100">
-          <Scale className="text-emerald-400" size={20} />
+      <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+        <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <Scale className="text-green-600" size={20} />
           Input Data UTAMA
         </h2>
         
         <form onSubmit={handleCalculate} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Pilih Mesin</label>
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Pilih Mesin</label>
             <select
               value={machine}
               onChange={(e) => setMachine(e.target.value)}
-              className="w-full bg-slate-800 border-none rounded-2xl py-4 px-5 focus:ring-2 focus:ring-emerald-500 transition-all text-lg font-medium text-slate-100 appearance-none"
+              className="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 focus:ring-2 focus:ring-green-500 transition-all text-lg font-medium appearance-none"
             >
               {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
                 <option key={i} value={`BS${i}`}>BS {i}</option>
@@ -103,7 +103,7 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Input (M3)</label>
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Input (M3)</label>
             <div className="relative">
               <input
                 type="number"
@@ -114,15 +114,15 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
                   setError(null);
                 }}
                 placeholder="0.00"
-                className="w-full bg-slate-800 border-none rounded-2xl py-4 px-5 focus:ring-2 focus:ring-emerald-500 transition-all text-lg font-medium text-slate-100 placeholder:text-slate-600"
+                className="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 focus:ring-2 focus:ring-green-500 transition-all text-lg font-medium"
                 required
               />
-              <div className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-500 font-bold">M3</div>
+              <div className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold">M3</div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Utama (M3)</label>
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Utama (M3)</label>
             <div className="relative">
               <input
                 type="number"
@@ -133,10 +133,10 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
                   setError(null);
                 }}
                 placeholder="0.00"
-                className="w-full bg-slate-800 border-none rounded-2xl py-4 px-5 focus:ring-2 focus:ring-emerald-500 transition-all text-lg font-medium text-slate-100 placeholder:text-slate-600"
+                className="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 focus:ring-2 focus:ring-green-500 transition-all text-lg font-medium"
                 required
               />
-              <div className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-500 font-bold">M3</div>
+              <div className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold">M3</div>
             </div>
           </div>
 
@@ -144,7 +144,7 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
             <motion.p 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-xs font-bold text-red-400 bg-red-900/20 p-3 rounded-xl border border-red-900/30"
+              className="text-xs font-bold text-red-500 bg-red-50 p-3 rounded-xl border border-red-100"
             >
               ⚠️ {error}
             </motion.p>
@@ -152,7 +152,7 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
 
           <button
             type="submit"
-            className="w-full bg-emerald-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-950/20 hover:bg-emerald-500 active:scale-95 transition-all"
+            className="w-full bg-green-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-green-200 hover:bg-green-700 active:scale-95 transition-all"
           >
             Hitung UTAMA
           </button>
@@ -160,9 +160,9 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
       </div>
 
       {result && (
-        <div className="bg-emerald-600 text-white p-6 rounded-3xl shadow-xl space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300 shadow-emerald-950/20">
+        <div className="bg-green-600 text-white p-6 rounded-3xl shadow-xl space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="flex justify-between items-start">
-            <h3 className="font-bold text-lg text-white">Hasil Perhitungan</h3>
+            <h3 className="font-bold text-lg">Hasil Perhitungan</h3>
             <div className="bg-white/20 p-2 rounded-lg">
               <TrendingUp size={20} />
             </div>
@@ -170,11 +170,11 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
-              <p className="text-xs font-medium text-emerald-100 uppercase tracking-wider mb-1">UTAMA</p>
+              <p className="text-xs font-medium text-green-100 uppercase tracking-wider mb-1">UTAMA</p>
               <p className="text-2xl font-bold">{result.yield.toFixed(2)} <span className="text-sm font-normal">%</span></p>
             </div>
             <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
-              <p className="text-xs font-medium text-emerald-100 uppercase tracking-wider mb-1">Output</p>
+              <p className="text-xs font-medium text-green-100 uppercase tracking-wider mb-1">Output</p>
               <p className="text-2xl font-bold">{result.output.toLocaleString("id-ID")} <span className="text-sm font-normal">M3</span></p>
             </div>
           </div>
@@ -182,7 +182,7 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
           <div className="pt-2">
             <button
               onClick={handleSave}
-              className="w-full bg-white text-emerald-600 font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors"
+              className="w-full bg-white text-green-600 font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-green-50 transition-colors"
             >
               <Plus size={18} />
               Simpan ke Riwayat
@@ -191,13 +191,13 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
         </div>
       )}
 
-      <div className="bg-amber-900/10 p-4 rounded-2xl border border-amber-900/20 flex gap-3">
-        <div className="bg-amber-900/20 p-2 rounded-lg h-fit">
-          <Zap className="text-amber-500" size={18} />
+      <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex gap-3">
+        <div className="bg-amber-100 p-2 rounded-lg h-fit">
+          <Zap className="text-amber-600" size={18} />
         </div>
         <div>
-          <p className="text-sm font-bold text-amber-500">Motivasi Hari Ini</p>
-          <p className="text-xs text-amber-200/70 leading-relaxed italic">"Rendemen tinggi bukan sekadar angka, tapi bukti ketelitian dan kerja keras kita dalam mengoptimalkan setiap serpihan kayu."</p>
+          <p className="text-sm font-bold text-amber-900">Motivasi Hari Ini</p>
+          <p className="text-xs text-amber-700 leading-relaxed">"Rendemen tinggi bukan sekadar angka, tapi bukti ketelitian dan kerja keras kita dalam mengoptimalkan setiap serpihan kayu."</p>
           <p className="text-[10px] font-black text-amber-600 mt-1 uppercase tracking-widest">BERSAMA KITA BISA</p>
         </div>
       </div>

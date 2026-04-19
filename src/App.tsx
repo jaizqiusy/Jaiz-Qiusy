@@ -198,68 +198,68 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col max-w-md mx-auto shadow-2xl relative overflow-hidden">
-      {/* Header - Dark Slate Gradient */}
-      <header className="bg-gradient-to-b from-slate-900 to-slate-950 px-6 pt-10 pb-12 text-white relative border-b border-slate-800">
+    <div className="min-h-screen bg-[#F4F7FE] text-[#1a1a1a] font-sans flex flex-col max-w-md mx-auto shadow-2xl relative overflow-hidden">
+      {/* Header - Purple Gradient */}
+      <header className="bg-gradient-to-b from-[#311B92] to-[#512DA8] px-6 pt-10 pb-12 text-white relative">
         <div className="flex flex-col items-center text-center space-y-4">
           <div className="flex items-center gap-3">
-            <div className="bg-slate-800 p-1.5 rounded-lg shadow-lg border border-slate-700">
-              <div className="w-8 h-8 bg-slate-800 flex items-center justify-center">
+            <div className="bg-white p-1.5 rounded-lg shadow-lg">
+              <div className="w-8 h-8 bg-white flex items-center justify-center">
                 <div className="flex items-end gap-0.5 h-full w-full p-1">
-                  <div className="w-1/3 bg-emerald-500 h-[40%]" />
-                  <div className="w-1/3 bg-emerald-500 h-[80%]" />
-                  <div className="w-1/3 bg-emerald-500 h-[60%]" />
+                  <div className="w-1/3 bg-green-500 h-[40%]" />
+                  <div className="w-1/3 bg-blue-500 h-[80%]" />
+                  <div className="w-1/3 bg-yellow-500 h-[60%]" />
                 </div>
               </div>
             </div>
-            <h1 className="text-2xl font-black tracking-tight uppercase text-emerald-400">RENDEMENKU</h1>
+            <h1 className="text-2xl font-black tracking-tight uppercase">RENDEMENKU</h1>
           </div>
           
           <div className="flex items-center gap-4">
             {/* Container Icon - Left of Slogan */}
             <div className="flex flex-col items-center">
-              <div className="bg-slate-800 p-0.5 rounded-lg border border-slate-700 overflow-hidden">
+              <div className="bg-white/20 p-0.5 rounded-lg backdrop-blur-sm border border-white/10 overflow-hidden">
                 <img 
                   src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=100&auto=format&fit=crop" 
                   alt="Container"
-                  className="w-6 h-6 object-cover rounded-md opacity-80"
+                  className="w-6 h-6 object-cover rounded-md"
                   referrerPolicy="no-referrer"
                 />
               </div>
-              <span className="text-[7px] font-black mt-0.5 text-slate-400">20 CONT</span>
+              <span className="text-[7px] font-black mt-0.5">20 CONT</span>
             </div>
 
-            <p className="text-[10px] font-bold leading-tight text-slate-300 max-w-[200px] uppercase tracking-wider">
+            <p className="text-[10px] font-bold leading-tight opacity-90 max-w-[200px] uppercase tracking-wider">
               TARGET JELAS • UKURAN PASTI • HASIL NYATA
             </p>
 
             {/* Wood Pile Icon - Right of Slogan */}
             <div className="flex flex-col items-center">
-              <div className="bg-slate-800 p-0.5 rounded-lg border border-slate-700 overflow-hidden">
+              <div className="bg-white/20 p-0.5 rounded-lg backdrop-blur-sm border border-white/10 overflow-hidden">
                 <img 
                   src="https://images.unsplash.com/photo-1516467508483-a7212febe31a?q=80&w=100&auto=format&fit=crop" 
                   alt="Wood"
-                  className="w-6 h-6 object-cover rounded-md opacity-80"
+                  className="w-6 h-6 object-cover rounded-md"
                   referrerPolicy="no-referrer"
                 />
               </div>
-              <span className="text-[7px] font-black mt-0.5 text-slate-400">765 M3</span>
+              <span className="text-[7px] font-black mt-0.5">765 M3</span>
             </div>
           </div>
 
           <div className="absolute top-6 right-4 flex items-center gap-3">
             {lastSync && (
               <div className="hidden xs:flex flex-col items-end">
-                <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">Terakhir Sinkron</span>
-                <span className="text-[9px] font-black text-slate-300">{lastSync}</span>
+                <span className="text-[8px] font-bold opacity-60 uppercase tracking-tighter">Terakhir Sinkron</span>
+                <span className="text-[9px] font-black">{lastSync}</span>
               </div>
             )}
             <button 
               onClick={handleSync}
               disabled={isSyncing}
               className={cn(
-                "p-2 text-slate-400 hover:text-emerald-400 transition-all rounded-full hover:bg-slate-800",
-                isSyncing && "animate-spin text-emerald-400"
+                "p-2 text-white/70 hover:text-white transition-all rounded-full hover:bg-white/10 flex items-center gap-2",
+                isSyncing && "animate-spin text-white"
               )}
             >
               <RefreshCw size={20} />
@@ -274,7 +274,7 @@ export default function App() {
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-4 p-3 bg-red-900/20 border border-red-900/30 rounded-xl text-red-400 text-xs font-medium flex items-center justify-between"
+            className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-xs font-medium flex items-center justify-between"
           >
             <span>⚠️ {syncError}</span>
             <button onClick={() => setSyncError(null)} className="font-bold">X</button>
@@ -286,7 +286,7 @@ export default function App() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="mb-4 p-3 bg-emerald-900/20 border border-emerald-900/30 rounded-xl text-emerald-400 text-xs font-medium flex items-center justify-between"
+            className="mb-4 p-3 bg-green-50 border border-green-100 rounded-xl text-green-600 text-xs font-medium flex items-center justify-between"
           >
             <span>✅ Sinkronisasi berhasil! Data diperbarui.</span>
             <button onClick={() => setSyncSuccess(false)} className="font-bold">X</button>
@@ -324,7 +324,7 @@ export default function App() {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900/90 backdrop-blur-md border-t border-slate-800 px-4 py-3 flex justify-around items-center z-20">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/90 backdrop-blur-md border-t border-gray-100 px-4 py-3 flex justify-around items-center z-20">
         <NavButton 
           active={activeTab === "calculator"} 
           onClick={() => handleTabChange("calculator")}
@@ -366,13 +366,13 @@ function NavButton({ active, onClick, icon, label }: { active: boolean, onClick:
       onClick={onClick}
       className={cn(
         "relative flex flex-col items-center gap-1 py-1 px-3 transition-all duration-300 z-10",
-        active ? "text-emerald-400" : "text-slate-500 hover:text-slate-300"
+        active ? "text-green-600" : "text-gray-400 hover:text-gray-600"
       )}
     >
       {active && (
         <motion.div 
           layoutId="nav-pill"
-          className="absolute inset-0 bg-emerald-500/10 rounded-2xl -z-10"
+          className="absolute inset-0 bg-green-50 rounded-2xl -z-10"
           transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
         />
       )}
