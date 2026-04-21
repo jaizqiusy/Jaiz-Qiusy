@@ -96,12 +96,36 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
   
   // Main Machines (Poni A, Poni B, Breakdown)
   const mainStations = [
-    { search: "PONIA", label: "PONI A", short: "PA" },
-    { search: "PONIB", label: "PONI B", short: "PB" },
-    { search: "BREAKDOWN", label: "BREAK", short: "BD" }
+    { search: ["PONIA", "PONI A", "PONI_A"], label: "PONI A", short: "PA" },
+    { search: ["PONIB", "PONI B", "PONI_B"], label: "PONI B", short: "PB" },
+    { search: ["BREAKDOWN", "BREAK", "BD", "SYSTEM", "DOWNTIME"], label: "BREAK", short: "BD" }
   ].map(m => {
-    const entry = filteredData.find(item => item.machine.replace(/\s/g, "").toUpperCase() === m.search);
-    return entry ? { ...entry, machine: m.label, short: m.short } : null;
+    // Collect all entries for this machine category (in case multiple rows exist)
+    const entries = filteredData.filter(item => {
+      const mName = item.machine.toUpperCase();
+      return m.search.some(s => 
+        mName === s.toUpperCase() || 
+        mName === s.replace(/\s/g, "").toUpperCase() ||
+        mName.includes(s.toUpperCase())
+      );
+    });
+
+    if (entries.length === 0) return null;
+
+    // If multiple entries exist, sum them up for the summary row
+    // (We use the first entry as base and sum numeric values)
+    const baseEntry = { ...entries[0] };
+    if (entries.length > 1) {
+      baseEntry.input = entries.reduce((s, e) => s + e.input, 0);
+      baseEntry.utama = entries.reduce((s, e) => s + e.utama, 0);
+      baseEntry.turunan = entries.reduce((s, e) => s + e.turunan, 0);
+      baseEntry.lokal = entries.reduce((s, e) => s + e.lokal, 0);
+      baseEntry.output = entries.reduce((s, e) => s + e.output, 0);
+      baseEntry.yield_primary = baseEntry.input > 0 ? baseEntry.utama / baseEntry.input : 0;
+      baseEntry.achievement = entries.reduce((s, e) => s + e.achievement, 0) / entries.length;
+    }
+
+    return { ...baseEntry, machine: m.label, short: m.short } as Calculation;
   }).filter(Boolean) as Calculation[];
 
   const allDisplayData = [...bsData, ...mainStations];
@@ -113,8 +137,10 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
   const avgAchievement = bsData.length > 0 ? (bsData.reduce((acc, curr) => acc + curr.achievement, 0) / bsData.length) * 100 : 0;
 
   // Analysis Logic
-  const topMachine = [...bsData].sort((a, b) => b.yield_primary - a.yield_primary)[0];
-  const lowMachine = [...bsData].sort((a, b) => a.yield_primary - b.yield_primary)[0];
+  const getCalcYield = (m: any) => m.input > 0 ? (m.utama / m.input) * 100 : 0;
+  
+  const topMachine = [...bsData].sort((a, b) => getCalcYield(b) - getCalcYield(a))[0];
+  const lowMachine = [...bsData].sort((a, b) => getCalcYield(a) - getCalcYield(b))[0];
   const topOutputMachine = [...bsData].sort((a, b) => b.output - a.output)[0];
   const lowOutputMachine = [...bsData].sort((a, b) => a.output - b.output)[0];
 
@@ -217,25 +243,38 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                       if (posB !== -1) return 1;
                       
                       return a.machine.localeCompare(b.machine);
-                    }).map((item) => (
-                      <tr key={item.id} className="hover:bg-blue-900/20 transition-colors">
-                        <td className="px-3 py-4 border-r border-blue-900/50">
-                          <span className="text-[10px] font-black text-slate-200 uppercase tracking-tighter leading-none">{item.machine}</span>
-                        </td>
-                        <td className="px-3 py-4 text-center border-r border-blue-900/50">
-                          <span className="text-[11px] font-black text-blue-400 tracking-tighter">{item.input.toFixed(1)}</span>
-                        </td>
-                        <td className="px-3 py-4 text-center border-r border-blue-900/50">
-                          <span className="text-[11px] font-black text-white tracking-tighter">{(item.yield_primary * 100).toFixed(1)}%</span>
-                        </td>
-                        <td className="px-3 py-4 text-center border-r border-blue-900/50">
-                          <span className="text-[11px] font-black text-green-400 tracking-tighter">{item.output.toFixed(1)}</span>
-                        </td>
-                        <td className="px-3 py-4 text-center">
-                          <span className="text-[11px] font-black text-white">{(item.achievement * 100).toFixed(0)}</span>
-                        </td>
-                      </tr>
-                    ))}
+                    }).map((item) => {
+                      const yieldVal = getCalcYield(item);
+                      const achievementVal = Math.min(10, item.achievement * 10);
+                      
+                      return (
+                        <tr key={item.id} className="hover:bg-blue-900/20 transition-colors">
+                          <td className="px-3 py-4 border-r border-blue-900/50">
+                            <span className="text-[10px] font-black text-slate-200 uppercase tracking-tighter leading-none">{item.machine}</span>
+                          </td>
+                          <td className="px-3 py-4 text-center border-r border-blue-900/50">
+                            <span className="text-[11px] font-black text-blue-400 tracking-tighter">
+                              {item.input.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          </td>
+                          <td className="px-3 py-4 text-center border-r border-blue-900/50">
+                            <span className="text-[11px] font-black text-white tracking-tighter">
+                              {yieldVal.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
+                            </span>
+                          </td>
+                          <td className="px-3 py-4 text-center border-r border-blue-900/50">
+                            <span className="text-[11px] font-black text-green-400 tracking-tighter">
+                              {item.output.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          </td>
+                          <td className="px-3 py-4 text-center">
+                            <span className="text-[11px] font-black text-white">
+                              {achievementVal.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -257,7 +296,9 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                            </div>
                            <p className="text-[8px] font-black text-green-400 uppercase tracking-widest">UTAMA ↑</p>
                         </div>
-                        <p className="text-lg font-black text-green-400 font-mono tracking-tighter">{(topMachine.yield_primary * 100).toFixed(1)}%</p>
+                        <p className="text-lg font-black text-green-400 font-mono tracking-tighter">
+                          {getCalcYield(topMachine).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
+                        </p>
                       </div>
                       <div className="flex items-center justify-between">
                         <p className="text-xl font-black text-slate-100 leading-none">{topMachine.machine}</p>
@@ -275,7 +316,9 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                            </div>
                            <p className="text-[8px] font-black text-orange-400 uppercase tracking-widest">UTAMA ↓</p>
                         </div>
-                        <p className="text-lg font-black text-orange-400 font-mono tracking-tighter">{(lowMachine.yield_primary * 100).toFixed(1)}%</p>
+                        <p className="text-lg font-black text-orange-400 font-mono tracking-tighter">
+                          {getCalcYield(lowMachine).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
+                        </p>
                       </div>
                       <div className="flex items-center justify-between">
                         <p className="text-xl font-black text-slate-100 leading-none">{lowMachine.machine}</p>
@@ -296,7 +339,9 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                            </div>
                            <p className="text-[8px] font-black text-blue-400 uppercase tracking-widest">OUTPUT ↑</p>
                         </div>
-                        <p className="text-lg font-black text-blue-400 font-mono tracking-tighter">{Math.round(topOutputMachine.output).toLocaleString()}</p>
+                        <p className="text-lg font-black text-blue-400 font-mono tracking-tighter">
+                          {topOutputMachine.output.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
                       </div>
                       <div className="flex items-center justify-between">
                         <p className="text-xl font-black text-slate-100 leading-none">{topOutputMachine.machine}</p>
@@ -314,7 +359,9 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                            </div>
                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">OUTPUT ↓</p>
                         </div>
-                        <p className="text-lg font-black text-slate-200 font-mono tracking-tighter">{Math.round(lowOutputMachine.output).toLocaleString()}</p>
+                        <p className="text-lg font-black text-slate-200 font-mono tracking-tighter">
+                          {lowOutputMachine.output.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
                       </div>
                       <div className="flex items-center justify-between">
                         <p className="text-xl font-black text-slate-100 leading-none">{lowOutputMachine.machine}</p>

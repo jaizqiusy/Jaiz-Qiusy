@@ -18,6 +18,12 @@ const TARGET_MACHINES = [
   "BREAK"
 ];
 
+const MACHINE_ALIASES: Record<string, string[]> = {
+  "PONI A": ["PONIA", "PONI A", "PONI_A"],
+  "PONI B": ["PONIB", "PONI B", "PONI_B"],
+  "BREAK": ["BREAKDOWN", "BREAK", "BD", "SYSTEM", "DOWNTIME"]
+};
+
 interface MachineCardProps {
   key?: string | number;
   summary: any;
@@ -50,15 +56,15 @@ function DetailTable({ data }: { data: Calculation[] }) {
                 {new Date(item.date).toLocaleDateString("id-ID", { day: '2-digit', month: '2-digit' })}
               </td>
               <td className="px-3 py-2.5 font-black text-indigo-900 whitespace-nowrap">{item.machine}</td>
-              <td className="px-3 py-2.5">{item.input.toFixed(2)}</td>
-              <td className="px-3 py-2.5">{item.utama.toFixed(2)}</td>
-              <td className="px-3 py-2.5 font-bold">{(item.yield_primary * 100).toFixed(1)}%</td>
-              <td className="px-3 py-2.5">{item.turunan.toFixed(2)}</td>
-              <td className="px-3 py-2.5">{(item.yield_secondary * 100).toFixed(1)}%</td>
-              <td className="px-3 py-2.5">{item.lokal.toFixed(2)}</td>
-              <td className="px-3 py-2.5 font-bold">{item.output.toFixed(2)}</td>
-              <td className="px-3 py-2.5 font-black text-green-600">{(item.yield_total * 100).toFixed(1)}%</td>
-              <td className="px-3 py-2.5">{(item.achievement * 100).toFixed(0)}</td>
+              <td className="px-3 py-2.5 whitespace-nowrap">{item.input.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td className="px-3 py-2.5 whitespace-nowrap">{item.utama.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td className="px-3 py-2.5 font-bold whitespace-nowrap">{(item.yield_primary * 100).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</td>
+              <td className="px-3 py-2.5 whitespace-nowrap">{item.turunan.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td className="px-3 py-2.5 whitespace-nowrap">{(item.yield_secondary * 100).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</td>
+              <td className="px-3 py-2.5 whitespace-nowrap">{item.lokal.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td className="px-3 py-2.5 font-bold whitespace-nowrap">{item.output.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td className="px-3 py-2.5 font-black text-green-600 whitespace-nowrap">{(item.yield_total * 100).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</td>
+              <td className="px-3 py-2.5 whitespace-nowrap">{Math.min(10, item.achievement * 10).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
             </tr>
           ))}
         </tbody>
@@ -77,12 +83,14 @@ function MachineCard({ summary, index }: MachineCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03 }}
       className={cn(
-        "bg-white p-5 rounded-3xl shadow-sm border transition-all relative overflow-hidden",
-        hasData ? "border-gray-100 hover:border-indigo-300" : "border-gray-50 opacity-60"
+        "p-5 rounded-3xl shadow-xl border transition-all relative overflow-hidden",
+        hasData 
+          ? "bg-[#0f172a] border-blue-900/30 hover:border-blue-700/50" 
+          : "bg-[#0f172a]/40 border-blue-900/10 opacity-60"
       )}
     >
       {!hasData && (
-        <div className="absolute top-3 right-4 bg-gray-200 px-2 py-0.5 rounded text-[8px] font-bold text-gray-400 uppercase">
+        <div className="absolute top-3 right-4 bg-blue-900/30 px-2 py-0.5 rounded text-[8px] font-bold text-slate-500 uppercase border border-blue-800/30">
           No Data
         </div>
       )}
@@ -90,20 +98,22 @@ function MachineCard({ summary, index }: MachineCardProps) {
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
           <div className={cn(
-            "p-3 rounded-2xl font-black text-sm w-12 h-12 flex items-center justify-center",
-            hasData ? "bg-indigo-100 text-indigo-900" : "bg-gray-50 text-gray-300"
+            "p-3 rounded-2xl font-black text-sm w-12 h-12 flex items-center justify-center border",
+            hasData 
+              ? "bg-blue-900/50 text-blue-200 border-blue-800/50" 
+              : "bg-slate-800/50 text-slate-600 border-slate-700/30"
           )}>
             {summary.machine.split(" ").pop()}
           </div>
           <div>
-            <p className="text-sm font-black text-gray-800">{summary.machine}</p>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{summary.line}</p>
+            <p className="text-sm font-black text-white">{summary.machine}</p>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{summary.line}</p>
           </div>
         </div>
         {hasData && summary.latestDate && (
           <div className="text-right">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Terakhir</p>
-            <p className="text-[10px] font-black text-gray-600">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none mb-1">Terakhir</p>
+            <p className="text-[10px] font-black text-blue-400">
               {new Date(summary.latestDate).toLocaleDateString("id-ID", { day: 'numeric', month: 'short' })}
             </p>
           </div>
@@ -112,28 +122,28 @@ function MachineCard({ summary, index }: MachineCardProps) {
 
       <div className="grid grid-cols-3 gap-3">
         <div className="flex flex-col">
-          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Input</p>
-          <p className="text-sm font-black">{summary.totalInput.toLocaleString("id-ID")} <span className="text-[10px] font-normal">M3</span></p>
+          <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Input</p>
+          <p className="text-sm font-black text-white">{summary.totalInput.toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[10px] font-normal text-slate-500">M3</span></p>
         </div>
         <div className="flex flex-col">
-          <p className="text-[9px] font-bold text-indigo-800 uppercase tracking-wider mb-1">Avg Yield</p>
-          <p className="text-sm font-black text-indigo-900">{avgYield.toFixed(2)}%</p>
+          <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider mb-1">Avg Yield</p>
+          <p className="text-sm font-black text-indigo-300">{avgYield.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</p>
         </div>
         <div className="flex flex-col">
-          <p className="text-[9px] font-bold text-orange-600 uppercase tracking-wider mb-1">Total Output</p>
-          <p className="text-sm font-black text-orange-700">{summary.totalOutput.toLocaleString("id-ID")} <span className="text-[10px] font-normal">M3</span></p>
+          <p className="text-[9px] font-bold text-orange-400 uppercase tracking-wider mb-1">Total Output</p>
+          <p className="text-sm font-black text-orange-300">{summary.totalOutput.toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[10px] font-normal text-slate-500">M3</span></p>
         </div>
       </div>
 
       {hasData && (
-        <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
+        <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <TrendingUp size={12} className="text-green-500" />
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
               {summary.count} Kali Produksi
             </p>
           </div>
-          <ChevronRight size={16} className="text-gray-300 group-hover:text-indigo-500 transition-colors" />
+          <ChevronRight size={16} className="text-slate-600 group-hover:text-blue-400 transition-colors" />
         </div>
       )}
     </motion.div>
@@ -192,9 +202,30 @@ export default function History({ history, selectedDate }: HistoryProps) {
     });
 
     filtered.forEach(calc => {
-      const machineKey = calc.machine.toUpperCase().replace(/\s/g, "");
-      // Map variations like "BS 1" to "BS1" for lookup
-      const targetKey = TARGET_MACHINES.find(tm => tm.replace(/\s/g, "") === machineKey);
+      const machineName = calc.machine.toUpperCase();
+      const machineKeyNoSpace = machineName.replace(/\s/g, "");
+      
+      // Try to find matching target machine
+      const targetKey = TARGET_MACHINES.find(tm => {
+        const tmUpper = tm.toUpperCase();
+        const tmNoSpace = tmUpper.replace(/\s/g, "");
+        
+        // Direct match
+        if (tmNoSpace === machineKeyNoSpace) return true;
+        
+        // Alias match
+        const aliases = MACHINE_ALIASES[tm];
+        if (aliases) {
+          return aliases.some(alias => {
+            const aliasUpper = alias.toUpperCase();
+            return machineName === aliasUpper || 
+                   machineKeyNoSpace === aliasUpper.replace(/\s/g, "") ||
+                   machineName.includes(aliasUpper);
+          });
+        }
+        
+        return false;
+      });
       
       if (targetKey) {
         const existing = summaryMap.get(targetKey);

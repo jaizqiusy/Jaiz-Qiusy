@@ -64,7 +64,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
     const tTurunan = machineEntries.reduce((acc, curr) => acc + curr.turunan, 0);
     const tLokal = machineEntries.reduce((acc, curr) => acc + curr.lokal, 0);
     const tOutput = machineEntries.reduce((acc, curr) => acc + curr.output, 0);
-    const tAchievement = machineEntries.length > 0 ? (machineEntries.reduce((acc, curr) => acc + curr.achievement, 0) / machineEntries.length) * 100 : 0;
+    const tAchievement = machineEntries.length > 0 ? (machineEntries.reduce((acc, curr) => acc + curr.achievement, 0) / machineEntries.length) * 10 : 0;
     const aYield = tInput > 0 ? (tUtama / tInput) * 100 : 0;
 
     return {
@@ -76,7 +76,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
       utama: tUtama,
       turunan: tTurunan,
       lokal: tLokal,
-      achievement: tAchievement
+      achievement: Math.min(10, tAchievement)
     };
   });
 
@@ -84,18 +84,25 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
 
   // Main Machines (Poni A, Poni B, Breakdown)
   const mainMachines = [
-    { id: "PA", name: "Poni A", line: "Line 1", color: "text-blue-600", bg: "bg-blue-100", search: "PONIA" },
-    { id: "PB", name: "Poni B", line: "Line 2", color: "text-green-600", bg: "bg-green-100", search: "PONIB" },
-    { id: "BD", name: "Break", line: "System", color: "text-red-600", bg: "bg-red-100", search: "BREAKDOWN" }
+    { id: "PA", name: "Poni A", line: "Line 1", color: "text-blue-600", bg: "bg-blue-100", search: ["PONIA", "PONI A", "PONI_A"] },
+    { id: "PB", name: "Poni B", line: "Line 2", color: "text-green-600", bg: "bg-green-100", search: ["PONIB", "PONI B", "PONI_B"] },
+    { id: "BD", name: "Break", line: "System", color: "text-red-600", bg: "bg-red-100", search: ["BREAKDOWN", "BREAK", "BD", "SYSTEM", "DOWNTIME"] }
   ].map(m => {
-    const machineEntries = filteredHistory.filter(item => item.machine.replace(/\s/g, "").toUpperCase() === m.search);
+    const machineEntries = filteredHistory.filter(item => {
+      const mName = item.machine.toUpperCase();
+      return m.search.some(s => 
+        mName === s.toUpperCase() || 
+        mName === s.replace(/\s/g, "").toUpperCase() ||
+        mName.includes(s.toUpperCase())
+      );
+    });
     
     const tInput = machineEntries.reduce((acc, curr) => acc + curr.input, 0);
     const tUtama = machineEntries.reduce((acc, curr) => acc + curr.utama, 0);
     const tTurunan = machineEntries.reduce((acc, curr) => acc + curr.turunan, 0);
     const tLokal = machineEntries.reduce((acc, curr) => acc + curr.lokal, 0);
     const tOutput = machineEntries.reduce((acc, curr) => acc + curr.output, 0);
-    const tAchievement = machineEntries.length > 0 ? (machineEntries.reduce((acc, curr) => acc + curr.achievement, 0) / machineEntries.length) * 100 : 0;
+    const tAchievement = machineEntries.length > 0 ? (machineEntries.reduce((acc, curr) => acc + curr.achievement, 0) / machineEntries.length) * 10 : 0;
     const aYield = tInput > 0 ? (tUtama / tInput) * 100 : 0;
 
     return {
@@ -107,7 +114,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
       output: tOutput,
       yield: aYield,
       active: tOutput > 0,
-      achievement: tAchievement
+      achievement: Math.min(10, tAchievement)
     };
   });
 
@@ -158,7 +165,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
       <div className="grid grid-cols-2 gap-3">
         <StatCard 
           label="Total Input"
-          value={totalInput.toLocaleString("id-ID")}
+          value={totalInput.toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           unit="M3"
           icon={<Download className="text-white" size={24} />}
           gradient="from-blue-600 to-blue-800"
@@ -166,7 +173,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
         />
         <StatCard 
           label="Total Output"
-          value={totalOutput.toLocaleString("id-ID")}
+          value={totalOutput.toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           unit="M3"
           icon={<Upload className="text-white" size={24} />}
           gradient="from-green-600 to-green-800"
@@ -174,7 +181,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
         />
         <StatCard 
           label="UTAMA"
-          value={avgRendemen.toFixed(2)}
+          value={avgRendemen.toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           unit="%"
           subLabel={selectedMachine === "ALL" ? "BS 1 - 8" : selectedMachine}
           icon={<TrendingUp className="text-white" size={24} />}
@@ -253,7 +260,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                       item.active ? "text-slate-900" : "text-slate-300"
                     )}
                   >
-                    {item.yield.toFixed(1)}
+                    {item.yield.toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     <span className="text-[9px] font-bold ml-0.5">%</span>
                   </p>
                 </div>
@@ -280,46 +287,45 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
             {mainMachines.map((item) => (
               <motion.div 
                 key={item.id} 
-                whileHover={item.active ? { x: 4, backgroundColor: "#fff" } : {}}
+                whileHover={item.active ? { x: 4, backgroundColor: "#0f172a" } : {}}
                 whileTap={item.active ? { scale: 0.98 } : {}}
                 onClick={() => item.active && setDetailMachine(item)}
                 className={cn(
                   "flex items-center justify-between p-3 rounded-[20px] border transition-all",
                   item.active 
-                    ? "bg-white border-gray-100 shadow-sm cursor-pointer hover:border-gray-200" 
-                    : "bg-gray-50 border-gray-50 opacity-40 grayscale"
+                    ? "bg-[#0f172a] border-blue-900/30 shadow-lg cursor-pointer hover:border-blue-700/50" 
+                    : "bg-[#0f172a]/40 border-blue-900/10 opacity-40 grayscale"
                 )}
               >
                 <div className="flex items-center gap-3">
                   <div className={cn(
-                    item.bg, 
-                    item.color, 
-                    "p-2 rounded-xl font-black text-xs w-10 h-10 flex items-center justify-center shadow-inner border border-white/50"
+                    item.active ? "bg-blue-900/50 text-blue-200 border-blue-800/50" : "bg-slate-800/50 text-slate-600 border-slate-700/30", 
+                    "p-2 rounded-xl font-black text-xs w-10 h-10 flex items-center justify-center shadow-inner border"
                   )}>
                     {item.id}
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <p className="text-base font-black text-slate-900 leading-none tracking-tight">{item.name}</p>
+                      <p className="text-base font-black text-white leading-none tracking-tight">{item.name}</p>
                       {item.active && <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />}
                     </div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">
                       {item.line}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <p className="text-sm font-black text-slate-900 leading-none tracking-tighter">
-                      {item.output.toLocaleString("id-ID")}
+                    <p className="text-sm font-black text-white leading-none tracking-tighter">
+                      {item.output.toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
-                    <p className="text-[8px] font-black text-slate-400 uppercase mt-0.5">OUTPUT</p>
+                    <p className="text-[8px] font-black text-slate-500 uppercase mt-0.5">OUTPUT</p>
                   </div>
                   <div className={cn(
-                    "min-w-[50px] text-center px-2 py-1.5 rounded-xl text-[10px] font-black",
-                    item.active ? "bg-indigo-50 text-indigo-700" : "bg-gray-100 text-gray-400"
+                    "min-w-[50px] text-center px-2 py-1.5 rounded-xl text-[10px] font-black border",
+                    item.active ? "bg-indigo-900/40 text-indigo-300 border-indigo-800/50" : "bg-slate-800/30 text-slate-600 border-slate-700/30"
                   )}>
-                    {item.yield.toFixed(1)}%
+                    {item.yield.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
                   </div>
                 </div>
               </motion.div>
@@ -369,26 +375,26 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   <div className="bg-blue-50 p-2 rounded-2xl border border-blue-100">
                     <p className="text-[8px] font-bold text-blue-400 uppercase tracking-widest mb-0.5">Total Input</p>
-                    <p className="text-lg font-black text-blue-700">{detailMachine.input.toFixed(2)} <span className="text-[8px] font-normal">M3</span></p>
+                    <p className="text-lg font-black text-blue-700">{detailMachine.input.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[8px] font-normal">M3</span></p>
                   </div>
                   <div className="bg-green-50 p-2 rounded-2xl border border-green-100">
                     <p className="text-[8px] font-bold text-green-400 uppercase tracking-widest mb-0.5">Total Output</p>
-                    <p className="text-lg font-black text-green-700">{detailMachine.output.toFixed(2)} <span className="text-[8px] font-normal">M3</span></p>
+                    <p className="text-lg font-black text-green-700">{detailMachine.output.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[8px] font-normal">M3</span></p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 mb-2">
                   <div className="bg-gray-50 p-1.5 rounded-xl border border-gray-100 text-center">
                     <p className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mb-0.5">Utama</p>
-                    <p className="text-[10px] font-black text-gray-800">{detailMachine.utama.toFixed(2)}</p>
+                    <p className="text-[10px] font-black text-gray-800">{detailMachine.utama.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   </div>
                   <div className="bg-gray-50 p-1.5 rounded-xl border border-gray-100 text-center">
                     <p className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mb-0.5">Turunan</p>
-                    <p className="text-[10px] font-black text-gray-800">{detailMachine.turunan.toFixed(2)}</p>
+                    <p className="text-[10px] font-black text-gray-800">{detailMachine.turunan.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   </div>
                   <div className="bg-gray-50 p-1.5 rounded-xl border border-gray-100 text-center">
                     <p className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mb-0.5">Lokal</p>
-                    <p className="text-[10px] font-black text-gray-800">{detailMachine.lokal.toFixed(2)}</p>
+                    <p className="text-[10px] font-black text-gray-800">{detailMachine.lokal.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   </div>
                 </div>
 
@@ -400,7 +406,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                     </div>
                     <div className="flex items-baseline gap-0.5">
                       <p className="text-xl font-black tracking-tighter">
-                        {detailMachine.yield.toFixed(2)}
+                        {detailMachine.yield.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         <span className="text-[10px] font-bold ml-0.5">%</span>
                       </p>
                     </div>
@@ -414,7 +420,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                     </div>
                     <div className="flex items-baseline gap-0.5">
                       <p className="text-xl font-black tracking-tighter">
-                        {(detailMachine.input > 0 ? (detailMachine.output / detailMachine.input) * 100 : 0).toFixed(2)}
+                        {(detailMachine.input > 0 ? (detailMachine.output / detailMachine.input) * 100 : 0).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         <span className="text-[10px] font-bold ml-0.5">%</span>
                       </p>
                     </div>
