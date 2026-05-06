@@ -28,6 +28,7 @@ import Dashboard from "./components/Dashboard";
 import History from "./components/History";
 import Performance from "./components/Performance";
 import Analysis from "./components/Analysis";
+import { sendWhatsAppNotification } from "./services/notificationService";
 
 export type Calculation = {
   id: string;
@@ -136,6 +137,9 @@ export default function App() {
       });
 
       setSyncSuccess(true);
+      // Trigger WA Notification
+      sendWhatsAppNotification(mappedHistory).catch(e => console.error("WA Notify Error:", e));
+      
       setLastSync(new Date().toLocaleString("id-ID", { 
         day: '2-digit', 
         month: '2-digit', 
@@ -190,7 +194,10 @@ export default function App() {
       date: new Date().toISOString(),
       timestamp: Date.now(),
     };
-    setHistory([newCalc, ...history]);
+    const updatedHistory = [newCalc, ...history];
+    setHistory(updatedHistory);
+    // WhatsApp Notification for manual entry
+    sendWhatsAppNotification([newCalc]).catch(e => console.error("WA Notify Error:", e));
   };
 
   const deleteCalculation = (id: string) => {

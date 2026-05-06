@@ -14,13 +14,15 @@ import {
   X,
   Info,
   Activity,
-  RefreshCw
+  RefreshCw,
+  Send
 } from "lucide-react";
 import { Calculation } from "../App";
 import { cn } from "../lib/utils";
 import PeriodicSummary from "./PeriodicSummary";
 import PerformanceCharts from "./PerformanceCharts";
 import { motion, AnimatePresence } from "motion/react";
+import { sendCustomWhatsAppNotification } from "../services/notificationService";
 
 interface DashboardProps {
   history: Calculation[];
@@ -32,6 +34,21 @@ interface DashboardProps {
 export default function Dashboard({ history, filteredHistory, selectedDate, onDateChange }: DashboardProps) {
   const [selectedMachine, setSelectedMachine] = useState("ALL");
   const [detailMachine, setDetailMachine] = useState<any | null>(null);
+  const [isSendingWA, setIsSendingWA] = useState(false);
+
+  const handleSendWA = async () => {
+    if (!window.confirm("Kirim notifikasi ke grup WhatsApp?")) return;
+    try {
+      setIsSendingWA(true);
+      const appUrl = window.location.origin;
+      await sendCustomWhatsAppNotification(`*Notifikasi RendemenKu*\nRendemen sudah selesai di input silahkan cek untuk review dan analisa\n\n${appUrl}`);
+      alert("Notifikasi WA berhasil dikirim!");
+    } catch (error) {
+      alert("Gagal mengirim Notifikasi WA.");
+    } finally {
+      setIsSendingWA(false);
+    }
+  };
 
   const machines = [
     "ALL",
@@ -143,7 +160,7 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
         </div>
 
         {/* Machine Filter Chips */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+        <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar mb-2">
           {machines.map(m => (
             <button
               key={m}
@@ -158,6 +175,18 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
               {m}
             </button>
           ))}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <button 
+            onClick={handleSendWA}
+            disabled={isSendingWA}
+            className="flex-1 py-2.5 px-4 bg-[#25D366] text-white rounded-[14px] text-[10px] font-black uppercase tracking-widest hover:bg-[#20bd5a] transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-200"
+          >
+            <Send size={16} className={cn(isSendingWA ? "animate-bounce" : "")} />
+            {isSendingWA ? "Mengirim..." : "Kirim Notif Selesai (WA)"}
+          </button>
         </div>
       </div>
 
