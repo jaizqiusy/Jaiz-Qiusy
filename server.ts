@@ -20,8 +20,8 @@ async function startServer() {
   app.post("/api/notify-wa", async (req, res) => {
     try {
       const { message, target } = req.body;
-      const FONNTE_TOKEN = process.env.FONNTE_TOKEN || "ZMmGJ6dN3ZB8qCNKUMMn";
-      const DEFAULT_TARGET = process.env.FONNTE_TARGET_PHONE || target || "6285725766343,6282165053509,62895323091432,6281276267423";
+      const FONNTE_TOKEN = "ZMmGJ6dN3ZB8qCNKUMMn";
+      const DEFAULT_TARGET = "6285725766343,6282165053509,62895323091432,6281276267423";
 
       if (!FONNTE_TOKEN) {
         console.error("FONNTE_TOKEN is not set");
@@ -71,7 +71,7 @@ async function startServer() {
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`Fonnte target: ${process.env.FONNTE_TARGET_PHONE || "Not set"}`);
+    console.log(`Fonnte target (hardcoded updated version v2)`);
   });
 }
 

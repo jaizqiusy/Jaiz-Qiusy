@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Calculator as CalcIcon, 
@@ -81,20 +81,41 @@ export default function App() {
     return calcDate === selectedDate;
   });
 
-  const handleSync = async () => {
-    if (isSyncing) return;
+  const selectedDateRef = useRef(selectedDate);
+  useEffect(() => {
+    selectedDateRef.current = selectedDate;
+  }, [selectedDate]);
+
+  const isSyncingRef = useRef(false);
+
+  const handleSync = useCallback(async (isAutoRefresh = false) => {
+    if (isSyncingRef.current) return;
     
+    isSyncingRef.current = true;
     setIsSyncing(true);
-    setSyncError(null);
-    setSyncSuccess(false);
-    
+    if (!isAutoRefresh) setSyncError(null);
+    if (!isAutoRefresh) setSyncSuccess(false);
+
     try {
       const data = await fetchSheetData();
       
       if (data.length === 0) {
-        setSyncError("Tidak ada data ditemukan di Google Sheet.");
+        if (!isAutoRefresh) setSyncError("Tidak ada data ditemukan di Google Sheet.");
+        setIsSyncing(false);
+        isSyncingRef.current = false;
         return;
       }
+
+      const currentDataStr = JSON.stringify(data);
+      const prevDataStr = localStorage.getItem("rendemen_last_raw_data");
+      
+      if (isAutoRefresh && prevDataStr === currentDataStr) {
+        setIsSyncing(false);
+        isSyncingRef.current = false;
+        return; // No changes detected
+      }
+      
+      localStorage.setItem("rendemen_last_raw_data", currentDataStr);
 
       const mappedHistory: Calculation[] = data.map(item => ({
         id: `sheet-${item.tanggal}-${item.mesin}-${item.input}-${item.output}`,
@@ -118,16 +139,13 @@ export default function App() {
         timestamp: new Date(item.tanggal).getTime() || Date.now()
       }));
       
-      // Refresh logic: Replace all existing sheet entries with the new ones from the sheet
-      // while preserving manual entries (those not starting with 'sheet-')
       setHistory(prev => {
         const manualEntries = prev.filter(p => !p.id.startsWith('sheet-'));
         const merged = [...mappedHistory, ...manualEntries].sort((a, b) => b.timestamp - a.timestamp);
         
-        // If current selected date has no data, try to select the latest date from merged data
         if (merged.length > 0) {
           const latestDate = merged[0].date.includes('T') ? merged[0].date.split('T')[0] : merged[0].date;
-          const currentHasData = merged.some(item => (item.date.includes('T') ? item.date.split('T')[0] : item.date) === selectedDate);
+          const currentHasData = merged.some(item => (item.date.includes('T') ? item.date.split('T')[0] : item.date) === selectedDateRef.current);
           if (!currentHasData) {
             setSelectedDate(latestDate);
           }
@@ -136,9 +154,16 @@ export default function App() {
         return merged;
       });
 
-      setSyncSuccess(true);
-      // Trigger WA Notification
-      sendWhatsAppNotification(mappedHistory).catch(e => console.error("WA Notify Error:", e));
+      if (!isAutoRefresh) setSyncSuccess(true);
+      
+      if (prevDataStr !== currentDataStr) {
+        if (prevDataStr !== null || !isAutoRefresh) {
+          // Send notification if it's an actual update, or if manual sync is forcibly triggered
+          sendWhatsAppNotification(mappedHistory).catch(e => console.error("WA Notify Error:", e));
+        }
+      } else if (!isAutoRefresh) {
+        sendWhatsAppNotification(mappedHistory).catch(e => console.error("WA Notify Error:", e));
+      }
       
       setLastSync(new Date().toLocaleString("id-ID", { 
         day: '2-digit', 
@@ -147,20 +172,35 @@ export default function App() {
         hour: '2-digit', 
         minute: '2-digit' 
       }));
-      setTimeout(() => setSyncSuccess(false), 3000);
+      
+      if (!isAutoRefresh) {
+        setTimeout(() => setSyncSuccess(false), 3000);
+      }
     } catch (err: any) {
       console.error("Sync Error:", err);
-      let message = err.message || "Gagal sinkronisasi data.";
-      
-      if (message === "Failed to fetch") {
-        message = "Gagal terhubung ke Google Sheets. Pastikan Sheet sudah di-share (Anyone with the link can view) dan koneksi internet stabil.";
+      if (!isAutoRefresh) {
+        let message = err.message || "Gagal sinkronisasi data.";
+        if (message === "Failed to fetch") {
+          message = "Gagal terhubung ke Google Sheets. Pastikan Sheet sudah di-share (Anyone with the link can view) dan koneksi internet stabil.";
+        }
+        setSyncError(message);
       }
-      
-      setSyncError(message);
     } finally {
       setIsSyncing(false);
+      isSyncingRef.current = false;
     }
-  };
+  }, []);
+
+  // Auto Refresh Polling (every 60 seconds)
+  useEffect(() => {
+    // Initial fetch on mount
+    handleSync(true);
+    
+    const interval = setInterval(() => {
+      handleSync(true);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [handleSync]);
 
   const [lastSync, setLastSync] = useState<string | null>(null);
 
@@ -262,7 +302,7 @@ export default function App() {
               </div>
             )}
             <button 
-              onClick={handleSync}
+              onClick={() => handleSync(false)}
               disabled={isSyncing}
               className={cn(
                 "p-2 text-white/70 hover:text-white transition-all rounded-full hover:bg-white/10 flex items-center gap-2",

@@ -41,7 +41,9 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
     try {
       setIsSendingWA(true);
       const appUrl = window.location.origin;
-      await sendCustomWhatsAppNotification(`*Notifikasi RendemenKu*\nRendemen sudah selesai di input silahkan cek untuk review dan analisa\n\n${appUrl}`);
+      const dateStr = new Date().toLocaleDateString("id-ID");
+      const msg = `🚀 RENDEMENKU SUDAH UPDATE 🚀\n📅 Tanggal: ${dateStr}\n** SILAHKAN CEK ,REVIEW DAN ANALISA **\n** RENDEMEN TINGGI BUKAN SEKEDAR ANGKA TAPI BUKTI DARI KERJA KERAS KITA DALAM MENGOPTIMALKAN SETIAP SERPIHAN KAYU **\nBERSAMA KITA BISA\n\n${appUrl}`;
+      await sendCustomWhatsAppNotification(msg);
       alert("Notifikasi WA berhasil dikirim!");
     } catch (error) {
       alert("Gagal mengirim Notifikasi WA.");
