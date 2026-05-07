@@ -1,9 +1,9 @@
 import axios from "axios";
 import { Calculation } from "../App";
+import { DowntimeData } from "./sheetService";
 
 export async function sendWhatsAppNotification(data: Calculation[]) {
   if (data.length === 0) return;
-
   // Mengambil 3 data terakhir yang valid (ada input atau output)
   const latest = [...data]
     .filter(item => item.input > 0 || item.output > 0)
@@ -19,38 +19,24 @@ export async function sendWhatsAppNotification(data: Calculation[]) {
   msg += "BERSAMA KITA BISA\n\n";
   msg += typeof window !== "undefined" ? window.location.origin : "https://jaiz-qiusy.vercel.app";
 
-  const FONNTE_TOKEN = "ZMmGJ6dN3ZB8qCNKUMMn";
-  const DEFAULT_TARGET = "6285725766343,6282165053509,62895323091432,6281276267423";
+  return sendCustomWhatsAppNotification(msg);
+}
 
-  try {
-    // Try calling Fonnte directly (bypasses backend, works perfectly if no CORS restriction)
-    const response = await axios.post(
-      "https://api.fonnte.com/send",
-      { target: DEFAULT_TARGET, message: msg, delay: "2", countryCode: "62" },
-      { headers: { Authorization: FONNTE_TOKEN } }
-    );
-    console.log("Direct WA Notification response:", response.data);
-    if (response.data && response.data.status === false) {
-       throw new Error(response.data.reason || "Fonnte API returned status false");
-    }
-    return response.data;
-  } catch (error) {
-    console.info("Direct call failed, trying local API as fallback...", error);
-    // Fallback to our existing /api/notify-wa route (works in AI Studio and via Vercel functions)
-    try {
-      const response = await axios.post("/api/notify-wa", {
-        message: msg
-      });
-      console.log("Fallback WA Notification response:", response.data);
-      if (response.data && response.data.data && response.data.data.status === false) {
-         throw new Error(response.data.data.reason || "Fonnte API returned status false");
-      }
-      return response.data;
-    } catch (fallbackError) {
-      console.error("Failed to send WA notification via fallback:", fallbackError);
-      throw fallbackError;
-    }
-  }
+export async function sendDowntimeNotification(data: DowntimeData[]) {
+  if (data.length === 0) return;
+  
+  const todayDate = new Date().toISOString().split('T')[0];
+  const todaysDowntime = data.filter(d => d.tanggal === todayDate);
+  
+  if (todaysDowntime.length === 0) return;
+
+  let msg = "⚠️ UPDATE DOWNTIME MESIN ⚠️\n";
+  msg += `📅 Tanggal: ${new Date().toLocaleDateString("id-ID")}\n\n`;
+  msg += `Ada ${todaysDowntime.length} catatan downtime hari ini.\n`;
+  msg += "Segera periksa dan lakukan tindakan yang diperlukan untuk minimalisir waktu henti.\n\n";
+  msg += typeof window !== "undefined" ? window.location.origin : "https://jaiz-qiusy.vercel.app";
+
+  return sendCustomWhatsAppNotification(msg);
 }
 
 export async function sendCustomWhatsAppNotification(message: string) {

@@ -1,0 +1,1 @@
+fetch("https://docs.google.com/spreadsheets/d/1G7x3dtE2KFF338w6qdd4jrMkz-yrbThlzx5Vi0I8AqQ/gviz/tq?tqx=out:csv&sheet=Downtime").then(r=>r.text()).then(d=>console.log(d.split('\\n').slice(0, 5).join('\\n')));

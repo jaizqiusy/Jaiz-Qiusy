@@ -17,10 +17,11 @@ import {
   RefreshCw,
   BarChart3,
   Package,
-  Layers
+  Layers,
+  Clock
 } from "lucide-react";
 import { cn } from "./lib/utils";
-import { fetchSheetData } from "./services/sheetService";
+import { fetchSheetData, fetchDowntimeData, DowntimeData } from "./services/sheetService";
 
 // Components
 import Calculator from "./components/Calculator";
@@ -28,7 +29,8 @@ import Dashboard from "./components/Dashboard";
 import History from "./components/History";
 import Performance from "./components/Performance";
 import Analysis from "./components/Analysis";
-import { sendWhatsAppNotification } from "./services/notificationService";
+import Downtime from "./components/Downtime";
+import { sendWhatsAppNotification, sendDowntimeNotification } from "./services/notificationService";
 
 export type Calculation = {
   id: string;
@@ -52,12 +54,13 @@ export type Calculation = {
   timestamp: number;
 };
 
-const TABS = ["calculator", "dashboard", "analysis", "performance", "history"] as const;
+const TABS = ["calculator", "dashboard", "analysis", "performance", "history", "downtime"] as const;
 type TabType = typeof TABS[number];
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [history, setHistory] = useState<Calculation[]>([]);
+  const [downtime, setDowntime] = useState<DowntimeData[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncSuccess, setSyncSuccess] = useState<boolean>(false);
@@ -97,7 +100,11 @@ export default function App() {
     if (!isAutoRefresh) setSyncSuccess(false);
 
     try {
-      const data = await fetchSheetData();
+      const [data, downtimeDataRes] = await Promise.all([
+         fetchSheetData(),
+         fetchDowntimeData()
+      ]);
+      setDowntime(downtimeDataRes);
       
       if (data.length === 0) {
         if (!isAutoRefresh) setSyncError("Tidak ada data ditemukan di Google Sheet.");
@@ -109,13 +116,17 @@ export default function App() {
       const currentDataStr = JSON.stringify(data);
       const prevDataStr = localStorage.getItem("rendemen_last_raw_data");
       
-      if (isAutoRefresh && prevDataStr === currentDataStr) {
+      const currentDowntimeStr = JSON.stringify(downtimeDataRes);
+      const prevDowntimeStr = localStorage.getItem("rendemen_last_downtime_data");
+      
+      if (isAutoRefresh && prevDataStr === currentDataStr && prevDowntimeStr === currentDowntimeStr) {
         setIsSyncing(false);
         isSyncingRef.current = false;
         return; // No changes detected
       }
       
       localStorage.setItem("rendemen_last_raw_data", currentDataStr);
+      localStorage.setItem("rendemen_last_downtime_data", currentDowntimeStr);
 
       const mappedHistory: Calculation[] = data.map(item => ({
         id: `sheet-${item.tanggal}-${item.mesin}-${item.input}-${item.output}`,
@@ -163,6 +174,12 @@ export default function App() {
         }
       } else if (!isAutoRefresh) {
         sendWhatsAppNotification(mappedHistory).catch(e => console.error("WA Notify Error:", e));
+      }
+
+      if (prevDowntimeStr !== currentDowntimeStr) {
+        if (prevDowntimeStr !== null || !isAutoRefresh) {
+          sendDowntimeNotification(downtimeDataRes).catch(e => console.error("WA Downtime Notify Error:", e));
+        }
       }
       
       setLastSync(new Date().toLocaleString("id-ID", { 
@@ -367,6 +384,7 @@ export default function App() {
           {activeTab === "history" && <History history={history} selectedDate={selectedDate} onDelete={deleteCalculation} />}
           {activeTab === "performance" && <Performance history={history} selectedDate={selectedDate} />}
           {activeTab === "analysis" && <Analysis history={history} selectedDate={selectedDate} />}
+          {activeTab === "downtime" && <Downtime downtimeList={downtime} selectedDate={selectedDate} />}
         </motion.div>
       </main>
 
@@ -401,6 +419,12 @@ export default function App() {
           onClick={() => handleTabChange("history")}
           icon={<HistoryIcon size={20} />}
           label="Rekap"
+        />
+        <NavButton 
+          active={activeTab === "downtime"} 
+          onClick={() => handleTabChange("downtime")}
+          icon={<Clock size={20} />}
+          label="Downtime"
         />
       </nav>
     </div>

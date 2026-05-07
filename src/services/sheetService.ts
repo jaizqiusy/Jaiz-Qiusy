@@ -19,9 +19,21 @@ export interface SheetData {
   quartal: number;
 }
 
+export interface DowntimeData {
+  id: string;
+  tanggal: string;
+  mesin: string;
+  keterangan: string; // issue
+  durasi: string; // duration
+  jenis: string; // type
+  waktu: string; // time
+}
+
 const SHEET_ID = "1G7x3dtE2KFF338w6qdd4jrMkz-yrbThlzx5Vi0I8AqQ";
 // Using the gviz API which is often more reliable for CORS and public sheets
 const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+const DOWNTIME_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Downtime`;
+
 
 export async function fetchSheetData(): Promise<SheetData[]> {
   const controller = new AbortController();
@@ -149,5 +161,110 @@ export async function fetchSheetData(): Promise<SheetData[]> {
     }
     console.error("Sheet Fetch Error:", error);
     throw error;
+  }
+}
+
+export async function fetchDowntimeData(): Promise<DowntimeData[]> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000); 
+
+  try {
+    console.log("Fetching from:", DOWNTIME_CSV_URL);
+    const response = await fetch(DOWNTIME_CSV_URL, { 
+      signal: controller.signal,
+      headers: {
+        'Accept': 'text/csv'
+      }
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`Gagal mengambil data downtime (Status: ${response.status}).`);
+    }
+    
+    const csvText = await response.text();
+    
+    if (csvText.includes("<!DOCTYPE html>") || csvText.includes("<html")) {
+      throw new Error("Google Sheet tidak dapat diakses.");
+    }
+
+    if (!csvText || csvText.trim().length === 0) {
+      return [];
+    }
+    
+    return new Promise((resolve, reject) => {
+      Papa.parse(csvText, {
+        header: false,
+        dynamicTyping: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const rawData = results.data as any[][];
+          if (rawData.length < 2) {
+            resolve([]);
+            return;
+          }
+
+          const dataRows = rawData.slice(1);
+          
+          const mappedData: DowntimeData[] = [];
+          
+          dataRows.forEach((row, rowIndex) => {
+            if (!row || row.length < 20) return;
+
+            let rawDate = row[0];
+            let dateStr = "";
+            if (rawDate) {
+              try {
+                if (typeof rawDate === 'number') {
+                  const dateObj = new Date((rawDate - 25569) * 86400 * 1000);
+                  dateStr = dateObj.toISOString().split('T')[0];
+                } else {
+                  const dateObj = new Date(String(rawDate));
+                  if (!isNaN(dateObj.getTime())) {
+                    dateStr = dateObj.toISOString().split('T')[0];
+                  } else {
+                     dateStr = String(rawDate);
+                  }
+                }
+              } catch {
+                dateStr = String(rawDate);
+              }
+            }
+
+            const rawDowntime = row[19] ? String(row[19]) : "";
+            const events = rawDowntime.split(',').map(e => e.trim()).filter(e => e !== "");
+            
+            events.forEach((evt, evtIndex) => {
+              // format is typically "Keterangan=XXmnt"
+              let keterangan = evt;
+              let durasi = "0mnt";
+              
+              if (evt.includes("=")) {
+                const parts = evt.split("=");
+                keterangan = parts[0].trim();
+                durasi = parts[1].trim();
+              }
+              
+              mappedData.push({
+                id: `downtime-${dateStr}-${rowIndex}-${evtIndex}`,
+                tanggal: dateStr,
+                mesin: row[1] ? String(row[1]).trim().toUpperCase() : "-",
+                keterangan: keterangan,
+                durasi: durasi,
+                jenis: "maintenance", // simple default
+                waktu: "00:00", // not provided directly, maybe not needed
+              });
+            });
+          });
+          
+          resolve(mappedData);
+        },
+        error: (error: any) => reject(new Error(`Gagal proses CSV downtime: ${error.message}`))
+      });
+    });
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    console.error("Downtime Fetch Error:", error);
+    return [];
   }
 }
