@@ -51,8 +51,7 @@ export async function sendCustomWhatsAppNotification(message: string) {
     );
     console.log("Direct Custom WA request:", response.data);
     if (response.data && response.data.status === false) {
-       console.warn("Fonnte API Warning:", response.data.reason || "status false");
-       return response.data;
+       throw new Error(response.data.reason || "Fonnte API returned status false");
     }
     return response.data;
   } catch (error) {
@@ -63,14 +62,12 @@ export async function sendCustomWhatsAppNotification(message: string) {
       });
       console.log("Fallback Custom WA Notification response:", response.data);
       if (response.data && response.data.data && response.data.data.status === false) {
-         console.warn("Fonnte API Fallback Warning:", response.data.data.reason || "status false");
-         return response.data;
+         throw new Error(response.data.data.reason || "Fonnte API returned status false");
       }
       return response.data;
     } catch (fallbackError) {
       console.error("Failed to send Custom WA notification:", fallbackError);
-      // Don't throw, just return null so it doesn't break caller
-      return null;
+      throw fallbackError;
     }
   }
 }
