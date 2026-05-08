@@ -273,21 +273,21 @@ export default function Dashboard({ history, filteredHistory, selectedDate, onDa
                 whileTap={item.active ? { scale: 0.95 } : {}}
                 onClick={() => item.active && setDetailMachine(item)}
                 className={cn(
-                  "flex flex-col items-center justify-center p-3 rounded-[20px] border transition-all relative group",
+                  "flex flex-col items-center justify-center p-1.5 sm:p-3 rounded-2xl sm:rounded-[20px] border transition-all relative group overflow-hidden",
                   item.active 
                     ? "bg-white border-green-100 shadow-sm cursor-pointer hover:border-green-300" 
                     : "bg-gray-50 border-gray-50 opacity-40 grayscale"
                 )}
               >
                 {item.active && (
-                  <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-green-500 rounded-full" />
+                  <div className="absolute top-1 sm:top-1.5 right-1 sm:right-1.5 w-1.5 h-1.5 bg-green-500 rounded-full" />
                 )}
-                <div className="w-full bg-slate-50/50 py-1 border-b border-gray-100/50 rounded-t-xl mb-1.5 group-hover:bg-green-50 transition-colors">
-                  <p className="text-[11px] font-black text-slate-800 uppercase tracking-widest">{item.name}</p>
+                <div className="w-full bg-slate-50/50 py-0.5 sm:py-1 border-b border-gray-100/50 rounded-t-xl mb-1 sm:mb-1.5 group-hover:bg-green-50 transition-colors">
+                  <p className="text-[10px] sm:text-[11px] font-black text-slate-800 uppercase tracking-widest">{item.name}</p>
                 </div>
-                <div className="pb-1.5">
+                <div className="pb-1 sm:pb-1.5 relative w-full flex justify-center">
                   <p className={cn(
-                      "text-[18px] font-black leading-none tracking-tighter",
+                      "text-sm sm:text-[18px] font-black leading-none tracking-tighter truncate",
                       item.active ? "text-slate-900" : "text-slate-300"
                     )}
                   >

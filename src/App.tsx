@@ -278,9 +278,9 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F7FE] text-[#1a1a1a] font-sans flex flex-col max-w-md mx-auto shadow-2xl relative overflow-hidden">
+    <div className="min-h-screen w-full bg-[#F4F7FE] text-[#1a1a1a] font-sans flex flex-col max-w-md mx-auto shadow-2xl relative overflow-x-hidden">
       {/* Header - Purple Gradient */}
-      <header className="bg-gradient-to-b from-[#311B92] to-[#512DA8] px-6 pt-10 pb-12 text-white relative">
+      <header className="bg-gradient-to-b from-[#311B92] to-[#512DA8] px-4 pt-[max(2rem,env(safe-area-inset-top))] pb-12 text-white relative">
         <div className="flex flex-col items-center text-center space-y-4">
           <div className="flex items-center gap-3">
             <div className="bg-white p-1.5 rounded-lg shadow-lg">
@@ -329,7 +329,7 @@ export default function App() {
 
           <div className="absolute top-6 right-4 flex items-center gap-3">
             {lastSync && (
-              <div className="hidden xs:flex flex-col items-end">
+              <div className="hidden sm:flex flex-col items-end">
                 <span className="text-[8px] font-bold opacity-60 uppercase tracking-tighter">Terakhir Sinkron</span>
                 <span className="text-[9px] font-black">{lastSync}</span>
               </div>
@@ -349,7 +349,7 @@ export default function App() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto pb-24 px-4 -mt-6 relative z-10">
+      <main className="flex-1 overflow-y-auto pb-32 px-4 -mt-6 relative z-10">
         {syncError && (
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
@@ -405,41 +405,41 @@ export default function App() {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/90 backdrop-blur-md border-t border-gray-100 px-4 py-3 flex justify-around items-center z-20">
+      <nav className="fixed bottom-0 left-0 right-0 w-full max-w-md mx-auto bg-white/90 backdrop-blur-md border-t border-gray-100 flex justify-between items-center z-20 pb-[env(safe-area-inset-bottom)] pt-1 px-1 sm:px-2">
         <NavButton 
           active={activeTab === "calculator"} 
           onClick={() => handleTabChange("calculator")}
-          icon={<CalcIcon size={20} />}
+          icon={<CalcIcon size={18} className="sm:w-5 sm:h-5" />}
           label="Hitung"
         />
         <NavButton 
           active={activeTab === "dashboard"} 
           onClick={() => handleTabChange("dashboard")}
-          icon={<LayoutDashboard size={20} />}
+          icon={<LayoutDashboard size={18} className="sm:w-5 sm:h-5" />}
           label="Beranda"
         />
         <NavButton 
           active={activeTab === "analysis"} 
           onClick={() => handleTabChange("analysis")}
-          icon={<BarChart3 size={20} />}
+          icon={<BarChart3 size={18} className="sm:w-5 sm:h-5" />}
           label="Review"
         />
         <NavButton 
           active={activeTab === "performance"} 
           onClick={() => handleTabChange("performance")}
-          icon={<TrendingUp size={20} />}
+          icon={<TrendingUp size={18} className="sm:w-5 sm:h-5" />}
           label="Performa"
         />
         <NavButton 
           active={activeTab === "history"} 
           onClick={() => handleTabChange("history")}
-          icon={<HistoryIcon size={20} />}
+          icon={<HistoryIcon size={18} className="sm:w-5 sm:h-5" />}
           label="Rekap"
         />
         <NavButton 
           active={activeTab === "downtime"} 
           onClick={() => handleTabChange("downtime")}
-          icon={<Clock size={20} />}
+          icon={<Clock size={18} className="sm:w-5 sm:h-5" />}
           label="Downtime"
         />
       </nav>
@@ -452,21 +452,21 @@ function NavButton({ active, onClick, icon, label }: { active: boolean, onClick:
     <button 
       onClick={onClick}
       className={cn(
-        "relative flex flex-col items-center gap-1 py-1 px-3 transition-all duration-300 z-10",
+        "relative flex flex-col items-center justify-center gap-1 pb-1.5 pt-2 flex-1 min-w-0 transition-all duration-300 z-10",
         active ? "text-green-600" : "text-gray-400 hover:text-gray-600"
       )}
     >
       {active && (
         <motion.div 
           layoutId="nav-pill"
-          className="absolute inset-0 bg-green-50 rounded-2xl -z-10"
+          className="absolute inset-x-1 inset-y-0.5 bg-green-50 rounded-xl -z-10"
           transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
         />
       )}
       <div className="p-0.5">
         {icon}
       </div>
-      <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
+      <span className="text-[7.5px] sm:text-[9px] font-black uppercase tracking-wider truncate max-w-full px-0.5 text-center">{label}</span>
     </button>
   );
 }
