@@ -119,14 +119,7 @@ export default function App() {
       const currentDowntimeStr = JSON.stringify(downtimeDataRes);
       const prevDowntimeStr = localStorage.getItem("rendemen_last_downtime_data");
       
-      const todayDateStr = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
-      const lastDailyNotifDate = localStorage.getItem("rendemen_last_daily_notif_date");
-      const currentHour = new Date().getHours();
-      
-      // Kirim notif harian otomatis jika auto refresh, waktu >= 19:00, dan belum dikirim hari ini
-      const isDailyNotifDue = isAutoRefresh && currentHour >= 19 && lastDailyNotifDate !== todayDateStr;
-
-      if (isAutoRefresh && !isDailyNotifDue && prevDataStr === currentDataStr && prevDowntimeStr === currentDowntimeStr) {
+      if (isAutoRefresh && prevDataStr === currentDataStr && prevDowntimeStr === currentDowntimeStr) {
         setIsSyncing(false);
         isSyncingRef.current = false;
         return; // No changes detected
@@ -174,27 +167,18 @@ export default function App() {
 
       if (!isAutoRefresh) setSyncSuccess(true);
       
-      if (isAutoRefresh) {
-        if (isDailyNotifDue) {
+      if (prevDataStr !== currentDataStr) {
+        if (prevDataStr !== null || !isAutoRefresh) {
+          // Send notification if it's an actual update, or if manual sync is forcibly triggered
           sendWhatsAppNotification(mappedHistory).catch(e => console.error("WA Notify Error:", e));
-          sendDowntimeNotification(downtimeDataRes).catch(e => console.error("WA Downtime Notify Error:", e));
-          localStorage.setItem("rendemen_last_daily_notif_date", todayDateStr);
-        } else if (currentHour >= 19) {
-          // Jika ada perubahan data dan waktu sudah >= 19:00, kirim notifikasi otomatis
-          if (prevDataStr !== currentDataStr && prevDataStr !== null) {
-            sendWhatsAppNotification(mappedHistory).catch(e => console.error("WA Notify Error:", e));
-          }
-          if (prevDowntimeStr !== currentDowntimeStr && prevDowntimeStr !== null) {
-            sendDowntimeNotification(downtimeDataRes).catch(e => console.error("WA Downtime Notify Error:", e));
-          }
         }
-      } else {
-        // Manual Sync (selalu kirim notifikasi)
+      } else if (!isAutoRefresh) {
         sendWhatsAppNotification(mappedHistory).catch(e => console.error("WA Notify Error:", e));
-        sendDowntimeNotification(downtimeDataRes).catch(e => console.error("WA Downtime Notify Error:", e));
-        
-        if (currentHour >= 19) {
-          localStorage.setItem("rendemen_last_daily_notif_date", todayDateStr);
+      }
+
+      if (prevDowntimeStr !== currentDowntimeStr) {
+        if (prevDowntimeStr !== null || !isAutoRefresh) {
+          sendDowntimeNotification(downtimeDataRes).catch(e => console.error("WA Downtime Notify Error:", e));
         }
       }
       
