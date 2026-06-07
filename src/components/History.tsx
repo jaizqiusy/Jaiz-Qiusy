@@ -83,37 +83,37 @@ function MachineCard({ summary, index }: MachineCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03 }}
       className={cn(
-        "p-5 rounded-3xl shadow-xl border transition-all relative overflow-hidden",
+        "p-5 sm:p-6 rounded-3xl shadow-xl border transition-all relative overflow-hidden",
         hasData 
-          ? "bg-[#0f172a] border-blue-900/30 hover:border-blue-700/50" 
-          : "bg-[#0f172a]/40 border-blue-900/10 opacity-60"
+          ? "bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 border-white/60 hover:shadow-2xl hover:border-white/80" 
+          : "bg-white/50 border-white/40 opacity-70 grayscale"
       )}
     >
       {!hasData && (
-        <div className="absolute top-3 right-4 bg-blue-900/30 px-2 py-0.5 rounded text-[8px] font-bold text-slate-500 uppercase border border-blue-800/30">
+        <div className="absolute top-3 right-4 bg-white/60 px-2.5 py-1 rounded-lg text-[10px] font-bold text-indigo-800 uppercase border border-white/60 shadow-sm">
           No Data
         </div>
       )}
       
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex justify-between items-start mb-5">
         <div className="flex items-center gap-3">
           <div className={cn(
-            "p-3 rounded-2xl font-black text-sm w-12 h-12 flex items-center justify-center border",
+            "p-3 rounded-2xl font-black text-[18px] w-14 h-14 flex items-center justify-center border shadow-sm",
             hasData 
-              ? "bg-blue-900/50 text-blue-200 border-blue-800/50" 
-              : "bg-slate-800/50 text-slate-600 border-slate-700/30"
+              ? "bg-white/60 text-indigo-700 border-white/50" 
+              : "bg-gray-100/50 text-gray-500 border-gray-200/50"
           )}>
             {summary.machine.split(" ").pop()}
           </div>
           <div>
-            <p className="text-sm font-black text-white">{summary.machine}</p>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{summary.line}</p>
+            <p className="text-[18px] font-black text-indigo-950">{summary.machine}</p>
+            <p className="text-[12.5px] font-bold text-indigo-700 uppercase tracking-widest">{summary.line}</p>
           </div>
         </div>
         {hasData && summary.latestDate && (
           <div className="text-right">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none mb-1">Terakhir</p>
-            <p className="text-[10px] font-black text-blue-400">
+            <p className="text-[12.5px] font-bold text-indigo-800 uppercase tracking-widest leading-none mb-1.5 drop-shadow-sm">Terakhir</p>
+            <p className="text-[12.5px] font-black text-blue-700 drop-shadow-sm">
               {new Date(summary.latestDate).toLocaleDateString("id-ID", { day: 'numeric', month: 'short' })}
             </p>
           </div>
@@ -121,29 +121,29 @@ function MachineCard({ summary, index }: MachineCardProps) {
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <div className="flex flex-col">
-          <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Input</p>
-          <p className="text-sm font-black text-white">{summary.totalInput.toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[10px] font-normal text-slate-500">M3</span></p>
+        <div className="bg-white/40 p-3 rounded-xl border border-white/50 shadow-sm flex flex-col items-center justify-center text-center">
+          <p className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider mb-1">Total Input</p>
+          <p className="text-[18px] font-black text-indigo-950">{summary.totalInput.toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} <span className="text-[12.5px] font-bold text-indigo-700">M3</span></p>
         </div>
-        <div className="flex flex-col">
-          <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider mb-1">Avg Yield</p>
-          <p className="text-sm font-black text-indigo-300">{avgYield.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</p>
+        <div className="bg-white/40 p-3 rounded-xl border border-white/50 shadow-sm flex flex-col items-center justify-center text-center">
+          <p className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider mb-1">Avg Yield</p>
+          <p className="text-[18px] font-black text-indigo-950">{avgYield.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</p>
         </div>
-        <div className="flex flex-col">
-          <p className="text-[9px] font-bold text-orange-400 uppercase tracking-wider mb-1">Total Output</p>
-          <p className="text-sm font-black text-orange-300">{summary.totalOutput.toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[10px] font-normal text-slate-500">M3</span></p>
+        <div className="bg-white/40 p-3 rounded-xl border border-white/50 shadow-sm flex flex-col items-center justify-center text-center">
+          <p className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider mb-1">Total Output</p>
+          <p className="text-[18px] font-black text-indigo-950">{summary.totalOutput.toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} <span className="text-[12.5px] font-bold text-indigo-700">M3</span></p>
         </div>
       </div>
 
       {hasData && (
-        <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <TrendingUp size={12} className="text-green-500" />
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+        <div className="mt-5 pt-4 border-t border-indigo-200/60 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <TrendingUp size={16} className="text-indigo-600" />
+            <p className="text-[12.5px] font-bold text-indigo-800 uppercase tracking-widest">
               {summary.count} Kali Produksi
             </p>
           </div>
-          <ChevronRight size={16} className="text-slate-600 group-hover:text-blue-400 transition-colors" />
+          <ChevronRight size={18} className="text-indigo-600 group-hover:text-blue-700 transition-colors" />
         </div>
       )}
     </motion.div>
@@ -343,7 +343,7 @@ export default function History({ history, selectedDate }: HistoryProps) {
       <div className="space-y-8">
         {/* BS Section */}
         <section className="space-y-3">
-          <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">BS Line 1 - 8</h3>
+          <h3 className="text-[12.5px] font-black text-indigo-800 uppercase tracking-[0.2em] px-1">BS Line 1 - 8</h3>
           <div className="grid grid-cols-1 gap-3">
             {machineGroups.bs.map((summary, index) => (
               <MachineCard key={summary.machine} summary={summary} index={index} />
@@ -353,7 +353,7 @@ export default function History({ history, selectedDate }: HistoryProps) {
 
         {/* Poni Section */}
         <section className="space-y-3">
-          <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Main Stations</h3>
+          <h3 className="text-[12.5px] font-black text-indigo-800 uppercase tracking-[0.2em] px-1">Main Stations</h3>
           <div className="grid grid-cols-1 gap-3">
             {machineGroups.poni.map((summary, index) => (
               <MachineCard key={summary.machine} summary={summary} index={index + 8} />
@@ -363,7 +363,7 @@ export default function History({ history, selectedDate }: HistoryProps) {
 
         {/* Breakdown Section */}
         <section className="space-y-3">
-          <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">System Status</h3>
+          <h3 className="text-[12.5px] font-black text-indigo-800 uppercase tracking-[0.2em] px-1">System Status</h3>
           <div className="grid grid-cols-1 gap-3">
             {machineGroups.breakdown.map((summary, index) => (
               <MachineCard key={summary.machine} summary={summary} index={index + 10} />

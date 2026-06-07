@@ -49,16 +49,16 @@ export default function PeriodicSummary({ history, selectedDate }: PeriodicSumma
   ));
 
   return (
-    <div className="bg-[#0f172a] rounded-3xl shadow-xl border border-blue-900/30 p-5">
+    <div className="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 rounded-3xl shadow-xl border border-white/60 p-5">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <div className="bg-blue-900/50 p-2 rounded-xl border border-blue-800/50">
-            <BarChart3 className="text-blue-200" size={20} />
+          <div className="bg-white/50 p-2 rounded-xl border border-white/40 shadow-sm">
+            <BarChart3 className="text-indigo-700" size={24} />
           </div>
-          <h3 className="font-black text-white tracking-tight uppercase text-sm">Ringkasan Berkala</h3>
+          <h3 className="font-black text-indigo-950 tracking-tight uppercase text-xl">Ringkasan Berkala</h3>
         </div>
-        <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-          <Clock size={14} className="text-blue-400" />
+        <div className="flex items-center gap-1 text-sm font-bold text-indigo-700 uppercase tracking-widest">
+          <Clock size={16} className="text-indigo-500" />
           <span>BS 1 - 8 Only</span>
         </div>
       </div>
@@ -69,13 +69,13 @@ export default function PeriodicSummary({ history, selectedDate }: PeriodicSumma
           stats={weeklyStats} 
           color="cyan" 
         />
-        <div className="h-px bg-blue-900/20" />
+        <div className="h-px bg-indigo-200/60" />
         <SummaryBlock 
           title={`Bulanan (Month ${currentMonth || "-"})`} 
           stats={monthlyStats} 
           color="blue" 
         />
-        <div className="h-px bg-blue-900/20" />
+        <div className="h-px bg-indigo-200/60" />
         <SummaryBlock 
           title={`Quarterly (Q${currentQuartal || "-"})`} 
           stats={quarterlyStats} 
@@ -92,29 +92,29 @@ function SummaryBlock({ title, stats, color }: {
   color: string
 }) {
   const colorMap: Record<string, string> = {
-    cyan: "text-cyan-400",
-    blue: "text-blue-400",
-    indigo: "text-indigo-400"
+    cyan: "text-blue-700",
+    blue: "text-indigo-800",
+    indigo: "text-purple-800"
   };
 
   return (
     <div className="space-y-3">
       <div className="flex justify-between items-center">
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{title}</p>
-        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">{stats.count} Data</span>
+        <p className="text-[15px] font-black text-indigo-950 uppercase tracking-widest">{title}</p>
+        <span className="text-[13.5px] font-bold text-indigo-700 uppercase tracking-tighter">{stats.count} Data</span>
       </div>
       <div className="grid grid-cols-3 gap-2">
-        <div className="bg-white/5 p-2 rounded-xl text-center border border-white/5">
-          <p className="text-[8px] font-bold text-slate-500 uppercase mb-1">Input</p>
-          <p className="text-xs font-black text-white">{stats.input.toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} <span className="text-[8px] font-normal text-slate-500">M3</span></p>
+        <div className="bg-white/60 backdrop-blur-sm p-3 rounded-xl text-center border border-white/50 shadow-sm">
+          <p className="text-[12px] font-bold text-indigo-800 uppercase mb-1">Input</p>
+          <p className="text-[18px] font-black text-indigo-950">{stats.input.toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} <span className="text-[12px] font-bold text-indigo-700">M3</span></p>
         </div>
-        <div className="bg-white/5 p-2 rounded-xl text-center border border-white/5">
-          <p className="text-[8px] font-bold text-slate-500 uppercase mb-1">Output</p>
-          <p className="text-xs font-black text-white">{stats.output.toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} <span className="text-[8px] font-normal text-slate-500">M3</span></p>
+        <div className="bg-white/60 backdrop-blur-sm p-3 rounded-xl text-center border border-white/50 shadow-sm">
+          <p className="text-[12px] font-bold text-indigo-800 uppercase mb-1">Output</p>
+          <p className="text-[18px] font-black text-indigo-950">{stats.output.toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} <span className="text-[12px] font-bold text-indigo-700">M3</span></p>
         </div>
-        <div className="bg-white/5 p-2 rounded-xl text-center border border-white/5">
-          <p className="text-[8px] font-bold text-slate-500 uppercase mb-1">Yield</p>
-          <p className={cn("text-xs font-black", colorMap[color] || "text-white")}>{stats.rendemen.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</p>
+        <div className="bg-white/60 backdrop-blur-sm p-3 rounded-xl text-center border border-white/50 shadow-sm">
+          <p className="text-[12px] font-bold text-indigo-800 uppercase mb-1">Yield</p>
+          <p className={cn("text-[18px] font-black", colorMap[color] || "text-indigo-950")}>{stats.rendemen.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</p>
         </div>
       </div>
     </div>
