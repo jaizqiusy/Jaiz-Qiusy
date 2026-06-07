@@ -278,9 +278,9 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#F4F7FE] text-[#1a1a1a] font-sans flex flex-col max-w-md mx-auto shadow-2xl relative overflow-x-hidden">
+    <div className="h-[100dvh] w-full bg-[#F4F7FE] text-[#1a1a1a] font-sans flex flex-col max-w-md mx-auto shadow-2xl relative overflow-hidden">
       {/* Header - Purple Gradient */}
-      <header className="bg-gradient-to-b from-[#311B92] to-[#512DA8] px-4 pt-[max(2rem,env(safe-area-inset-top))] pb-12 text-white relative">
+      <header className="bg-gradient-to-b from-[#311B92] to-[#512DA8] px-4 pt-[max(2rem,env(safe-area-inset-top))] pb-12 text-white relative shrink-0">
         <div className="flex flex-col items-center text-center space-y-4">
           <div className="flex items-center gap-3">
             <div className="bg-white p-1.5 rounded-lg shadow-lg">
@@ -405,7 +405,7 @@ export default function App() {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 w-full max-w-md mx-auto bg-white/90 backdrop-blur-md border-t border-gray-100 flex justify-between items-center z-20 pb-[env(safe-area-inset-bottom)] pt-1 px-1 sm:px-2">
+      <nav className="absolute bottom-0 left-0 right-0 w-full bg-white/90 backdrop-blur-md border-t border-gray-100 grid grid-cols-6 items-center z-20 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 px-1">
         <NavButton 
           active={activeTab === "calculator"} 
           onClick={() => handleTabChange("calculator")}
@@ -452,7 +452,7 @@ function NavButton({ active, onClick, icon, label }: { active: boolean, onClick:
     <button 
       onClick={onClick}
       className={cn(
-        "relative flex flex-col items-center justify-center gap-1 pb-1.5 pt-2 flex-1 min-w-0 transition-all duration-300 z-10",
+        "relative flex flex-col items-center justify-center gap-1 pb-1.5 pt-2 w-full min-w-0 transition-all duration-300 z-10",
         active ? "text-green-600" : "text-gray-400 hover:text-gray-600"
       )}
     >
