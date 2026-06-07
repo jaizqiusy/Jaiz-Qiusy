@@ -212,7 +212,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-white/40 text-[9px] font-black text-indigo-800 uppercase tracking-widest border-b border-indigo-200">
+                    <tr className="bg-white/40 text-[11px] font-black text-indigo-800 uppercase tracking-widest border-b border-indigo-200">
                       <th className="px-3 py-4 border-r border-indigo-200/60">Mesin</th>
                       <th className="px-3 py-4 text-center border-r border-indigo-200/60">Input</th>
                       <th className="px-3 py-4 text-center border-r border-indigo-200/60">Utama</th>
@@ -250,25 +250,25 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                       return (
                         <tr key={item.id} className="hover:bg-white/40 transition-colors">
                           <td className="px-3 py-4 border-r border-indigo-200/60">
-                            <span className="text-[10px] font-black text-indigo-950 uppercase tracking-tighter leading-none">{item.machine}</span>
+                            <span className="text-[12.5px] font-black text-indigo-950 uppercase tracking-tighter leading-none">{item.machine}</span>
                           </td>
                           <td className="px-3 py-4 text-center border-r border-indigo-200/60">
-                            <span className="text-[11px] font-black text-blue-700 tracking-tighter">
+                            <span className="text-[14px] font-black text-blue-700 tracking-tighter">
                               {item.input.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           </td>
                           <td className="px-3 py-4 text-center border-r border-indigo-200/60">
-                            <span className="text-[11px] font-black text-indigo-900 tracking-tighter">
+                            <span className="text-[14px] font-black text-indigo-900 tracking-tighter">
                               {yieldVal.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
                             </span>
                           </td>
                           <td className="px-3 py-4 text-center border-r border-indigo-200/60">
-                            <span className="text-[11px] font-black text-emerald-700 tracking-tighter">
+                            <span className="text-[14px] font-black text-emerald-700 tracking-tighter">
                               {item.output.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           </td>
                           <td className="px-3 py-4 text-center">
-                            <span className="text-[11px] font-black text-indigo-900">
+                            <span className="text-[14px] font-black text-indigo-900">
                               {achievementVal.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           </td>
