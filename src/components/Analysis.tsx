@@ -144,60 +144,61 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
   const topOutputMachine = [...bsData].sort((a, b) => b.output - a.output)[0];
   const lowOutputMachine = [...bsData].sort((a, b) => a.output - b.output)[0];
 
-  return (
-    <div className="space-y-4 pb-6" ref={containerRef}>
-      {/* Header Analysis */}
-      <div className="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 rounded-3xl shadow-2xl border border-white/60 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div className="flex items-center gap-3">
-          <div className="bg-white/50 p-2.5 rounded-2xl text-indigo-700 backdrop-blur-sm border border-white/40 shadow-sm">
-            <BarChart3 size={24} />
-          </div>
-          <div>
-            <h3 className="text-xl font-black text-indigo-950 leading-none">Review Harian</h3>
-            <p className="text-xs font-extrabold text-indigo-700 uppercase tracking-widest mt-1">
-              {new Date(selectedDate).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}
-            </p>
-          </div>
-        </div>
+  const topAchievementMachine = [...allDisplayData].sort((a, b) => {
+    const achA = Math.min(10, a.achievement * 10);
+    const achB = Math.min(10, b.achievement * 10);
+    return achB - achA;
+  })[0];
+  const lowAchievementMachine = [...allDisplayData].sort((a, b) => {
+    const achA = Math.min(10, a.achievement * 10);
+    const achB = Math.min(10, b.achievement * 10);
+    return achA - achB;
+  })[0];
 
-        {/* Zoom Controls */}
-        <div className="flex items-center gap-3 self-end sm:self-auto">
-          <div className="flex bg-white/60 backdrop-blur-md rounded-2xl p-1.5 border border-white/40 overflow-hidden shadow-sm">
+  return (
+    <div className="flex-1 flex flex-col min-h-0 h-full space-y-2 pb-1" ref={containerRef}>
+      {/* Slim Zoom Controls */}
+      <div className="flex items-center justify-between px-1.5 py-1 shrink-0 bg-white/40 rounded-xl border border-white/50 shadow-sm">
+        <span className="text-[10px] font-black text-indigo-800 uppercase tracking-wider">
+          Skala Tampilan / Zoom
+        </span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex bg-white/60 backdrop-blur-md rounded-lg p-0.5 border border-indigo-200/50 overflow-hidden shadow-sm items-center">
             <button 
               onClick={handleZoomOut}
-              className="p-3 hover:bg-white/50 text-indigo-900 transition-all active:scale-95 active:bg-white/70 rounded-xl"
+              className="p-1 hover:bg-indigo-100/50 text-indigo-950 transition-all active:scale-95 rounded"
               title="Zoom Out"
             >
-              <ZoomOut size={20} />
+              <ZoomOut size={12} />
             </button>
-            <div className="w-px bg-indigo-200 self-stretch my-2" />
-            <div className="px-4 flex items-center justify-center min-w-[60px]">
-              <span className="text-sm font-black text-indigo-900 font-mono text-center">
+            <div className="w-px bg-indigo-200/40 self-stretch my-1" />
+            <div className="px-1.5 flex items-center justify-center min-w-[28px]">
+              <span className="text-[9px] font-black text-indigo-950 font-mono text-center">
                 {Math.round(zoomLevel * 100)}%
               </span>
             </div>
-            <div className="w-px bg-indigo-200 self-stretch my-2" />
+            <div className="w-px bg-indigo-200/40 self-stretch my-1" />
             <button 
               onClick={handleZoomIn}
-              className="p-3 hover:bg-white/50 text-indigo-900 transition-all active:scale-95 active:bg-white/70 rounded-xl"
+              className="p-1 hover:bg-indigo-100/50 text-indigo-950 transition-all active:scale-95 rounded"
               title="Zoom In"
             >
-              <ZoomIn size={20} />
+              <ZoomIn size={12} />
             </button>
           </div>
           <button 
             onClick={handleResetZoom}
-            className="p-4 bg-white/60 backdrop-blur-md rounded-2xl border border-white/40 text-indigo-900 hover:bg-white/80 hover:border-white/60 transition-all active:rotate-180 active:scale-90 shadow-sm"
-            title="Reset Zoom (or 5-finger touch)"
+            className="p-1.5 bg-white/60 backdrop-blur-md rounded-lg border border-indigo-200/50 text-indigo-950 hover:bg-white/80 transition-all shadow-sm"
+            title="Reset Zoom"
           >
-            <RotateCcw size={18} />
+            <RotateCcw size={10} />
           </button>
         </div>
       </div>
 
       <div 
         style={{ zoom: zoomLevel }}
-        className="transition-all duration-300 origin-top"
+        className="transition-all duration-300 origin-top flex-1 flex flex-col min-h-0 justify-between gap-2"
       >
         {bsData.length === 0 ? (
           <div className="py-20 text-center bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 rounded-3xl border border-white/60 shadow-lg">
@@ -206,18 +207,18 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
             <p className="text-[10px] font-bold text-indigo-600 mt-2">Pilih tanggal lain atau sinkronisasi ulang data Anda</p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="flex-1 flex flex-col min-h-0 justify-between gap-2">
             {/* Detailed Machine Status Grid */}
-            <div className="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 rounded-3xl border border-white/60 overflow-hidden shadow-xl">
+            <div className="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 rounded-2xl border border-white/60 overflow-hidden shadow-md shrink-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-white/40 text-[11px] font-black text-indigo-800 uppercase tracking-widest border-b border-indigo-200">
-                      <th className="px-3 py-4 border-r border-indigo-200/60">Mesin</th>
-                      <th className="px-3 py-4 text-center border-r border-indigo-200/60">Input</th>
-                      <th className="px-3 py-4 text-center border-r border-indigo-200/60">Utama</th>
-                      <th className="px-3 py-4 text-center border-r border-indigo-200/60">Output</th>
-                      <th className="px-3 py-4 text-center">Point</th>
+                    <tr className="bg-white/40 text-[10px] font-black text-indigo-800 uppercase tracking-wider border-b border-indigo-200">
+                      <th className="px-2 py-2 border-r border-indigo-200/60">Mesin</th>
+                      <th className="px-2 py-2 text-center border-r border-indigo-200/60">Input</th>
+                      <th className="px-2 py-2 text-center border-r border-indigo-200/60">Utama</th>
+                      <th className="px-2 py-2 text-center border-r border-indigo-200/60">Output</th>
+                      <th className="px-2 py-2 text-center">Point</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-indigo-200/60">
@@ -249,25 +250,25 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                       
                       return (
                         <tr key={item.id} className="hover:bg-white/40 transition-colors">
-                          <td className="px-3 py-4 border-r border-indigo-200/60">
+                          <td className="px-2 py-1.5 border-r border-indigo-200/60">
                             <span className="text-[12.5px] font-black text-indigo-950 uppercase tracking-tighter leading-none">{item.machine}</span>
                           </td>
-                          <td className="px-3 py-4 text-center border-r border-indigo-200/60">
+                          <td className="px-2 py-1.5 text-center border-r border-indigo-200/60">
                             <span className="text-[14px] font-black text-blue-700 tracking-tighter">
                               {item.input.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           </td>
-                          <td className="px-3 py-4 text-center border-r border-indigo-200/60">
+                          <td className="px-2 py-1.5 text-center border-r border-indigo-200/60">
                             <span className="text-[14px] font-black text-indigo-900 tracking-tighter">
                               {yieldVal.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
                             </span>
                           </td>
-                          <td className="px-3 py-4 text-center border-r border-indigo-200/60">
+                          <td className="px-2 py-1.5 text-center border-r border-indigo-200/60">
                             <span className="text-[14px] font-black text-emerald-700 tracking-tighter">
                               {item.output.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           </td>
-                          <td className="px-3 py-4 text-center">
+                          <td className="px-2 py-1.5 text-center">
                             <span className="text-[14px] font-black text-indigo-900">
                               {achievementVal.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
@@ -281,91 +282,134 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
             </div>
 
             {/* Insight Cards */}
-            <div className="space-y-4">
-              <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] px-1">Performance Highlights</h4>
+            <div className="space-y-1.5 shrink-0">
+              <h4 className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.2em] px-1">Performance Highlights</h4>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-1.5">
                 {/* Rendemen Highlights */}
-                <div className="space-y-4">
+                <div className="space-y-1">
                   {topMachine && (
-                    <div className="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 border border-white/60 p-3 rounded-2xl flex flex-col gap-2 shadow-lg relative overflow-hidden">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                           <div className="bg-emerald-500 p-1 rounded text-white shadow-md shadow-emerald-500/20">
-                             <TrendingUp size={10} />
+                    <div className="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 border border-white/60 p-1.5 rounded-xl flex flex-col gap-0.5 shadow-md relative overflow-hidden">
+                      <div className="flex items-center justify-between gap-1 overflow-hidden">
+                        <div className="flex items-center gap-0.5">
+                           <div className="bg-emerald-500 p-0.5 rounded text-white shadow-sm">
+                             <TrendingUp size={8} />
                            </div>
-                           <p className="text-[8px] font-black text-emerald-700 uppercase tracking-widest">UTAMA ↑</p>
+                           <p className="text-[7px] font-black text-emerald-700 uppercase tracking-tight">UTAMA ↑</p>
                         </div>
-                        <p className="text-lg font-black text-emerald-700 font-mono tracking-tighter drop-shadow-sm">
-                          {getCalcYield(topMachine).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
+                        <p className="text-[11px] font-black text-emerald-700 font-mono tracking-tighter drop-shadow-sm whitespace-nowrap">
+                          {getCalcYield(topMachine).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
                         </p>
                       </div>
                       <div className="flex items-center justify-between">
-                        <p className="text-xl font-black text-indigo-950 leading-none">{topMachine.machine}</p>
-                        <p className="text-[8px] font-bold text-indigo-700 uppercase tracking-tighter">Yield Utama</p>
+                        <p className="text-[11px] font-black text-indigo-950 leading-none truncate max-w-[48px]">{topMachine.machine}</p>
+                        <p className="text-[7.5px] font-bold text-indigo-700 uppercase tracking-tighter">Yield</p>
                       </div>
                     </div>
                   )}
 
                   {lowMachine && (
-                    <div className="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 border border-white/60 p-3 rounded-2xl flex flex-col gap-2 shadow-lg relative overflow-hidden">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                           <div className="bg-rose-500 p-1 rounded text-white shadow-md shadow-rose-500/20">
-                             <TrendingDown size={10} />
+                    <div className="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 border border-white/60 p-1.5 rounded-xl flex flex-col gap-0.5 shadow-md relative overflow-hidden">
+                      <div className="flex items-center justify-between gap-1 overflow-hidden">
+                        <div className="flex items-center gap-0.5">
+                           <div className="bg-rose-500 p-0.5 rounded text-white shadow-sm">
+                             <TrendingDown size={8} />
                            </div>
-                           <p className="text-[8px] font-black text-rose-700 uppercase tracking-widest">UTAMA ↓</p>
+                           <p className="text-[7px] font-black text-rose-700 uppercase tracking-tight">UTAMA ↓</p>
                         </div>
-                        <p className="text-lg font-black text-rose-700 font-mono tracking-tighter drop-shadow-sm">
-                          {getCalcYield(lowMachine).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
+                        <p className="text-[11px] font-black text-rose-700 font-mono tracking-tighter drop-shadow-sm whitespace-nowrap">
+                          {getCalcYield(lowMachine).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
                         </p>
                       </div>
                       <div className="flex items-center justify-between">
-                        <p className="text-xl font-black text-indigo-950 leading-none">{lowMachine.machine}</p>
-                        <p className="text-[8px] font-bold text-indigo-700 uppercase tracking-tighter">Yield Utama</p>
+                        <p className="text-[11px] font-black text-indigo-950 leading-none truncate max-w-[48px]">{lowMachine.machine}</p>
+                        <p className="text-[7.5px] font-bold text-indigo-700 uppercase tracking-tighter">Yield</p>
                       </div>
                     </div>
                   )}
                 </div>
 
                 {/* Output Highlights */}
-                <div className="space-y-4">
+                <div className="space-y-1">
                   {topOutputMachine && (
-                    <div className="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 border border-white/60 p-3 rounded-2xl flex flex-col gap-2 shadow-lg relative overflow-hidden">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                           <div className="bg-blue-600 p-1 rounded text-white shadow-md shadow-blue-600/20">
-                             <TrendingUp size={10} />
+                    <div className="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 border border-white/60 p-1.5 rounded-xl flex flex-col gap-0.5 shadow-md relative overflow-hidden">
+                      <div className="flex items-center justify-between gap-1 overflow-hidden">
+                        <div className="flex items-center gap-0.5">
+                           <div className="bg-blue-600 p-0.5 rounded text-white shadow-sm">
+                             <TrendingUp size={8} />
                            </div>
-                           <p className="text-[8px] font-black text-blue-700 uppercase tracking-widest">OUTPUT ↑</p>
+                           <p className="text-[7px] font-black text-blue-700 uppercase tracking-tight">OUT ↑</p>
                         </div>
-                        <p className="text-lg font-black text-blue-700 font-mono tracking-tighter drop-shadow-sm">
-                          {topOutputMachine.output.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <p className="text-[11px] font-black text-blue-700 font-mono tracking-tighter drop-shadow-sm whitespace-nowrap">
+                          {topOutputMachine.output.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
                         </p>
                       </div>
                       <div className="flex items-center justify-between">
-                        <p className="text-xl font-black text-indigo-950 leading-none">{topOutputMachine.machine}</p>
-                        <p className="text-[8px] font-bold text-indigo-700 uppercase tracking-tighter">M3 Output</p>
+                        <p className="text-[11px] font-black text-indigo-950 leading-none truncate max-w-[48px]">{topOutputMachine.machine}</p>
+                        <p className="text-[7.5px] font-bold text-indigo-700 uppercase tracking-tighter">M3</p>
                       </div>
                     </div>
                   )}
 
                   {lowOutputMachine && (
-                    <div className="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 border border-white/60 p-3 rounded-2xl flex flex-col gap-2 shadow-lg relative overflow-hidden">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                           <div className="bg-indigo-600 p-1 rounded text-white shadow-md shadow-indigo-600/20">
-                             <TrendingDown size={10} />
+                    <div className="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 border border-white/60 p-1.5 rounded-xl flex flex-col gap-0.5 shadow-md relative overflow-hidden">
+                      <div className="flex items-center justify-between gap-1 overflow-hidden">
+                        <div className="flex items-center gap-0.5">
+                           <div className="bg-indigo-600 p-0.5 rounded text-white shadow-sm">
+                             <TrendingDown size={8} />
                            </div>
-                           <p className="text-[8px] font-black text-indigo-800 uppercase tracking-widest">OUTPUT ↓</p>
+                           <p className="text-[7px] font-black text-indigo-800 uppercase tracking-tight">OUT ↓</p>
                         </div>
-                        <p className="text-lg font-black text-indigo-800 font-mono tracking-tighter drop-shadow-sm">
-                          {lowOutputMachine.output.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <p className="text-[11px] font-black text-indigo-800 font-mono tracking-tighter drop-shadow-sm whitespace-nowrap">
+                          {lowOutputMachine.output.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
                         </p>
                       </div>
                       <div className="flex items-center justify-between">
-                        <p className="text-xl font-black text-indigo-950 leading-none">{lowOutputMachine.machine}</p>
-                        <p className="text-[8px] font-bold text-indigo-700 uppercase tracking-tighter">M3 Output</p>
+                        <p className="text-[11px] font-black text-indigo-950 leading-none truncate max-w-[48px]">{lowOutputMachine.machine}</p>
+                        <p className="text-[7.5px] font-bold text-indigo-700 uppercase tracking-tighter">M3</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Achievement Highlights */}
+                <div className="space-y-1">
+                  {topAchievementMachine && (
+                    <div className="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 border border-white/60 p-1.5 rounded-xl flex flex-col gap-0.5 shadow-md relative overflow-hidden">
+                      <div className="flex items-center justify-between gap-1 overflow-hidden">
+                        <div className="flex items-center gap-0.5">
+                           <div className="bg-indigo-600 p-0.5 rounded text-white shadow-sm">
+                             <TrendingUp size={8} />
+                           </div>
+                           <p className="text-[7px] font-black text-indigo-700 uppercase tracking-tight">POINT ↑</p>
+                        </div>
+                        <p className="text-[11px] font-black text-indigo-800 font-mono tracking-tighter drop-shadow-sm whitespace-nowrap">
+                          {Math.min(10, topAchievementMachine.achievement * 10).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-[11px] font-black text-indigo-950 leading-none truncate max-w-[48px]">{topAchievementMachine.machine}</p>
+                        <p className="text-[7.5px] font-bold text-indigo-800 uppercase tracking-tighter">Poin</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {lowAchievementMachine && (
+                    <div className="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 border border-white/60 p-1.5 rounded-xl flex flex-col gap-0.5 shadow-md relative overflow-hidden">
+                      <div className="flex items-center justify-between gap-1 overflow-hidden">
+                        <div className="flex items-center gap-0.5">
+                           <div className="bg-purple-600 p-0.5 rounded text-white shadow-sm">
+                             <TrendingDown size={8} />
+                           </div>
+                           <p className="text-[7px] font-black text-indigo-700 uppercase tracking-tight">POINT ↓</p>
+                        </div>
+                        <p className="text-[11px] font-black text-indigo-800 font-mono tracking-tighter drop-shadow-sm whitespace-nowrap">
+                          {Math.min(10, lowAchievementMachine.achievement * 10).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-[11px] font-black text-indigo-950 leading-none truncate max-w-[48px]">{lowAchievementMachine.machine}</p>
+                        <p className="text-[7.5px] font-bold text-indigo-800 uppercase tracking-tighter">Poin</p>
                       </div>
                     </div>
                   )}

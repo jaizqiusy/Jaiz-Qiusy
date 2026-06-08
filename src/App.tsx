@@ -280,76 +280,117 @@ export default function App() {
   return (
     <div className="h-[100dvh] w-full bg-[#F4F7FE] text-[#1a1a1a] font-sans flex flex-col max-w-md mx-auto shadow-2xl relative overflow-hidden">
       {/* Header - Purple Gradient */}
-      <header className="bg-gradient-to-b from-[#311B92] to-[#512DA8] px-4 pt-[max(2rem,env(safe-area-inset-top))] pb-12 text-white relative shrink-0">
-        <div className="flex flex-col items-center text-center space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-white p-1.5 rounded-lg shadow-lg">
-              <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <div className="flex items-end gap-0.5 h-full w-full p-1">
-                  <div className="w-1/3 bg-green-500 h-[40%]" />
-                  <div className="w-1/3 bg-blue-500 h-[80%]" />
-                  <div className="w-1/3 bg-yellow-500 h-[60%]" />
-                </div>
+      <header className={cn(
+        "bg-gradient-to-b from-[#311B92] to-[#512DA8] text-white relative shrink-0 shadow-md",
+        activeTab === "analysis" 
+          ? "px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 rounded-b-2xl" 
+          : "px-4 pt-[max(2rem,env(safe-area-inset-top))] pb-12"
+      )}>
+        {activeTab === "analysis" ? (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="bg-white/10 p-1 rounded-lg backdrop-blur-sm border border-white/20">
+                <BarChart3 size={16} className="text-white" />
+              </div>
+              <div>
+                <h1 className="text-xs font-black tracking-tight uppercase leading-none">RENDEMENKU</h1>
+                <p className="text-[9px] font-bold text-indigo-300 uppercase tracking-widest mt-0.5 whitespace-nowrap">Review Harian</p>
               </div>
             </div>
-            <h1 className="text-2xl font-black tracking-tight uppercase">RENDEMENKU</h1>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            {/* Container Icon - Left of Slogan */}
-            <div className="flex flex-col items-center">
-              <div className="bg-white/20 p-0.5 rounded-lg backdrop-blur-sm border border-white/10 overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=100&auto=format&fit=crop" 
-                  alt="Container"
-                  className="w-6 h-6 object-cover rounded-md"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-              <span className="text-[7px] font-black mt-0.5">20 CONT</span>
+            
+            <div className="bg-white/10 px-2.5 py-1 rounded-lg border border-white/10 flex items-center justify-center backdrop-blur-sm">
+              <span className="text-[10px] font-black text-white uppercase tracking-wider">
+                {new Date(selectedDate).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase()}
+              </span>
             </div>
 
-            <p className="text-[10px] font-bold leading-tight opacity-90 max-w-[200px] uppercase tracking-wider">
-              TARGET JELAS • UKURAN PASTI • HASIL NYATA
-            </p>
-
-            {/* Wood Pile Icon - Right of Slogan */}
-            <div className="flex flex-col items-center">
-              <div className="bg-white/20 p-0.5 rounded-lg backdrop-blur-sm border border-white/10 overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1516467508483-a7212febe31a?q=80&w=100&auto=format&fit=crop" 
-                  alt="Wood"
-                  className="w-6 h-6 object-cover rounded-md"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-              <span className="text-[7px] font-black mt-0.5">765 M3</span>
-            </div>
-          </div>
-
-          <div className="absolute top-6 right-4 flex items-center gap-3">
-            {lastSync && (
-              <div className="hidden sm:flex flex-col items-end">
-                <span className="text-[8px] font-bold opacity-60 uppercase tracking-tighter">Terakhir Sinkron</span>
-                <span className="text-[9px] font-black">{lastSync}</span>
-              </div>
-            )}
             <button 
               onClick={() => handleSync(false)}
               disabled={isSyncing}
               className={cn(
-                "p-2 text-white/70 hover:text-white transition-all rounded-full hover:bg-white/10 flex items-center gap-2",
+                "p-1.5 text-white/70 hover:text-white transition-all rounded-full hover:bg-white/10 flex items-center justify-center",
                 isSyncing && "animate-spin text-white"
               )}
             >
-              <RefreshCw size={20} />
+              <RefreshCw size={14} />
             </button>
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-white p-1.5 rounded-lg shadow-lg">
+                <div className="w-8 h-8 bg-white flex items-center justify-center">
+                  <div className="flex items-end gap-0.5 h-full w-full p-1">
+                    <div className="w-1/3 bg-green-500 h-[40%]" />
+                    <div className="w-1/3 bg-blue-500 h-[80%]" />
+                    <div className="w-1/3 bg-yellow-500 h-[60%]" />
+                  </div>
+                </div>
+              </div>
+              <h1 className="text-2xl font-black tracking-tight uppercase">RENDEMENKU</h1>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              {/* Container Icon - Left of Slogan */}
+              <div className="flex flex-col items-center">
+                <div className="bg-white/20 p-0.5 rounded-lg backdrop-blur-sm border border-white/10 overflow-hidden">
+                  <img 
+                    src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=100&auto=format&fit=crop" 
+                    alt="Container"
+                    className="w-6 h-6 object-cover rounded-md"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <span className="text-[7px] font-black mt-0.5">20 CONT</span>
+              </div>
+
+              <p className="text-[10px] font-bold leading-tight opacity-90 max-w-[200px] uppercase tracking-wider">
+                TARGET JELAS • UKURAN PASTI • HASIL NYATA
+              </p>
+
+              {/* Wood Pile Icon - Right of Slogan */}
+              <div className="flex flex-col items-center">
+                <div className="bg-white/20 p-0.5 rounded-lg backdrop-blur-sm border border-white/10 overflow-hidden">
+                  <img 
+                    src="https://images.unsplash.com/photo-1516467508483-a7212febe31a?q=80&w=100&auto=format&fit=crop" 
+                    alt="Wood"
+                    className="w-6 h-6 object-cover rounded-md"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <span className="text-[7px] font-black mt-0.5">765 M3</span>
+              </div>
+            </div>
+
+            <div className="absolute top-6 right-4 flex items-center gap-3">
+              {lastSync && (
+                <div className="hidden sm:flex flex-col items-end">
+                  <span className="text-[8px] font-bold opacity-60 uppercase tracking-tighter">Terakhir Sinkron</span>
+                  <span className="text-[9px] font-black">{lastSync}</span>
+                </div>
+              )}
+              <button 
+                onClick={() => handleSync(false)}
+                disabled={isSyncing}
+                className={cn(
+                  "p-2 text-white/70 hover:text-white transition-all rounded-full hover:bg-white/10 flex items-center gap-2",
+                  isSyncing && "animate-spin text-white"
+                )}
+              >
+                <RefreshCw size={20} />
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto pb-32 px-4 -mt-6 relative z-10">
+      <main className={cn(
+        "flex-1 relative z-10 flex flex-col min-h-0",
+        activeTab === "analysis" 
+          ? "pt-2 pb-[max(5rem,calc(env(safe-area-inset-bottom)+4.2rem))] px-2 mt-0 h-full overflow-hidden" 
+          : "overflow-y-auto pb-32 px-4 -mt-6"
+      )}>
         {syncError && (
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
