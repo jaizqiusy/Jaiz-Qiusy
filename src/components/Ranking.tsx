@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Trophy, ChevronDown, Award, TrendingUp, Sparkles, Volume2 } from "lucide-react";
+import { Trophy, ChevronDown, Award, TrendingUp, Sparkles, Volume2, X } from "lucide-react";
 import { Calculation } from "../App";
 import { cn } from "../lib/utils";
 import { fetchOperatorData, OperatorData } from "../services/sheetService";
@@ -56,6 +56,17 @@ export function getNormalizedMachineKey(rawMachine: string): string {
 export default function Ranking({ history }: RankingProps) {
   const [periodType, setPeriodType] = useState<"bulanan" | "mingguan">("bulanan");
   const [operatorMapping, setOperatorMapping] = useState<Record<string, { name: string; avatar: string }>>(DEFAULT_OPERATOR_MAPPING);
+  const [selectedDetailOperator, setSelectedDetailOperator] = useState<{
+    machine: string;
+    name: string;
+    avatar: string;
+    input: number;
+    utama: number;
+    output: number;
+    yield: number;
+    achievement: number;
+    rank: number;
+  } | null>(null);
 
   useEffect(() => {
     fetchOperatorData().then(data => {
@@ -255,7 +266,10 @@ export default function Ranking({ history }: RankingProps) {
         {podium.rank2 && (
           <div className="flex-1 flex flex-col items-center text-center mt-2">
             <div className="relative">
-              <div className="w-[70px] h-[70px] rounded-full p-[2.5px] bg-gradient-to-tr from-cyan-400 via-sky-300 to-indigo-500 shadow-[0_0_10px_rgba(6,182,212,0.3)]">
+              <div 
+                onClick={() => setSelectedDetailOperator({ ...podium.rank2!, rank: 2 })}
+                className="w-[70px] h-[70px] rounded-full p-[2.5px] bg-gradient-to-tr from-cyan-400 via-sky-300 to-indigo-500 shadow-[0_0_10px_rgba(6,182,212,0.3)] cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-200"
+              >
                 <div className="w-full h-full rounded-full overflow-hidden border-2 border-slate-950">
                   <img 
                     src={podium.rank2.avatar} 
@@ -265,7 +279,7 @@ export default function Ranking({ history }: RankingProps) {
                   />
                 </div>
               </div>
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-[22px] h-[22px] min-w-[22px] min-h-[22px] bg-cyan-500 rounded-full flex items-center justify-center border-2 border-[#0C1524] shadow-sm">
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-[22px] h-[22px] min-w-[22px] min-h-[22px] bg-cyan-500 rounded-full flex items-center justify-center border-2 border-[#0C1524] shadow-sm pointer-events-none">
                 <span className="text-[11px] font-black text-slate-950">2</span>
               </div>
             </div>
@@ -296,7 +310,10 @@ export default function Ranking({ history }: RankingProps) {
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 text-amber-400 animate-bounce">
                 <Award size={14} className="fill-amber-400/20" />
               </div>
-              <div className="w-[90px] h-[90px] rounded-full p-[3.5px] bg-gradient-to-tr from-yellow-400 via-amber-300 to-orange-500 shadow-[0_0_15px_rgba(251,191,36,0.3)]">
+              <div 
+                onClick={() => setSelectedDetailOperator({ ...podium.rank1!, rank: 1 })}
+                className="w-[90px] h-[90px] rounded-full p-[3.5px] bg-gradient-to-tr from-yellow-400 via-amber-300 to-orange-500 shadow-[0_0_15px_rgba(251,191,36,0.3)] cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-200"
+              >
                 <div className="w-full h-full rounded-full overflow-hidden border-[2.5px] border-slate-950">
                   <img 
                     src={podium.rank1.avatar} 
@@ -306,7 +323,7 @@ export default function Ranking({ history }: RankingProps) {
                   />
                 </div>
               </div>
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-7 h-7 bg-yellow-400 rounded-full flex items-center justify-center border-[2.5px] border-[#0C1524] shadow-md">
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-7 h-7 bg-yellow-400 rounded-full flex items-center justify-center border-[2.5px] border-[#0C1524] shadow-md pointer-events-none">
                 <span className="text-[13px] font-black text-slate-950">1</span>
               </div>
             </div>
@@ -333,7 +350,10 @@ export default function Ranking({ history }: RankingProps) {
         {podium.rank3 && (
           <div className="flex-1 flex flex-col items-center text-center mt-3">
             <div className="relative">
-              <div className="w-[66px] h-[66px] rounded-full p-[2.5px] bg-gradient-to-tr from-emerald-500 via-teal-400 to-indigo-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]">
+              <div 
+                onClick={() => setSelectedDetailOperator({ ...podium.rank3!, rank: 3 })}
+                className="w-[66px] h-[66px] rounded-full p-[2.5px] bg-gradient-to-tr from-emerald-500 via-teal-400 to-indigo-500 shadow-[0_0_10px_rgba(16,185,129,0.3)] cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-200"
+              >
                 <div className="w-full h-full rounded-full overflow-hidden border-2 border-slate-950">
                   <img 
                     src={podium.rank3.avatar} 
@@ -343,7 +363,7 @@ export default function Ranking({ history }: RankingProps) {
                   />
                 </div>
               </div>
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-[22px] h-[22px] min-w-[22px] min-h-[22px] bg-emerald-500 rounded-full flex items-center justify-center border-2 border-[#0C1524] shadow-sm">
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-[22px] h-[22px] min-w-[22px] min-h-[22px] bg-emerald-500 rounded-full flex items-center justify-center border-2 border-[#0C1524] shadow-sm pointer-events-none">
                 <span className="text-[11px] font-black text-slate-950">3</span>
               </div>
             </div>
@@ -383,7 +403,10 @@ export default function Ranking({ history }: RankingProps) {
                   <span className="w-4 text-center text-[13px] font-black text-indigo-400">
                     {rankNum}
                   </span>
-                  <div className="w-9 h-9 rounded-full overflow-hidden border-[1.5px] border-indigo-900 bg-slate-900 shrink-0 shadow-md">
+                  <div 
+                    onClick={() => setSelectedDetailOperator({ ...op, rank: rankNum })}
+                    className="w-9 h-9 rounded-full overflow-hidden border-[1.5px] border-indigo-900 bg-slate-900 shrink-0 shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-200"
+                  >
                     <img 
                       src={op.avatar} 
                       alt={op.name} 
@@ -421,6 +444,168 @@ export default function Ranking({ history }: RankingProps) {
           </div>
         )}
       </div>
+
+      {/* Detail View Full Screen Overlay/Card */}
+      {selectedDetailOperator && (
+        <div id="operator_detail_card" className="absolute inset-0 z-50 bg-[#0C1524] flex flex-col text-white overflow-y-auto pb-4 transition-all duration-300">
+          {/* Detailed Card View Header */}
+          <div className="flex items-center justify-between px-4 py-3.5 border-b border-indigo-950/40 bg-[#0e192c] shrink-0 sticky top-0 z-10">
+            <div className="flex items-center gap-1.5">
+              <Trophy size={16} className="text-amber-500" />
+              <span className="text-[12px] font-black uppercase tracking-wider text-indigo-300">Detail Operator</span>
+            </div>
+            <button
+              id="close_detail_button"
+              onClick={() => setSelectedDetailOperator(null)}
+              className="p-1.5 px-2.5 rounded-lg bg-indigo-950 hover:bg-indigo-900 text-white flex items-center gap-1.5 transition-all outline-none border border-indigo-900/40 active:scale-95 cursor-pointer"
+            >
+              <X size={15} className="text-red-400" />
+              <span className="text-[10px] font-black text-indigo-300 uppercase">Kembali</span>
+            </button>
+          </div>
+
+          <div className="flex-1 flex flex-col items-center justify-start py-5 px-4 space-y-4">
+            
+            {/* Operator Avatar and Medal/Crown */}
+            <div className="relative mt-2">
+              {/* Rank Tag Badge */}
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 whitespace-nowrap bg-[#121c30] border border-indigo-500/30 rounded-full px-3 py-1 shadow-lg flex items-center gap-1">
+                <Award size={12} className={
+                  selectedDetailOperator.rank === 1 ? "text-yellow-400" :
+                  selectedDetailOperator.rank === 2 ? "text-cyan-400" :
+                  selectedDetailOperator.rank === 3 ? "text-emerald-400" : "text-indigo-400"
+                } />
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#FFB800]">
+                  Peringkat {selectedDetailOperator.rank}
+                </span>
+              </div>
+              
+              {/* Main Circular Profile Photo */}
+              <div className={`w-[124px] h-[124px] rounded-full p-[3px] shadow-[0_0_20px_rgba(30,41,59,0.5)] ${
+                selectedDetailOperator.rank === 1 ? "bg-gradient-to-tr from-yellow-400 via-amber-300 to-orange-500" :
+                selectedDetailOperator.rank === 2 ? "bg-gradient-to-tr from-cyan-400 via-sky-300 to-indigo-500" :
+                selectedDetailOperator.rank === 3 ? "bg-gradient-to-tr from-emerald-500 via-teal-400 to-indigo-500" :
+                "bg-indigo-950 border border-indigo-800"
+              }`}>
+                <div className="w-full h-full rounded-full overflow-hidden border-2 border-slate-950">
+                  <img 
+                    src={selectedDetailOperator.avatar} 
+                    alt={selectedDetailOperator.name} 
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Operator Name and Machine info */}
+            <div className="text-center">
+              <h2 className="text-[18px] font-extrabold text-white leading-tight mt-1">{selectedDetailOperator.name}</h2>
+              <div className="mt-1.5 inline-flex items-center gap-2 bg-[#1E2538] border border-indigo-950 px-3 py-1 rounded-full">
+                <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest leading-none">
+                  Mesin: {selectedDetailOperator.machine}
+                </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 mt-0.5"></span>
+              </div>
+            </div>
+
+            {/* Stats Section */}
+            <div className="w-full space-y-3">
+              <h3 className="text-[10px] font-extrabold uppercase text-indigo-400 tracking-wider">
+                Kinerja Periode {periodType === "bulanan" ? `Bulan ${selectedMonth}` : `Minggu ${selectedWeek}`}
+              </h3>
+
+              {/* Grid of details cards */}
+              <div className="grid grid-cols-2 gap-2.5">
+                {/* 1. Rendemen Utama (Yield %) Card */}
+                <div className="bg-indigo-950/30 border border-indigo-900/40 p-3 rounded-xl flex flex-col justify-between">
+                  <span className="text-[9px] font-extrabold text-indigo-200 uppercase">Rendemen Utama</span>
+                  <div className="mt-1">
+                    <span className="text-[20px] font-black text-cyan-400 font-mono">{selectedDetailOperator.yield.toFixed(1)}%</span>
+                  </div>
+                  <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden mt-2">
+                    <div 
+                      className="h-full bg-cyan-400 rounded-full"
+                      style={{ width: `${Math.min(100, selectedDetailOperator.yield * 1.5)}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* 2. Skor Performa (Achievement) Card */}
+                <div className="bg-indigo-950/30 border border-indigo-900/40 p-3 rounded-xl flex flex-col justify-between">
+                  <span className="text-[9px] font-extrabold text-indigo-200 uppercase">Skor Performa</span>
+                  <div className="mt-1">
+                    <span className="text-[20px] font-black text-yellow-400 font-mono">{selectedDetailOperator.achievement.toFixed(1)}</span>
+                    <span className="text-[10px] text-gray-400 ml-1">/ 100</span>
+                  </div>
+                  <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden mt-2">
+                    <div 
+                      className="h-full bg-yellow-400 rounded-full"
+                      style={{ width: `${selectedDetailOperator.achievement}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* 3. Output Total Card */}
+                <div className="bg-indigo-950/30 border border-indigo-900/40 p-3 rounded-xl">
+                  <span className="text-[9px] font-extrabold text-indigo-200 uppercase">Output Total</span>
+                  <div className="mt-1 flex items-baseline gap-1">
+                    <span className="text-[18px] font-black text-white font-mono">
+                      {selectedDetailOperator.output.toLocaleString("id-ID", { maximumFractionDigits: 1 })}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400">m³</span>
+                  </div>
+                </div>
+
+                {/* 4. Bahan Utama Card */}
+                <div className="bg-indigo-950/30 border border-indigo-900/40 p-3 rounded-xl">
+                  <span className="text-[9px] font-extrabold text-indigo-200 uppercase">Output Utama</span>
+                  <div className="mt-1 flex items-baseline gap-1">
+                    <span className="text-[18px] font-black text-white font-mono">
+                      {selectedDetailOperator.utama.toLocaleString("id-ID", { maximumFractionDigits: 1 })}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400 font-sans">m³</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Full Input Total */}
+              <div className="bg-indigo-950/25 border border-indigo-900/30 p-3 rounded-xl flex justify-between items-center bg-[#0e172a]">
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-extrabold text-indigo-200 uppercase">Total Input Piringan</span>
+                  <span className="text-[10px] text-slate-400 font-medium mt-0.5">Bahan baku kayu masuk</span>
+                </div>
+                <div className="text-right flex items-baseline gap-1">
+                  <span className="text-[18px] font-black text-emerald-400 font-mono">
+                    {selectedDetailOperator.input.toLocaleString("id-ID", { maximumFractionDigits: 1 })}
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400">m³</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Motivation Badge or Summary */}
+            <div className="w-full bg-[#111A2E] border border-indigo-950 p-3.5 rounded-xl flex items-start gap-3 mt-1 shadow-inner">
+              <Sparkles size={16} className="text-amber-400 shrink-0 mt-0.5 animate-pulse" />
+              <div>
+                <h4 className="text-[11px] font-black text-slate-200 uppercase tracking-wider">
+                  {selectedDetailOperator.rank <= 3 ? "Kinerja Luar Biasa!" : "Semangat Peningkatan!"}
+                </h4>
+                <p className="text-[10px] text-[#A5B4FC] mt-1 leading-relaxed">
+                  {selectedDetailOperator.rank === 1 ? (
+                    "Selamat atas peringkat 1! Pertahankan koordinasi piringan kayu yang optimal untuk menjaga efisiensi tertinggi di pabrik."
+                  ) : selectedDetailOperator.rank === 2 || selectedDetailOperator.rank === 3 ? (
+                    "Kinerja luar biasa di jajaran podium teratas. Sedikit peningkatan efisiensi input piringan dapat mengantarkan Anda ke posisi juara pertama!"
+                  ) : (
+                    "Kinerja stabil dan kontributif. Dengan fokus lebih pada penekanan rendemen piringan utama (maksimal hasil kayu), Anda berpeluang besar untuk masuk 3 besar!"
+                  )}
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
       
     </div>
   );
