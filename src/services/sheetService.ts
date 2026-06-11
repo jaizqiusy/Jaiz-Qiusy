@@ -29,10 +29,20 @@ export interface DowntimeData {
   waktu: string; // time
 }
 
+export interface OperatorData {
+  id: string;
+  nama_lengkap: string;
+  inisial: string;
+  kode_bs: string;
+  status_aktif: boolean;
+  url_foto: string;
+}
+
 const SHEET_ID = "1G7x3dtE2KFF338w6qdd4jrMkz-yrbThlzx5Vi0I8AqQ";
 // Using the gviz API which is often more reliable for CORS and public sheets
-const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=DATABASE+APPSCRIPT`;
 const DOWNTIME_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Downtime`;
+const OPERATOR_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Operator+bs`;
 
 
 export async function fetchSheetData(): Promise<SheetData[]> {
@@ -268,3 +278,70 @@ export async function fetchDowntimeData(): Promise<DowntimeData[]> {
     return [];
   }
 }
+
+export async function fetchOperatorData(): Promise<OperatorData[]> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000); 
+
+  try {
+    console.log("Fetching from:", OPERATOR_CSV_URL);
+    const response = await fetch(OPERATOR_CSV_URL, { 
+      signal: controller.signal,
+      headers: {
+        'Accept': 'text/csv'
+      }
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`Gagal mengambil data operator (Status: ${response.status}).`);
+    }
+    
+    const csvText = await response.text();
+    
+    if (csvText.includes("<!DOCTYPE html>") || csvText.includes("<html")) {
+      throw new Error("Google Sheet operator tidak dapat diakses.");
+    }
+
+    if (!csvText || csvText.trim().length === 0) {
+      return [];
+    }
+    
+    return new Promise((resolve, reject) => {
+      Papa.parse(csvText, {
+        header: true,
+        dynamicTyping: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const rawData = results.data as any[];
+          const mappedData: OperatorData[] = rawData.map(row => {
+              let photoUrl = String(row.url_foto || "");
+              if (photoUrl.includes("drive.google.com/uc") || photoUrl.includes("drive.google.com/file/d/")) {
+                const idMatch = photoUrl.match(/id=([a-zA-Z0-9_-]+)/) || photoUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                if (idMatch && idMatch[1]) {
+                  photoUrl = `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w500`;
+                }
+              }
+              
+            return {
+              id: String(row.id_operator || ""),
+              nama_lengkap: String(row.nama_lengkap || ""),
+              inisial: String(row.inisial || ""),
+              kode_bs: String(row.kode_bs || ""),
+              status_aktif: String(row.status_aktif).toUpperCase() === "TRUE",
+              url_foto: photoUrl,
+            };
+          }).filter(item => item.id && item.kode_bs);
+          
+          resolve(mappedData);
+        },
+        error: (error: any) => reject(new Error(`Gagal proses CSV operator: ${error.message}`))
+      });
+    });
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    console.error("Operator Fetch Error:", error);
+    return [];
+  }
+}
+

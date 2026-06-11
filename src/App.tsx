@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
-  Calculator as CalcIcon, 
+  Trophy, 
   LayoutDashboard, 
   History as HistoryIcon, 
   Settings,
@@ -24,7 +24,7 @@ import { cn } from "./lib/utils";
 import { fetchSheetData, fetchDowntimeData, DowntimeData } from "./services/sheetService";
 
 // Components
-import Calculator from "./components/Calculator";
+import Ranking from "./components/Ranking";
 import Dashboard from "./components/Dashboard";
 import History from "./components/History";
 import Performance from "./components/Performance";
@@ -54,7 +54,7 @@ export type Calculation = {
   timestamp: number;
 };
 
-const TABS = ["calculator", "dashboard", "analysis", "performance", "history", "downtime"] as const;
+const TABS = ["ranking", "dashboard", "analysis", "performance", "history", "downtime"] as const;
 type TabType = typeof TABS[number];
 
 export default function App() {
@@ -281,10 +281,12 @@ export default function App() {
     <div className="h-[100dvh] w-full bg-[#F4F7FE] text-[#1a1a1a] font-sans flex flex-col max-w-md mx-auto shadow-2xl relative overflow-hidden">
       {/* Header - Purple Gradient */}
       <header className={cn(
-        "bg-gradient-to-b from-[#311B92] to-[#512DA8] text-white relative shrink-0 shadow-md",
-        activeTab === "analysis" 
-          ? "px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 rounded-b-2xl" 
-          : "px-4 pt-[max(2rem,env(safe-area-inset-top))] pb-12"
+        "text-white relative shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.1)] transition-colors duration-300",
+        activeTab === "ranking"
+          ? "bg-[#0C1524] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 z-20"
+          : activeTab === "analysis" 
+          ? "bg-gradient-to-b from-[#311B92] to-[#512DA8] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 rounded-b-2xl z-20" 
+          : "bg-gradient-to-b from-[#311B92] to-[#512DA8] px-4 pt-[max(2rem,env(safe-area-inset-top))] pb-12 z-0"
       )}>
         {activeTab === "analysis" ? (
           <div className="flex items-center justify-between">
@@ -314,6 +316,22 @@ export default function App() {
             >
               <RefreshCw size={14} />
             </button>
+          </div>
+        ) : activeTab === "ranking" ? (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="bg-amber-500/10 p-1.5 rounded-lg border border-amber-500/20">
+                <Trophy size={16} className="text-amber-500" />
+              </div>
+              <div>
+                <h1 className="text-[14px] font-black tracking-wide text-white">Leaderboard Operator</h1>
+              </div>
+            </div>
+            <div className="bg-indigo-950/50 px-2 py-1 rounded-md border border-indigo-900/50">
+              <span className="text-[9px] font-bold text-indigo-300 uppercase tracking-wider">
+                {new Date().toLocaleDateString("id-ID", { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase()}
+              </span>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col items-center text-center space-y-4">
@@ -387,8 +405,10 @@ export default function App() {
       {/* Main Content */}
       <main className={cn(
         "flex-1 relative z-10 flex flex-col min-h-0",
-        activeTab === "analysis" 
+        activeTab === "analysis"
           ? "pt-2 pb-[max(5rem,calc(env(safe-area-inset-bottom)+4.2rem))] px-2 mt-0 h-full overflow-hidden" 
+          : activeTab === "ranking"
+          ? "pt-0 pb-[max(5rem,calc(env(safe-area-inset-bottom)+4.2rem))] px-0 mt-0 h-full overflow-hidden bg-[#0C1524]"
           : "overflow-y-auto pb-32 px-4 -mt-6"
       )}>
         {syncError && (
@@ -429,7 +449,7 @@ export default function App() {
           }}
           className="min-h-full"
         >
-          {activeTab === "calculator" && <Calculator onCalculate={addCalculation} />}
+          {activeTab === "ranking" && <Ranking history={history} />}
           {activeTab === "dashboard" && (
             <Dashboard 
               history={history} 
@@ -448,10 +468,10 @@ export default function App() {
       {/* Bottom Navigation */}
       <nav className="absolute bottom-0 left-0 right-0 w-full bg-white/90 backdrop-blur-md border-t border-gray-100 grid grid-cols-6 items-center z-20 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 px-1">
         <NavButton 
-          active={activeTab === "calculator"} 
-          onClick={() => handleTabChange("calculator")}
-          icon={<CalcIcon size={18} className="sm:w-5 sm:h-5" />}
-          label="Hitung"
+          active={activeTab === "ranking"} 
+          onClick={() => handleTabChange("ranking")}
+          icon={<Trophy size={18} className="sm:w-5 sm:h-5" />}
+          label="Ranking"
         />
         <NavButton 
           active={activeTab === "dashboard"} 
