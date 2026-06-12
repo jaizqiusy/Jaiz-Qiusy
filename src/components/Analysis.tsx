@@ -144,16 +144,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
   const topOutputMachine = [...bsData].sort((a, b) => b.output - a.output)[0];
   const lowOutputMachine = [...bsData].sort((a, b) => a.output - b.output)[0];
 
-  const topAchievementMachine = [...allDisplayData].sort((a, b) => {
-    const achA = Math.min(10, a.achievement * 10);
-    const achB = Math.min(10, b.achievement * 10);
-    return achB - achA;
-  })[0];
-  const lowAchievementMachine = [...allDisplayData].sort((a, b) => {
-    const achA = Math.min(10, a.achievement * 10);
-    const achB = Math.min(10, b.achievement * 10);
-    return achA - achB;
-  })[0];
+
 
   return (
     <div className="flex-1 flex flex-col min-h-0 h-full space-y-2 pb-1" ref={containerRef}>
@@ -372,48 +363,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                   )}
                 </div>
 
-                {/* Achievement Highlights */}
-                <div className="space-y-1">
-                  {topAchievementMachine && (
-                    <div className="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 border border-white/60 p-1.5 rounded-xl flex flex-col gap-0.5 shadow-md relative overflow-hidden">
-                      <div className="flex items-center justify-between gap-1 overflow-hidden">
-                        <div className="flex items-center gap-0.5">
-                           <div className="bg-indigo-600 p-0.5 rounded text-white shadow-sm">
-                             <TrendingUp size={8} />
-                           </div>
-                           <p className="text-[7px] font-black text-indigo-700 uppercase tracking-tight">POINT ↑</p>
-                        </div>
-                        <p className="text-[11px] font-black text-indigo-800 font-mono tracking-tighter drop-shadow-sm whitespace-nowrap">
-                          {Math.min(10, topAchievementMachine.achievement * 10).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <p className="text-[11px] font-black text-indigo-950 leading-none truncate max-w-[48px]">{topAchievementMachine.machine}</p>
-                        <p className="text-[7.5px] font-bold text-indigo-800 uppercase tracking-tighter">Poin</p>
-                      </div>
-                    </div>
-                  )}
 
-                  {lowAchievementMachine && (
-                    <div className="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 border border-white/60 p-1.5 rounded-xl flex flex-col gap-0.5 shadow-md relative overflow-hidden">
-                      <div className="flex items-center justify-between gap-1 overflow-hidden">
-                        <div className="flex items-center gap-0.5">
-                           <div className="bg-purple-600 p-0.5 rounded text-white shadow-sm">
-                             <TrendingDown size={8} />
-                           </div>
-                           <p className="text-[7px] font-black text-indigo-700 uppercase tracking-tight">POINT ↓</p>
-                        </div>
-                        <p className="text-[11px] font-black text-indigo-800 font-mono tracking-tighter drop-shadow-sm whitespace-nowrap">
-                          {Math.min(10, lowAchievementMachine.achievement * 10).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <p className="text-[11px] font-black text-indigo-950 leading-none truncate max-w-[48px]">{lowAchievementMachine.machine}</p>
-                        <p className="text-[7.5px] font-bold text-indigo-800 uppercase tracking-tighter">Poin</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
 
