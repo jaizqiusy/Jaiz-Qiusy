@@ -63,6 +63,7 @@ export default function Ranking({ history }: RankingProps) {
     input: number;
     utama: number;
     output: number;
+    targetTotal?: number;
     yield: number;
     achievement: number;
     rank: number;
@@ -148,6 +149,7 @@ export default function Ranking({ history }: RankingProps) {
       const totalInput = machRecords.reduce((sum, item) => sum + item.input, 0);
       const totalUtama = machRecords.reduce((sum, item) => sum + item.utama, 0);
       const totalOutput = machRecords.reduce((sum, item) => sum + item.output, 0);
+      const totalTarget = machRecords.reduce((sum, item) => sum + (item.target || 9), 0);
       
       // Calculate Yield % (Rendemen utama)
       const avgYield = totalInput > 0 ? (totalUtama / totalInput) * 100 : 0;
@@ -160,18 +162,20 @@ export default function Ranking({ history }: RankingProps) {
         utama: totalUtama,
         output: totalOutput,
         yield: avgYield,
+        targetTotal: totalTarget,
         achievement: 0 // Will compute below
       };
     });
 
-    const maxYield = Math.max(...list.map(m => m.yield));
-    const maxOutput = Math.max(...list.map(m => m.output));
-
     list.forEach(m => {
-      // Logic ranking: 55% dari rendemen utama dan 45% dari output total (normalized)
-      const yieldScore = maxYield > 0 ? (m.yield / maxYield) * 100 : 0;
-      const outputScore = maxOutput > 0 ? (m.output / maxOutput) * 100 : 0;
-      m.achievement = (yieldScore * 0.55) + (outputScore * 0.45);
+      // Rendemen Utama: Perhitungan mengambil Rendemen Aktual dibagi batas target 30%, kemudian dikalikan bobot 55%
+      const yieldScore = (m.yield / 30) * 55;
+      
+      // Output Total: Perhitungan mengambil Output Total Aktual dibagi target total produksi, lalu dikalikan dengan bobot 45%
+      const outputScore = m.targetTotal > 0 ? (m.output / m.targetTotal) * 45 : 0;
+      
+      // Kombinasi Skor Peringkat
+      m.achievement = yieldScore + outputScore;
     });
 
     // Sort list based on the new combined score
