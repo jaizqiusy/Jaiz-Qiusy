@@ -121,6 +121,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
       baseEntry.turunan = entries.reduce((s, e) => s + e.turunan, 0);
       baseEntry.lokal = entries.reduce((s, e) => s + e.lokal, 0);
       baseEntry.output = entries.reduce((s, e) => s + e.output, 0);
+      baseEntry.utama_non_pilot_ladder = entries.reduce((s, e) => s + (e.utama_non_pilot_ladder || 0), 0);
       baseEntry.yield_primary = baseEntry.input > 0 ? baseEntry.utama / baseEntry.input : 0;
       baseEntry.achievement = entries.reduce((s, e) => s + e.achievement, 0) / entries.length;
     }
@@ -139,10 +140,12 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
   // Analysis Logic
   const getCalcYield = (m: any) => m.input > 0 ? (m.utama / m.input) * 100 : 0;
   
-  const topMachine = [...bsData].sort((a, b) => getCalcYield(b) - getCalcYield(a))[0];
-  const lowMachine = [...bsData].sort((a, b) => getCalcYield(a) - getCalcYield(b))[0];
-  const topOutputMachine = [...bsData].sort((a, b) => b.output - a.output)[0];
-  const lowOutputMachine = [...bsData].sort((a, b) => a.output - b.output)[0];
+  const activeBsData = bsData.filter(m => m.input > 0 || m.output > 0);
+
+  const topMachine = activeBsData.length > 0 ? [...activeBsData].sort((a, b) => getCalcYield(b) - getCalcYield(a))[0] : null;
+  const lowMachine = activeBsData.length > 0 ? [...activeBsData].sort((a, b) => getCalcYield(a) - getCalcYield(b))[0] : null;
+  const topOutputMachine = activeBsData.length > 0 ? [...activeBsData].sort((a, b) => b.output - a.output)[0] : null;
+  const lowOutputMachine = activeBsData.length > 0 ? [...activeBsData].sort((a, b) => a.output - b.output)[0] : null;
 
 
 
@@ -200,14 +203,15 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
         ) : (
           <div className="flex-1 flex flex-col min-h-0 justify-between gap-2">
             {/* Detailed Machine Status Grid */}
-            <div className="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 rounded-2xl border border-white/60 overflow-hidden shadow-md shrink-0">
-              <div className="overflow-x-auto">
+            <div className="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 rounded-2xl border border-white/60 overflow-hidden shadow-md flex-1 flex flex-col min-h-0">
+              <div className="overflow-auto flex-1">
                 <table className="w-full text-left border-collapse">
-                  <thead>
+                  <thead className="sticky top-0 bg-[#e0e7ff] z-10">
                     <tr className="bg-white/40 text-[10px] font-black text-indigo-800 uppercase tracking-wider border-b border-indigo-200">
                       <th className="px-2 py-2 border-r border-indigo-200/60">Mesin</th>
                       <th className="px-2 py-2 text-center border-r border-indigo-200/60">Input</th>
-                      <th className="px-2 py-2 text-center border-r border-indigo-200/60">Utama</th>
+                      <th className="px-2 py-2 text-center border-r border-indigo-200/60">Rend %</th>
+                      <th className="px-2 py-2 text-center border-r border-indigo-200/60">Rend % No PL</th>
                       <th className="px-2 py-2 text-center border-r border-indigo-200/60">Output</th>
                       <th className="px-2 py-2 text-center">Point</th>
                     </tr>
@@ -255,6 +259,11 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                             </span>
                           </td>
                           <td className="px-2 py-1.5 text-center border-r border-indigo-200/60">
+                            <span className="text-[14px] font-black text-teal-700 tracking-tighter">
+                              {item.input > 0 ? ((item.utama_non_pilot_ladder || 0) / item.input * 100).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0,00"}%
+                            </span>
+                          </td>
+                          <td className="px-2 py-1.5 text-center border-r border-indigo-200/60">
                             <span className="text-[14px] font-black text-emerald-700 tracking-tighter">
                               {item.output.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
@@ -276,7 +285,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
             <div className="space-y-1.5 shrink-0">
               <h4 className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.2em] px-1">Performance Highlights</h4>
               
-              <div className="grid grid-cols-3 gap-1.5">
+              <div className="grid grid-cols-2 gap-1.5">
                 {/* Rendemen Highlights */}
                 <div className="space-y-1">
                   {topMachine && (

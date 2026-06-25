@@ -51,6 +51,7 @@ export type Calculation = {
   week: number;
   month: number;
   quartal: number;
+  utama_non_pilot_ladder: number;
   timestamp: number;
 };
 
@@ -154,6 +155,7 @@ export default function App() {
         week: item.week,
         month: item.month,
         quartal: item.quartal,
+        utama_non_pilot_ladder: item.utama_non_pilot_ladder || 0,
         timestamp: new Date(item.tanggal).getTime() || Date.now()
       }));
       

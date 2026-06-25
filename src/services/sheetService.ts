@@ -17,6 +17,7 @@ export interface SheetData {
   week: number;
   month: number;
   quartal: number;
+  utama_non_pilot_ladder: number;
 }
 
 export interface DowntimeData {
@@ -112,6 +113,7 @@ export async function fetchSheetData(): Promise<SheetData[]> {
             const week = Number(row[13]) || 0;
             const month = Number(row[14]) || 0;
             const quartal = Number(row[15]) || 0;
+            const utama_non_pilot_ladder = Number(row[19]) || 0;
             
             let rawDate = row[0];
             let dateStr = "";
@@ -153,7 +155,8 @@ export async function fetchSheetData(): Promise<SheetData[]> {
               achievement,
               week,
               month,
-              quartal
+              quartal,
+              utama_non_pilot_ladder
             };
           }).filter((item): item is SheetData => item !== null && !!item.tanggal && !!item.mesin);
           
