@@ -21,13 +21,13 @@ interface AnalysisProps {
 }
 
 export default function Analysis({ history, selectedDate }: AnalysisProps) {
-  const [zoomLevel, setZoomLevel] = React.useState(1);
+  const [zoomLevel, setZoomLevel] = React.useState(0.93);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const lastTouchDistance = React.useRef<number | null>(null);
 
   const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.1, 2));
   const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 0.1, 0.5));
-  const handleResetZoom = () => setZoomLevel(1);
+  const handleResetZoom = () => setZoomLevel(0.93);
 
   // Multi-touch gestures for Android/Mobile
   React.useEffect(() => {
