@@ -168,11 +168,11 @@ export default function Ranking({ history }: RankingProps) {
     });
 
     list.forEach(m => {
-      // Rendemen Utama: Perhitungan mengambil Rendemen Aktual dibagi batas target 30%, kemudian dikalikan bobot 50%
-      const yieldScore = (m.yield / 30) * 50;
+      // Rendemen Utama: Perhitungan berdasarkan bobot nilai Rendemen Aktual x 50%
+      const yieldScore = m.yield * 0.5;
       
-      // Output Total: Perhitungan mengambil Output Total Aktual dibagi target total produksi (akumulasi 9 m3 perhari), lalu dikalikan dengan bobot 50%
-      const outputScore = m.targetTotal > 0 ? (m.output / m.targetTotal) * 50 : 0;
+      // Output Total: Perhitungan berdasarkan bobot nilai Output Total Aktual x 50%
+      const outputScore = m.output * 0.5;
       
       // Kombinasi Skor Peringkat
       m.achievement = yieldScore + outputScore;
