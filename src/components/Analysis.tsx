@@ -211,7 +211,6 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                       <th className="px-2 py-2 border-r border-indigo-200/60">Mesin</th>
                       <th className="px-2 py-2 text-center border-r border-indigo-200/60">Input</th>
                       <th className="px-2 py-2 text-center border-r border-indigo-200/60">Rend %</th>
-                      <th className="px-2 py-2 text-center border-r border-indigo-200/60">Rend % No PL</th>
                       <th className="px-2 py-2 text-center border-r border-indigo-200/60">Output</th>
                       <th className="px-2 py-2 text-center">Point</th>
                     </tr>
@@ -256,11 +255,6 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                           <td className="px-2 py-1.5 text-center border-r border-indigo-200/60">
                             <span className="text-[14px] font-black text-indigo-900 tracking-tighter">
                               {yieldVal.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
-                            </span>
-                          </td>
-                          <td className="px-2 py-1.5 text-center border-r border-indigo-200/60">
-                            <span className="text-[14px] font-black text-teal-700 tracking-tighter">
-                              {item.input > 0 ? ((item.utama_non_pilot_ladder || 0) / item.input * 100).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0,00"}%
                             </span>
                           </td>
                           <td className="px-2 py-1.5 text-center border-r border-indigo-200/60">
