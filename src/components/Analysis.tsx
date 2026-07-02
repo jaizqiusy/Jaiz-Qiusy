@@ -140,7 +140,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
   // Analysis Logic
   const getCalcYield = (m: any) => m.input > 0 ? (m.utama / m.input) * 100 : 0;
   
-  const activeBsData = bsData.filter(m => m.input > 0 || m.output > 0);
+  const activeBsData = bsData.filter(m => Number(m.input) > 0 && Number(m.output) > 0);
 
   const topMachine = activeBsData.length > 0 ? [...activeBsData].sort((a, b) => getCalcYield(b) - getCalcYield(a))[0] : null;
   const lowMachine = activeBsData.length > 0 ? [...activeBsData].sort((a, b) => getCalcYield(a) - getCalcYield(b))[0] : null;
@@ -291,7 +291,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                            </div>
                            <p className="text-[7px] font-black text-emerald-700 uppercase tracking-tight">UTAMA ↑</p>
                         </div>
-                        <p className="text-[11px] font-black text-emerald-700 font-mono tracking-tighter drop-shadow-sm whitespace-nowrap">
+                        <p className="text-[16px] font-black text-emerald-700 tracking-tighter drop-shadow-sm whitespace-nowrap">
                           {getCalcYield(topMachine).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
                         </p>
                       </div>
@@ -311,7 +311,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                            </div>
                            <p className="text-[7px] font-black text-rose-700 uppercase tracking-tight">UTAMA ↓</p>
                         </div>
-                        <p className="text-[11px] font-black text-rose-700 font-mono tracking-tighter drop-shadow-sm whitespace-nowrap">
+                        <p className="text-[16px] font-black text-rose-700 tracking-tighter drop-shadow-sm whitespace-nowrap">
                           {getCalcYield(lowMachine).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
                         </p>
                       </div>
@@ -334,7 +334,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                            </div>
                            <p className="text-[7px] font-black text-blue-700 uppercase tracking-tight">OUT ↑</p>
                         </div>
-                        <p className="text-[11px] font-black text-blue-700 font-mono tracking-tighter drop-shadow-sm whitespace-nowrap">
+                        <p className="text-[16px] font-black text-blue-700 tracking-tighter drop-shadow-sm whitespace-nowrap">
                           {topOutputMachine.output.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
                         </p>
                       </div>
@@ -354,7 +354,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                            </div>
                            <p className="text-[7px] font-black text-indigo-800 uppercase tracking-tight">OUT ↓</p>
                         </div>
-                        <p className="text-[11px] font-black text-indigo-800 font-mono tracking-tighter drop-shadow-sm whitespace-nowrap">
+                        <p className="text-[16px] font-black text-indigo-800 tracking-tighter drop-shadow-sm whitespace-nowrap">
                           {lowOutputMachine.output.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
                         </p>
                       </div>
