@@ -122,6 +122,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
       baseEntry.lokal = entries.reduce((s, e) => s + e.lokal, 0);
       baseEntry.output = entries.reduce((s, e) => s + e.output, 0);
       baseEntry.utama_non_pilot_ladder = entries.reduce((s, e) => s + (e.utama_non_pilot_ladder || 0), 0);
+      baseEntry.point = entries.reduce((s, e) => s + (e.point || 0), 0);
       baseEntry.yield_primary = baseEntry.input > 0 ? baseEntry.utama / baseEntry.input : 0;
       baseEntry.achievement = entries.reduce((s, e) => s + e.achievement, 0) / entries.length;
     }
@@ -240,7 +241,6 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                       return a.machine.localeCompare(b.machine);
                     }).map((item) => {
                       const yieldVal = getCalcYield(item);
-                      const achievementVal = Math.min(10, item.achievement * 10);
                       
                       return (
                         <tr key={item.id} className="hover:bg-white/40 transition-colors">
@@ -264,7 +264,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                           </td>
                           <td className="px-2 py-1.5 text-center">
                             <span className="text-[14px] font-black text-indigo-900">
-                              {achievementVal.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              {(item.point || 0).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           </td>
                         </tr>
