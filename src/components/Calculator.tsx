@@ -69,7 +69,9 @@ export default function Calculator({ onCalculate }: CalculatorProps) {
       achievement: result.yield / 9,
       week: Math.ceil(new Date().getDate() / 7),
       month: new Date().getMonth() + 1,
-      quartal: Math.ceil((new Date().getMonth() + 1) / 3)
+      quartal: Math.ceil((new Date().getMonth() + 1) / 3),
+      point: 0,
+      utama_non_pilot_ladder: 0
     });
     // Reset
     setInput("");

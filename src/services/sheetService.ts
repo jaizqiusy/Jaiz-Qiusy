@@ -52,11 +52,15 @@ export async function fetchSheetData(): Promise<SheetData[]> {
   const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
   try {
-    console.log("Fetching from:", CSV_URL);
-    const response = await fetch(CSV_URL, { 
+    const fetchUrl = `${CSV_URL}&_t=${Date.now()}`;
+    console.log("Fetching from:", fetchUrl);
+    const response = await fetch(fetchUrl, { 
       signal: controller.signal,
+      cache: 'no-store',
       headers: {
-        'Accept': 'text/csv'
+        'Accept': 'text/csv',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
       }
     });
     clearTimeout(timeoutId);
@@ -111,9 +115,9 @@ export async function fetchSheetData(): Promise<SheetData[]> {
             const yield_total = Number(row[10]) || 0;
             const target = Number(row[11]) || 0;
             const achievement = Number(row[12]) || 0;
-            const week = Number(row[13]) || 0;
-            const month = Number(row[14]) || 0;
-            const quartal = Number(row[15]) || 0;
+            let week = Number(row[13]) || 0;
+            let month = Number(row[14]) || 0;
+            let quartal = Number(row[15]) || 0;
             const point = Number(row[16]) || 0;
             const utama_non_pilot_ladder = Number(row[19]) || 0;
             
@@ -138,6 +142,21 @@ export async function fetchSheetData(): Promise<SheetData[]> {
                 }
               } catch (e) {
                 dateStr = String(rawDate);
+              }
+            }
+
+            if ((!week || !month) && dateStr) {
+              const d = new Date(dateStr);
+              if (!isNaN(d.getTime())) {
+                if (!month) month = d.getMonth() + 1;
+                if (!quartal) quartal = Math.ceil(month / 3);
+                if (!week) {
+                  const targetDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+                  const dayNr = targetDate.getUTCDay() || 7;
+                  targetDate.setUTCDate(targetDate.getUTCDate() + 4 - dayNr);
+                  const janFirst = new Date(Date.UTC(targetDate.getUTCFullYear(), 0, 1));
+                  week = Math.ceil((((targetDate.getTime() - janFirst.getTime()) / 86400000) + 1) / 7);
+                }
               }
             }
 
@@ -185,11 +204,15 @@ export async function fetchDowntimeData(): Promise<DowntimeData[]> {
   const timeoutId = setTimeout(() => controller.abort(), 15000); 
 
   try {
-    console.log("Fetching from:", DOWNTIME_CSV_URL);
-    const response = await fetch(DOWNTIME_CSV_URL, { 
+    const fetchUrl = `${DOWNTIME_CSV_URL}&_t=${Date.now()}`;
+    console.log("Fetching from:", fetchUrl);
+    const response = await fetch(fetchUrl, { 
       signal: controller.signal,
+      cache: 'no-store',
       headers: {
-        'Accept': 'text/csv'
+        'Accept': 'text/csv',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
       }
     });
     clearTimeout(timeoutId);
@@ -290,11 +313,15 @@ export async function fetchOperatorData(): Promise<OperatorData[]> {
   const timeoutId = setTimeout(() => controller.abort(), 15000); 
 
   try {
-    console.log("Fetching from:", OPERATOR_CSV_URL);
-    const response = await fetch(OPERATOR_CSV_URL, { 
+    const fetchUrl = `${OPERATOR_CSV_URL}&_t=${Date.now()}`;
+    console.log("Fetching from:", fetchUrl);
+    const response = await fetch(fetchUrl, { 
       signal: controller.signal,
+      cache: 'no-store',
       headers: {
-        'Accept': 'text/csv'
+        'Accept': 'text/csv',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
       }
     });
     clearTimeout(timeoutId);

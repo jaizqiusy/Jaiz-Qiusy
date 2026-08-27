@@ -53,8 +53,13 @@ export function getNormalizedMachineKey(rawMachine: string): string {
   return rawMachine.trim().toUpperCase();
 }
 
+const MONTH_NAMES = [
+  "", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+  "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+];
+
 export default function Ranking({ history }: RankingProps) {
-  const [periodType, setPeriodType] = useState<"bulanan" | "mingguan">("bulanan");
+  const [periodType, setPeriodType] = useState<"bulanan" | "mingguan">("mingguan");
   const [operatorMapping, setOperatorMapping] = useState<Record<string, { name: string; avatar: string }>>(DEFAULT_OPERATOR_MAPPING);
   const [selectedDetailOperator, setSelectedDetailOperator] = useState<{
     machine: string;
@@ -65,25 +70,38 @@ export default function Ranking({ history }: RankingProps) {
     output: number;
     targetTotal?: number;
     yield: number;
+    yieldTotal?: number;
     achievement: number;
     rank: number;
   } | null>(null);
 
   useEffect(() => {
-    fetchOperatorData().then(data => {
-      if (data && data.length > 0) {
-        const newMapping = { ...DEFAULT_OPERATOR_MAPPING };
-        data.forEach(op => {
-          if (op.status_aktif && op.kode_bs) {
-            newMapping[op.kode_bs] = {
-              name: op.nama_lengkap || newMapping[op.kode_bs]?.name || "Unknown Operator",
-              avatar: op.url_foto || newMapping[op.kode_bs]?.avatar || ""
-            };
-          }
-        });
-        setOperatorMapping(newMapping);
-      }
-    }).catch(console.error);
+    const loadOperators = () => {
+      fetchOperatorData().then(data => {
+        if (data && data.length > 0) {
+          const newMapping = { ...DEFAULT_OPERATOR_MAPPING };
+          data.forEach(op => {
+            if (op.status_aktif && op.kode_bs) {
+              newMapping[op.kode_bs] = {
+                name: op.nama_lengkap || newMapping[op.kode_bs]?.name || "Unknown Operator",
+                avatar: op.url_foto || newMapping[op.kode_bs]?.avatar || ""
+              };
+            }
+          });
+          setOperatorMapping(newMapping);
+        }
+      }).catch(console.error);
+    };
+
+    loadOperators();
+    const interval = setInterval(loadOperators, 60000);
+    const handleFocus = () => loadOperators();
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", handleFocus);
+    };
   }, []);
   
   // Filter history to BS lines only containing sheet records
@@ -95,37 +113,61 @@ export default function Ranking({ history }: RankingProps) {
     });
   }, [history]);
 
-  const { currentMonth, currentWeek } = useMemo(() => {
+  // Determine latest week and month from the newest records in the spreadsheet
+  const { latestSheetMonth, latestSheetWeek } = useMemo(() => {
+    // bsRecords inherits history sort order (newest timestamp first)
+    const validMonths = bsRecords.map(r => r.month).filter((m): m is number => typeof m === "number" && !isNaN(m) && m > 0);
+    const validWeeks = bsRecords.map(r => r.week).filter((w): w is number => typeof w === "number" && !isNaN(w) && w > 0);
+
     const d = new Date();
-    const currentMonth = d.getMonth() + 1;
+    const fallbackMonth = d.getMonth() + 1;
     const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     const dayNum = date.getUTCDay() || 7;
     date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-    const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
-    const currentWeek = Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1)/7);
-    return { currentMonth, currentWeek };
-  }, []);
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    const fallbackWeek = Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
 
-  // Extract unique periods
+    return {
+      latestSheetMonth: validMonths.length > 0 ? validMonths[0] : fallbackMonth,
+      latestSheetWeek: validWeeks.length > 0 ? validWeeks[0] : fallbackWeek
+    };
+  }, [bsRecords]);
+
+  // Extract unique available periods from the spreadsheet
   const uniqueMonths = useMemo(() => {
-    const months = new Set(bsRecords.map(item => item.month));
-    months.add(currentMonth); // Guarantee current month is an option
-    return Array.from(months)
-      .filter((m): m is number => typeof m === "number" && !isNaN(m) && m > 0)
-      .sort((a, b) => b - a); // descending order (latest month first)
-  }, [bsRecords, currentMonth]);
+    const rawMonths = bsRecords
+      .map(item => item.month)
+      .filter((m): m is number => typeof m === "number" && !isNaN(m) && m > 0);
+    const months = Array.from(new Set<number>(rawMonths));
+    if (months.length === 0) months.push(latestSheetMonth);
+    return months.sort((a: number, b: number) => b - a); // latest first
+  }, [bsRecords, latestSheetMonth]);
 
   const uniqueWeeks = useMemo(() => {
-    const weeks = new Set(bsRecords.map(item => item.week));
-    weeks.add(currentWeek); // Guarantee current week is an option
-    return Array.from(weeks)
-      .filter((w): w is number => typeof w === "number" && !isNaN(w) && w > 0)
-      .sort((a, b) => b - a); // descending order (latest week first)
-  }, [bsRecords, currentWeek]);
+    const rawWeeks = bsRecords
+      .map(item => item.week)
+      .filter((w): w is number => typeof w === "number" && !isNaN(w) && w > 0);
+    const weeks = Array.from(new Set<number>(rawWeeks));
+    if (weeks.length === 0) weeks.push(latestSheetWeek);
+    return weeks.sort((a: number, b: number) => b - a); // latest first
+  }, [bsRecords, latestSheetWeek]);
 
-  // Selected period state (defaulting to the actual current month or week)
-  const [selectedMonth, setSelectedMonth] = useState<number>(currentMonth);
-  const [selectedWeek, setSelectedWeek] = useState<number>(currentWeek);
+  // Selected period state initialized to the latest data that entered the spreadsheet
+  const [selectedMonth, setSelectedMonth] = useState<number>(latestSheetMonth);
+  const [selectedWeek, setSelectedWeek] = useState<number>(latestSheetWeek);
+
+  // Auto-sync selection when latest spreadsheet data updates
+  useEffect(() => {
+    if (latestSheetMonth) {
+      setSelectedMonth(prev => (uniqueMonths.includes(prev) ? prev : latestSheetMonth));
+    }
+  }, [latestSheetMonth, uniqueMonths]);
+
+  useEffect(() => {
+    if (latestSheetWeek) {
+      setSelectedWeek(prev => (uniqueWeeks.includes(prev) ? prev : latestSheetWeek));
+    }
+  }, [latestSheetWeek, uniqueWeeks]);
 
   const activePeriodValue = periodType === "bulanan" ? selectedMonth : selectedWeek;
 
@@ -153,6 +195,8 @@ export default function Ranking({ history }: RankingProps) {
       
       // Calculate Yield % (Rendemen utama)
       const avgYield = totalInput > 0 ? (totalUtama / totalInput) * 100 : 0;
+      // Calculate Yield Total % (Rendemen total)
+      const avgYieldTotal = totalInput > 0 ? (totalOutput / totalInput) * 100 : 0;
       
       return {
         machine: machineKey,
@@ -162,20 +206,24 @@ export default function Ranking({ history }: RankingProps) {
         utama: totalUtama,
         output: totalOutput,
         yield: avgYield,
+        yieldTotal: avgYieldTotal,
         targetTotal: totalTarget,
         achievement: 0 // Will compute below
       };
     });
 
     list.forEach(m => {
-      // Rendemen Utama: Perhitungan berdasarkan bobot nilai Rendemen Aktual x 50%
-      const yieldScore = m.yield * 0.5;
+      // Rendemen Utama (Bobot 40%): Mengacu pada Target 30% -> (Rendemen Utama / 30) * 40
+      const yieldUtamaScore = (m.yield / 30) * 40;
       
-      // Output Total: Perhitungan berdasarkan bobot nilai Output Total Aktual x 50%
-      const outputScore = m.output * 0.5;
+      // Rendemen Total (Bobot 30%): Mengacu pada Target 65% -> (Rendemen Total / 65) * 30
+      const yieldTotalScore = (m.yieldTotal / 65) * 30;
       
-      // Kombinasi Skor Peringkat
-      m.achievement = yieldScore + outputScore;
+      // Output Total (Bobot 30%): Mengacu pada Target 225 M³ -> (Output Total / 225) * 30
+      const outputScore = (m.output / 225) * 30;
+      
+      // Kombinasi Skor Peringkat Total
+      m.achievement = yieldUtamaScore + yieldTotalScore + outputScore;
     });
 
     // Sort list based on the new combined score
@@ -248,7 +296,7 @@ export default function Ranking({ history }: RankingProps) {
             >
               {periodType === "bulanan" ? (
                 uniqueMonths.map(m => (
-                  <option key={m} value={m} className="text-black">Bulan {m}</option>
+                  <option key={m} value={m} className="text-black">{MONTH_NAMES[m] ? `${MONTH_NAMES[m]} (Bulan ${m})` : `Bulan ${m}`}</option>
                 ))
               ) : (
                 uniqueWeeks.map(w => (
@@ -264,15 +312,15 @@ export default function Ranking({ history }: RankingProps) {
       </div>
 
       {/* 3D-Like Operator Podium */}
-      <div className="relative flex items-end justify-center gap-1.5 px-1 py-1 mb-1 shrink-0 bg-gradient-to-t from-indigo-950/20 to-transparent min-h-[140px]">
+      <div className="relative flex items-end justify-center gap-1.5 px-2 py-1 mb-1 shrink-0 bg-gradient-to-t from-indigo-950/30 via-transparent to-transparent min-h-[160px]">
         
         {/* RANK 2 - Left */}
         {podium.rank2 && (
-          <div className="flex-1 flex flex-col items-center text-center mt-2">
+          <div className="flex-1 flex flex-col items-center text-center mt-3">
             <div className="relative">
               <div 
                 onClick={() => setSelectedDetailOperator({ ...podium.rank2!, rank: 2 })}
-                className="w-[70px] h-[70px] rounded-full p-[2.5px] bg-gradient-to-tr from-cyan-400 via-sky-300 to-indigo-500 shadow-[0_0_10px_rgba(6,182,212,0.3)] cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-200"
+                className="w-[66px] h-[66px] sm:w-[72px] sm:h-[72px] rounded-full p-[2.5px] bg-gradient-to-tr from-cyan-400 via-sky-300 to-indigo-500 shadow-[0_0_12px_rgba(6,182,212,0.35)] cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-200"
               >
                 <div className="w-full h-full rounded-full overflow-hidden border-2 border-slate-950">
                   <img 
@@ -283,22 +331,33 @@ export default function Ranking({ history }: RankingProps) {
                   />
                 </div>
               </div>
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-[22px] h-[22px] min-w-[22px] min-h-[22px] bg-cyan-500 rounded-full flex items-center justify-center border-2 border-[#0C1524] shadow-sm pointer-events-none">
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-[22px] h-[22px] min-w-[22px] min-h-[22px] bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full flex items-center justify-center border-2 border-[#0C1524] shadow-md pointer-events-none">
                 <span className="text-[11px] font-black text-slate-950">2</span>
               </div>
             </div>
             
-            <div className="mt-2.5">
-              <p className="text-[12px] font-black text-white leading-tight truncate max-w-[75px]" title={podium.rank2.name}>
+            <div className="mt-2.5 w-full flex flex-col items-center">
+              <p className="text-[12px] font-black text-white leading-tight truncate max-w-[80px]" title={podium.rank2.name}>
                 {podium.rank2.name.split(" ")[0]}
               </p>
-              <p className="text-[9px] font-extrabold text-cyan-400 uppercase tracking-widest">{podium.rank2.machine}</p>
+              <span className="text-[8px] font-extrabold text-cyan-300 bg-cyan-950/60 border border-cyan-800/40 px-1.5 py-0.5 rounded-full uppercase tracking-wider mt-0.5">
+                {podium.rank2.machine}
+              </span>
               
-              <div className="mt-1 space-y-0.5">
-                <div className="text-[13px] font-black text-cyan-400 font-mono">
-                  {podium.rank2.yield.toFixed(1)}%
+              {/* Score Badge */}
+              <div className="mt-1 bg-gradient-to-r from-cyan-950/80 to-blue-950/80 border border-cyan-500/40 rounded-lg px-1.5 py-0.5 shadow-sm">
+                <div className="text-[12px] font-black text-cyan-300 font-mono leading-none">
+                  {podium.rank2.achievement.toFixed(1)} <span className="text-[8px] text-cyan-400/80 font-sans font-bold">pts</span>
                 </div>
-                <div className="text-[9px] font-bold text-gray-300">
+              </div>
+
+              {/* Metric Breakdown */}
+              <div className="mt-1 flex flex-col items-center text-[9px] font-bold text-slate-300 space-y-0.5 leading-tight">
+                <div className="flex items-center gap-1 text-[9px]">
+                  <span className="text-gray-400">R.Utama:</span>
+                  <span className="font-black text-cyan-300 font-mono">{podium.rank2.yield.toFixed(1)}%</span>
+                </div>
+                <div className="text-[9px] text-gray-300 font-mono">
                   {podium.rank2.output.toLocaleString("id-ID", { maximumFractionDigits: 1 })} m³
                 </div>
               </div>
@@ -308,15 +367,15 @@ export default function Ranking({ history }: RankingProps) {
 
         {/* RANK 1 - Center Peak */}
         {podium.rank1 && (
-          <div className="flex-[1.2] flex flex-col items-center text-center -translate-y-2 relative z-10 mx-1">
+          <div className="flex-[1.2] flex flex-col items-center text-center -translate-y-2 relative z-10 mx-0.5">
             <div className="relative">
-              {/* Crown Emblem or Sparkles */}
+              {/* Crown Emblem */}
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 text-amber-400 animate-bounce">
-                <Award size={14} className="fill-amber-400/20" />
+                <Award size={15} className="fill-amber-400/30" />
               </div>
               <div 
                 onClick={() => setSelectedDetailOperator({ ...podium.rank1!, rank: 1 })}
-                className="w-[90px] h-[90px] rounded-full p-[3.5px] bg-gradient-to-tr from-yellow-400 via-amber-300 to-orange-500 shadow-[0_0_15px_rgba(251,191,36,0.3)] cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-200"
+                className="w-[84px] h-[84px] sm:w-[92px] sm:h-[92px] rounded-full p-[3px] bg-gradient-to-tr from-yellow-400 via-amber-300 to-orange-500 shadow-[0_0_18px_rgba(251,191,36,0.4)] cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-200"
               >
                 <div className="w-full h-full rounded-full overflow-hidden border-[2.5px] border-slate-950">
                   <img 
@@ -327,22 +386,33 @@ export default function Ranking({ history }: RankingProps) {
                   />
                 </div>
               </div>
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-7 h-7 bg-yellow-400 rounded-full flex items-center justify-center border-[2.5px] border-[#0C1524] shadow-md pointer-events-none">
+              <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-7 h-7 bg-gradient-to-br from-yellow-300 via-amber-400 to-orange-500 rounded-full flex items-center justify-center border-[2.5px] border-[#0C1524] shadow-lg pointer-events-none">
                 <span className="text-[13px] font-black text-slate-950">1</span>
               </div>
             </div>
             
-            <div className="mt-3">
-              <p className="text-[14px] font-black text-white leading-tight truncate max-w-[90px]" title={podium.rank1.name}>
+            <div className="mt-3 w-full flex flex-col items-center">
+              <p className="text-[13px] sm:text-[14px] font-black text-white leading-tight truncate max-w-[95px]" title={podium.rank1.name}>
                 {podium.rank1.name.split(" ")[0]}
               </p>
-              <p className="text-[10px] font-extrabold text-amber-400 uppercase tracking-widest">{podium.rank1.machine}</p>
+              <span className="text-[9px] font-extrabold text-amber-300 bg-amber-950/70 border border-amber-500/50 px-2 py-0.5 rounded-full uppercase tracking-wider mt-0.5">
+                {podium.rank1.machine}
+              </span>
               
-              <div className="mt-1 space-y-0.5">
-                <div className="text-[16px] font-black text-yellow-400 font-mono tracking-tight">
-                  {podium.rank1.yield.toFixed(1)}%
+              {/* Score Badge */}
+              <div className="mt-1 bg-gradient-to-r from-amber-950 to-orange-950 border border-amber-400/60 rounded-lg px-2 py-0.5 shadow-md">
+                <div className="text-[14px] font-black text-yellow-400 font-mono leading-none">
+                  {podium.rank1.achievement.toFixed(1)} <span className="text-[9px] text-amber-300 font-sans font-bold">pts</span>
                 </div>
-                <div className="text-[10px] font-extrabold text-slate-100">
+              </div>
+
+              {/* Metric Breakdown */}
+              <div className="mt-1 flex flex-col items-center text-[10px] font-bold text-slate-200 space-y-0.5 leading-tight">
+                <div className="flex items-center gap-1">
+                  <span className="text-gray-300 text-[9px]">R.Utama:</span>
+                  <span className="font-black text-yellow-300 font-mono">{podium.rank1.yield.toFixed(1)}%</span>
+                </div>
+                <div className="text-[10px] font-black text-white font-mono">
                   {podium.rank1.output.toLocaleString("id-ID", { maximumFractionDigits: 1 })} m³
                 </div>
               </div>
@@ -356,7 +426,7 @@ export default function Ranking({ history }: RankingProps) {
             <div className="relative">
               <div 
                 onClick={() => setSelectedDetailOperator({ ...podium.rank3!, rank: 3 })}
-                className="w-[66px] h-[66px] rounded-full p-[2.5px] bg-gradient-to-tr from-emerald-500 via-teal-400 to-indigo-500 shadow-[0_0_10px_rgba(16,185,129,0.3)] cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-200"
+                className="w-[64px] h-[64px] sm:w-[70px] sm:h-[70px] rounded-full p-[2.5px] bg-gradient-to-tr from-emerald-400 via-teal-300 to-indigo-500 shadow-[0_0_12px_rgba(16,185,129,0.35)] cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-200"
               >
                 <div className="w-full h-full rounded-full overflow-hidden border-2 border-slate-950">
                   <img 
@@ -367,22 +437,33 @@ export default function Ranking({ history }: RankingProps) {
                   />
                 </div>
               </div>
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-[22px] h-[22px] min-w-[22px] min-h-[22px] bg-emerald-500 rounded-full flex items-center justify-center border-2 border-[#0C1524] shadow-sm pointer-events-none">
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-[22px] h-[22px] min-w-[22px] min-h-[22px] bg-gradient-to-br from-emerald-400 to-teal-600 rounded-full flex items-center justify-center border-2 border-[#0C1524] shadow-md pointer-events-none">
                 <span className="text-[11px] font-black text-slate-950">3</span>
               </div>
             </div>
             
-            <div className="mt-2.5">
-              <p className="text-[12px] font-black text-white leading-tight truncate max-w-[75px]" title={podium.rank3.name}>
+            <div className="mt-2.5 w-full flex flex-col items-center">
+              <p className="text-[12px] font-black text-white leading-tight truncate max-w-[80px]" title={podium.rank3.name}>
                 {podium.rank3.name.split(" ")[0]}
               </p>
-              <p className="text-[9px] font-extrabold text-emerald-400 uppercase tracking-widest">{podium.rank3.machine}</p>
+              <span className="text-[8px] font-extrabold text-emerald-300 bg-emerald-950/60 border border-emerald-800/40 px-1.5 py-0.5 rounded-full uppercase tracking-wider mt-0.5">
+                {podium.rank3.machine}
+              </span>
               
-              <div className="mt-1 space-y-0.5">
-                <div className="text-[13px] font-extrabold text-emerald-400 font-mono">
-                  {podium.rank3.yield.toFixed(1)}%
+              {/* Score Badge */}
+              <div className="mt-1 bg-gradient-to-r from-emerald-950/80 to-teal-950/80 border border-emerald-500/40 rounded-lg px-1.5 py-0.5 shadow-sm">
+                <div className="text-[12px] font-black text-emerald-300 font-mono leading-none">
+                  {podium.rank3.achievement.toFixed(1)} <span className="text-[8px] text-emerald-400/80 font-sans font-bold">pts</span>
                 </div>
-                <div className="text-[9px] font-bold text-gray-300">
+              </div>
+
+              {/* Metric Breakdown */}
+              <div className="mt-1 flex flex-col items-center text-[9px] font-bold text-slate-300 space-y-0.5 leading-tight">
+                <div className="flex items-center gap-1 text-[9px]">
+                  <span className="text-gray-400">R.Utama:</span>
+                  <span className="font-black text-emerald-300 font-mono">{podium.rank3.yield.toFixed(1)}%</span>
+                </div>
+                <div className="text-[9px] text-gray-300 font-mono">
                   {podium.rank3.output.toLocaleString("id-ID", { maximumFractionDigits: 1 })} m³
                 </div>
               </div>
@@ -393,23 +474,25 @@ export default function Ranking({ history }: RankingProps) {
       </div>
 
       {/* Leaderboard List (Rank 4-8) */}
-      <div id="leaderboard_list" className="flex-1 flex flex-col justify-between space-y-1 px-2 min-h-0 pb-1">
+      <div id="leaderboard_list" className="flex-1 flex flex-col space-y-1.5 px-2 min-h-0 overflow-y-auto pb-1">
         {remainingRanks.length > 0 ? (
           remainingRanks.map((op, idx) => {
             const rankNum = idx + 4;
             return (
               <div
                 key={op.machine}
-                className="flex items-center justify-between bg-indigo-950/20 border border-indigo-900/50 hover:border-indigo-800/80 p-1.5 rounded-xl transition-all hover:bg-indigo-950/40 gap-2 flex-1"
+                onClick={() => setSelectedDetailOperator({ ...op, rank: rankNum })}
+                className="flex items-center justify-between bg-gradient-to-r from-indigo-950/30 to-[#121c32]/50 border border-indigo-900/40 hover:border-indigo-700/70 p-2 rounded-xl transition-all hover:bg-indigo-950/60 gap-2 cursor-pointer active:scale-[0.99] shadow-sm"
               >
                 {/* Left side: Rank + Avatar + Name/BS info */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="w-4 text-center text-[13px] font-black text-indigo-400">
-                    {rankNum}
-                  </span>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-5 h-5 rounded-full bg-slate-900 border border-indigo-800/60 flex items-center justify-center shrink-0">
+                    <span className="text-[10px] font-black text-indigo-300 font-mono">
+                      {rankNum}
+                    </span>
+                  </div>
                   <div 
-                    onClick={() => setSelectedDetailOperator({ ...op, rank: rankNum })}
-                    className="w-9 h-9 rounded-full overflow-hidden border-[1.5px] border-indigo-900 bg-slate-900 shrink-0 shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-200"
+                    className="w-9 h-9 rounded-full overflow-hidden border-[1.5px] border-indigo-800/60 bg-slate-900 shrink-0 shadow-md"
                   >
                     <img 
                       src={op.avatar} 
@@ -422,19 +505,27 @@ export default function Ranking({ history }: RankingProps) {
                     <h4 className="text-[12px] font-black text-white leading-tight truncate">
                       {op.name}
                     </h4>
-                    <p className="text-[9px] font-extrabold text-indigo-300 uppercase shrink-0 mt-0.5">
-                      {op.machine}
-                    </p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[9px] font-extrabold text-cyan-400 uppercase tracking-wider bg-cyan-950/40 px-1 rounded border border-cyan-900/40">
+                        {op.machine}
+                      </span>
+                      <span className="text-[9px] text-slate-400 font-medium font-mono">
+                        R.Utama: <span className="text-slate-200 font-bold">{op.yield.toFixed(1)}%</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Right side: Stats (Yield % & Output volume/Achievement points) */}
-                <div className="flex items-center gap-3 text-right shrink-0">
+                {/* Right side: Points and Output Stats */}
+                <div className="flex items-center gap-2.5 text-right shrink-0">
                   <div className="flex flex-col items-end">
-                    <span className="text-[14px] font-black text-white font-mono tracking-tight leading-none">
-                      {op.yield.toFixed(1)}%
-                    </span>
-                    <span className="text-[10px] font-semibold text-gray-400 mt-1.5 leading-none">
+                    <div className="bg-indigo-950/70 border border-indigo-800/50 rounded-lg px-2 py-0.5">
+                      <span className="text-[13px] font-black text-yellow-400 font-mono leading-none">
+                        {op.achievement.toFixed(1)}
+                      </span>
+                      <span className="text-[8px] font-bold text-yellow-300/80 ml-0.5">pts</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-slate-400 mt-1 leading-none font-mono">
                       {op.output.toLocaleString("id-ID", { maximumFractionDigits: 1 })} m³
                     </span>
                   </div>
@@ -443,7 +534,7 @@ export default function Ranking({ history }: RankingProps) {
             );
           })
         ) : (
-          <div className="py-2 text-center text-[10px] font-medium text-indigo-400 bg-indigo-950/10 rounded-xl border border-indigo-950/30">
+          <div className="py-3 text-center text-[10px] font-medium text-indigo-400 bg-indigo-950/10 rounded-xl border border-indigo-950/30">
             Tidak ada data peringkat untuk periode ini.
           </div>
         )}
@@ -523,52 +614,75 @@ export default function Ranking({ history }: RankingProps) {
               <div className="grid grid-cols-2 gap-2.5">
                 {/* 1. Rendemen Utama (Yield %) Card */}
                 <div className="bg-indigo-950/30 border border-indigo-900/40 p-3 rounded-xl flex flex-col justify-between">
-                  <span className="text-[9px] font-extrabold text-indigo-200 uppercase">Rendemen Utama</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] font-extrabold text-indigo-200 uppercase">Rendemen Utama</span>
+                    <span className="text-[8px] font-bold text-cyan-400/80 bg-cyan-950/50 px-1.5 py-0.5 rounded border border-cyan-800/40">Tgt 30% (40%)</span>
+                  </div>
                   <div className="mt-1">
                     <span className="text-[20px] font-black text-cyan-400 font-mono">{selectedDetailOperator.yield.toFixed(1)}%</span>
                   </div>
                   <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden mt-2">
                     <div 
                       className="h-full bg-cyan-400 rounded-full"
-                      style={{ width: `${Math.min(100, selectedDetailOperator.yield * 1.5)}%` }}
+                      style={{ width: `${Math.min(100, (selectedDetailOperator.yield / 30) * 100)}%` }}
                     />
                   </div>
                 </div>
 
-                {/* 2. Skor Performa (Achievement) Card */}
+                {/* 2. Rendemen Total Card */}
                 <div className="bg-indigo-950/30 border border-indigo-900/40 p-3 rounded-xl flex flex-col justify-between">
-                  <span className="text-[9px] font-extrabold text-indigo-200 uppercase">Skor Performa</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] font-extrabold text-indigo-200 uppercase">Rendemen Total</span>
+                    <span className="text-[8px] font-bold text-emerald-400/80 bg-emerald-950/50 px-1.5 py-0.5 rounded border border-emerald-800/40">Tgt 65% (30%)</span>
+                  </div>
                   <div className="mt-1">
-                    <span className="text-[20px] font-black text-yellow-400 font-mono">{selectedDetailOperator.achievement.toFixed(1)}</span>
-                    <span className="text-[10px] text-gray-400 ml-1">/ 100</span>
+                    <span className="text-[20px] font-black text-emerald-400 font-mono">
+                      {(selectedDetailOperator.yieldTotal ?? (selectedDetailOperator.input > 0 ? (selectedDetailOperator.output / selectedDetailOperator.input) * 100 : 0)).toFixed(1)}%
+                    </span>
                   </div>
                   <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden mt-2">
                     <div 
-                      className="h-full bg-yellow-400 rounded-full"
-                      style={{ width: `${selectedDetailOperator.achievement}%` }}
+                      className="h-full bg-emerald-400 rounded-full"
+                      style={{ width: `${Math.min(100, (((selectedDetailOperator.yieldTotal ?? (selectedDetailOperator.input > 0 ? (selectedDetailOperator.output / selectedDetailOperator.input) * 100 : 0))) / 65) * 100)}%` }}
                     />
                   </div>
                 </div>
 
                 {/* 3. Output Total Card */}
-                <div className="bg-indigo-950/30 border border-indigo-900/40 p-3 rounded-xl">
-                  <span className="text-[9px] font-extrabold text-indigo-200 uppercase">Output Total</span>
+                <div className="bg-indigo-950/30 border border-indigo-900/40 p-3 rounded-xl flex flex-col justify-between">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] font-extrabold text-indigo-200 uppercase">Output Total</span>
+                    <span className="text-[8px] font-bold text-blue-400/80 bg-blue-950/50 px-1.5 py-0.5 rounded border border-blue-800/40">Tgt 225 m³ (30%)</span>
+                  </div>
                   <div className="mt-1 flex items-baseline gap-1">
                     <span className="text-[18px] font-black text-white font-mono">
                       {selectedDetailOperator.output.toLocaleString("id-ID", { maximumFractionDigits: 1 })}
                     </span>
                     <span className="text-[10px] font-bold text-slate-400">m³</span>
                   </div>
+                  <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden mt-2">
+                    <div 
+                      className="h-full bg-blue-400 rounded-full"
+                      style={{ width: `${Math.min(100, (selectedDetailOperator.output / 225) * 100)}%` }}
+                    />
+                  </div>
                 </div>
 
-                {/* 4. Bahan Utama Card */}
-                <div className="bg-indigo-950/30 border border-indigo-900/40 p-3 rounded-xl">
-                  <span className="text-[9px] font-extrabold text-indigo-200 uppercase">Output Utama</span>
-                  <div className="mt-1 flex items-baseline gap-1">
-                    <span className="text-[18px] font-black text-white font-mono">
-                      {selectedDetailOperator.utama.toLocaleString("id-ID", { maximumFractionDigits: 1 })}
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-400 font-sans">m³</span>
+                {/* 4. Skor Performa (Achievement) Card */}
+                <div className="bg-indigo-950/30 border border-indigo-900/40 p-3 rounded-xl flex flex-col justify-between">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] font-extrabold text-indigo-200 uppercase">Skor Performa</span>
+                    <span className="text-[8px] font-bold text-yellow-400/80 bg-yellow-950/50 px-1.5 py-0.5 rounded border border-yellow-800/40">Bobot 100</span>
+                  </div>
+                  <div className="mt-1">
+                    <span className="text-[20px] font-black text-yellow-400 font-mono">{selectedDetailOperator.achievement.toFixed(1)}</span>
+                    <span className="text-[10px] text-gray-400 ml-1">pts</span>
+                  </div>
+                  <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden mt-2">
+                    <div 
+                      className="h-full bg-yellow-400 rounded-full"
+                      style={{ width: `${Math.min(100, selectedDetailOperator.achievement)}%` }}
+                    />
                   </div>
                 </div>
               </div>

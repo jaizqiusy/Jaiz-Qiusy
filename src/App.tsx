@@ -129,6 +129,13 @@ export default function App() {
       const isDailyNotifDue = isAutoRefresh && currentHour >= 19 && lastDailyNotifDate !== todayDateStr;
 
       if (isAutoRefresh && !isDailyNotifDue && prevDataStr === currentDataStr && prevDowntimeStr === currentDowntimeStr) {
+        setLastSync(new Date().toLocaleString("id-ID", { 
+          day: '2-digit', 
+          month: '2-digit', 
+          year: 'numeric', 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }));
         setIsSyncing(false);
         isSyncingRef.current = false;
         return; // No changes detected
@@ -228,15 +235,41 @@ export default function App() {
     }
   }, []);
 
-  // Auto Refresh Polling (every 60 seconds)
+  // Automatic Sync & Polling (Interval 30s + Window Focus + Tab Visibility + Online event)
   useEffect(() => {
     // Initial fetch on mount
     handleSync(true);
     
+    // Polling interval every 30 seconds
     const interval = setInterval(() => {
       handleSync(true);
-    }, 60000);
-    return () => clearInterval(interval);
+    }, 30000);
+
+    // Auto-refresh when user returns to window/tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        handleSync(true);
+      }
+    };
+
+    const handleFocus = () => {
+      handleSync(true);
+    };
+
+    const handleOnline = () => {
+      handleSync(true);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("online", handleOnline);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("online", handleOnline);
+    };
   }, [handleSync]);
 
   const [lastSync, setLastSync] = useState<string | null>(null);
