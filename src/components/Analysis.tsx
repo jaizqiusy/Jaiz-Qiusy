@@ -124,6 +124,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
       baseEntry.utama_non_pilot_ladder = entries.reduce((s, e) => s + (e.utama_non_pilot_ladder || 0), 0);
       baseEntry.point = entries.reduce((s, e) => s + (e.point || 0), 0);
       baseEntry.yield_primary = baseEntry.input > 0 ? baseEntry.utama / baseEntry.input : 0;
+      baseEntry.yield_total = baseEntry.input > 0 ? baseEntry.output / baseEntry.input : 0;
       baseEntry.achievement = entries.reduce((s, e) => s + e.achievement, 0) / entries.length;
     }
 
@@ -140,6 +141,13 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
 
   // Analysis Logic
   const getCalcYield = (m: any) => m.input > 0 ? (m.utama / m.input) * 100 : 0;
+  const getCalcTotalYield = (m: any) => {
+    if (m.input > 0) return (m.output / m.input) * 100;
+    if (typeof m.yield_total === 'number' && m.yield_total > 0) {
+      return m.yield_total > 1 ? m.yield_total : m.yield_total * 100;
+    }
+    return 0;
+  };
   
   const activeBsData = bsData.filter(m => Number(m.input) > 0 && Number(m.output) > 0);
 
@@ -213,7 +221,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                       <th className="px-2 py-2 text-center border-r border-indigo-200/60">Input</th>
                       <th className="px-2 py-2 text-center border-r border-indigo-200/60">Rend %</th>
                       <th className="px-2 py-2 text-center border-r border-indigo-200/60">Output</th>
-                      <th className="px-2 py-2 text-center">Point</th>
+                      <th className="px-2 py-2 text-center" title="Rendemen Total">% Total</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-indigo-200/60">
@@ -241,6 +249,7 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                       return a.machine.localeCompare(b.machine);
                     }).map((item) => {
                       const yieldVal = getCalcYield(item);
+                      const totalYieldVal = getCalcTotalYield(item);
                       
                       return (
                         <tr key={item.id} className="hover:bg-white/40 transition-colors">
@@ -263,8 +272,8 @@ export default function Analysis({ history, selectedDate }: AnalysisProps) {
                             </span>
                           </td>
                           <td className="px-2 py-1.5 text-center">
-                            <span className="text-[14px] font-black text-indigo-900">
-                              {(item.point || 0).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            <span className="text-[14px] font-black text-indigo-900 tracking-tighter">
+                              {totalYieldVal.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
                             </span>
                           </td>
                         </tr>

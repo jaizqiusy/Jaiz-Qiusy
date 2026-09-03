@@ -41,47 +41,76 @@ export interface OperatorData {
 }
 
 const SHEET_ID = "1G7x3dtE2KFF338w6qdd4jrMkz-yrbThlzx5Vi0I8AqQ";
-// Using the gviz API which is often more reliable for CORS and public sheets
-const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=DATABASE+APPSCRIPT`;
-const DOWNTIME_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Downtime`;
-const OPERATOR_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Operator+bs`;
 
+/**
+ * Robust CSV fetcher with multi-layer fallback:
+ * 1. Internal server proxy /api/sheets-csv (avoids CORS, browser timeout, carrier throttling)
+ * 2. Google Sheets gviz API (direct)
+ * 3. Google Sheets export CSV endpoint (direct fallback)
+ */
+async function fetchSheetCsvText(sheetName: string, timeoutMs: number = 30000): Promise<string> {
+  const encSheet = encodeURIComponent(sheetName);
+  const candidateUrls = [
+    // 1. Same-origin backend proxy (runs directly on cloud server, bypassing local network issues)
+    `/api/sheets-csv?sheet=${encSheet}&_t=${Date.now()}`,
+    // 2. Direct gviz/tq endpoint
+    `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encSheet}&_t=${Date.now()}`,
+    // 3. Direct export format endpoint
+    `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&sheet=${encSheet}&_t=${Date.now()}`
+  ];
+
+  let lastError: any = null;
+
+  for (let i = 0; i < candidateUrls.length; i++) {
+    const url = candidateUrls[i];
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      try {
+        controller.abort();
+      } catch (_) {}
+    }, timeoutMs);
+
+    try {
+      const response = await fetch(url, {
+        signal: controller.signal,
+        cache: 'no-store',
+        headers: {
+          'Accept': 'text/csv, text/plain, */*',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          throw new Error("Akses Google Sheet ditolak. Pastikan sheet disetel ke 'Siapa saja yang memiliki link dapat melihat'.");
+        }
+        continue;
+      }
+
+      const csvText = await response.text();
+      if (!csvText || csvText.trim().length === 0) continue;
+      if (csvText.includes("<!DOCTYPE html>") || csvText.includes("<html")) continue;
+
+      return csvText;
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      lastError = err;
+      // Continue to next fallback
+    }
+  }
+
+  if (lastError?.name === 'AbortError' || lastError?.message?.includes('aborted')) {
+    throw new Error("Koneksi ke Google Sheets lambat atau timeout (30 detik). Silakan periksa koneksi internet Anda.");
+  }
+
+  throw lastError || new Error("Gagal mengambil data dari Google Sheets.");
+}
 
 export async function fetchSheetData(): Promise<SheetData[]> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
-
   try {
-    const fetchUrl = `${CSV_URL}&_t=${Date.now()}`;
-    console.log("Fetching from:", fetchUrl);
-    const response = await fetch(fetchUrl, { 
-      signal: controller.signal,
-      cache: 'no-store',
-      headers: {
-        'Accept': 'text/csv',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache'
-      }
-    });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
-        throw new Error("Akses ditolak. Pastikan Google Sheet disetel ke 'Siapa saja yang memiliki link dapat melihat'.");
-      }
-      throw new Error(`Gagal mengambil data (Status: ${response.status}).`);
-    }
-    
-    const csvText = await response.text();
-    
-    // Check if we got an HTML login page instead of CSV
-    if (csvText.includes("<!DOCTYPE html>") || csvText.includes("<html")) {
-      throw new Error("Google Sheet tidak dapat diakses secara publik. Pastikan pengaturan berbagi adalah 'Siapa saja yang memiliki link dapat melihat'.");
-    }
-
-    if (!csvText || csvText.trim().length === 0) {
-      throw new Error("Data Google Sheet kosong.");
-    }
+    const csvText = await fetchSheetCsvText("DATABASE APPSCRIPT", 30000);
     
     return new Promise((resolve, reject) => {
       Papa.parse(csvText, {
@@ -190,9 +219,8 @@ export async function fetchSheetData(): Promise<SheetData[]> {
       });
     });
   } catch (error: any) {
-    clearTimeout(timeoutId);
-    if (error.name === 'AbortError') {
-      throw new Error("Koneksi ke Google Sheets timeout (10 detik).");
+    if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
+      throw new Error("Koneksi ke Google Sheets timeout (30 detik).");
     }
     console.error("Sheet Fetch Error:", error);
     throw error;
@@ -200,32 +228,8 @@ export async function fetchSheetData(): Promise<SheetData[]> {
 }
 
 export async function fetchDowntimeData(): Promise<DowntimeData[]> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000); 
-
   try {
-    const fetchUrl = `${DOWNTIME_CSV_URL}&_t=${Date.now()}`;
-    console.log("Fetching from:", fetchUrl);
-    const response = await fetch(fetchUrl, { 
-      signal: controller.signal,
-      cache: 'no-store',
-      headers: {
-        'Accept': 'text/csv',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache'
-      }
-    });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`Gagal mengambil data downtime (Status: ${response.status}).`);
-    }
-    
-    const csvText = await response.text();
-    
-    if (csvText.includes("<!DOCTYPE html>") || csvText.includes("<html")) {
-      throw new Error("Google Sheet tidak dapat diakses.");
-    }
+    const csvText = await fetchSheetCsvText("Downtime", 30000);
 
     if (!csvText || csvText.trim().length === 0) {
       return [];
@@ -302,39 +306,18 @@ export async function fetchDowntimeData(): Promise<DowntimeData[]> {
       });
     });
   } catch (error: any) {
-    clearTimeout(timeoutId);
-    console.error("Downtime Fetch Error:", error);
+    if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
+      console.warn("Downtime Fetch: Permintaan timeout atau dibatalkan, menggunakan data lokal.");
+    } else {
+      console.warn("Downtime Fetch Note:", error?.message || error);
+    }
     return [];
   }
 }
 
 export async function fetchOperatorData(): Promise<OperatorData[]> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000); 
-
   try {
-    const fetchUrl = `${OPERATOR_CSV_URL}&_t=${Date.now()}`;
-    console.log("Fetching from:", fetchUrl);
-    const response = await fetch(fetchUrl, { 
-      signal: controller.signal,
-      cache: 'no-store',
-      headers: {
-        'Accept': 'text/csv',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache'
-      }
-    });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`Gagal mengambil data operator (Status: ${response.status}).`);
-    }
-    
-    const csvText = await response.text();
-    
-    if (csvText.includes("<!DOCTYPE html>") || csvText.includes("<html")) {
-      throw new Error("Google Sheet operator tidak dapat diakses.");
-    }
+    const csvText = await fetchSheetCsvText("Operator bs", 30000);
 
     if (!csvText || csvText.trim().length === 0) {
       return [];
@@ -372,8 +355,11 @@ export async function fetchOperatorData(): Promise<OperatorData[]> {
       });
     });
   } catch (error: any) {
-    clearTimeout(timeoutId);
-    console.error("Operator Fetch Error:", error);
+    if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
+      console.warn("Operator Fetch: Permintaan timeout atau dibatalkan, menggunakan data lokal.");
+    } else {
+      console.warn("Operator Fetch Note:", error?.message || error);
+    }
     return [];
   }
 }

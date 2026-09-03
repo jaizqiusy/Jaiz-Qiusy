@@ -54,6 +54,58 @@ async function startServer() {
     }
   });
 
+  // API Proxy Route for Google Sheets CSV (ultra-fast cloud-to-cloud connection)
+  app.get("/api/sheets-csv", async (req, res) => {
+    try {
+      const sheet = String(req.query.sheet || "DATABASE APPSCRIPT");
+      const SHEET_ID = "1G7x3dtE2KFF338w6qdd4jrMkz-yrbThlzx5Vi0I8AqQ";
+      const encSheet = encodeURIComponent(sheet);
+      const urls = [
+        `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encSheet}&_t=${Date.now()}`,
+        `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&sheet=${encSheet}&_t=${Date.now()}`
+      ];
+
+      let csvText = "";
+      let lastErr: any = null;
+
+      for (const url of urls) {
+        try {
+          const response = await axios.get(url, {
+            timeout: 25000,
+            responseType: "text",
+            headers: {
+              Accept: "text/csv, text/plain, */*",
+              "Cache-Control": "no-cache",
+              Pragma: "no-cache",
+            },
+          });
+          if (
+            response.status === 200 &&
+            response.data &&
+            typeof response.data === "string" &&
+            !response.data.includes("<!DOCTYPE html>")
+          ) {
+            csvText = response.data;
+            break;
+          }
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+
+      if (!csvText) {
+        return res.status(502).json({ error: "Gagal mengambil data dari Google Sheets", details: lastErr?.message });
+      }
+
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      return res.status(200).send(csvText);
+    } catch (err: any) {
+      console.error("Sheets proxy error:", err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

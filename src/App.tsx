@@ -92,9 +92,11 @@ export default function App() {
   }, [selectedDate]);
 
   const isSyncingRef = useRef(false);
+  const lastSyncTimeRef = useRef<number>(0);
 
   const handleSync = useCallback(async (isAutoRefresh = false) => {
     if (isSyncingRef.current) return;
+    if (isAutoRefresh && Date.now() - lastSyncTimeRef.current < 15000) return;
     
     isSyncingRef.current = true;
     setIsSyncing(true);
@@ -102,11 +104,19 @@ export default function App() {
     if (!isAutoRefresh) setSyncSuccess(false);
 
     try {
-      const [data, downtimeDataRes] = await Promise.all([
-         fetchSheetData(),
-         fetchDowntimeData()
-      ]);
-      setDowntime(downtimeDataRes);
+      const data = await fetchSheetData();
+      const downtimeDataRes = await fetchDowntimeData().catch(() => []);
+      
+      let finalDowntime = downtimeDataRes;
+      if (finalDowntime.length === 0) {
+        const prevDowntimeStr = localStorage.getItem("rendemen_last_downtime_data");
+        if (prevDowntimeStr) {
+          try {
+            finalDowntime = JSON.parse(prevDowntimeStr);
+          } catch (_) {}
+        }
+      }
+      setDowntime(finalDowntime);
       
       if (data.length === 0) {
         if (!isAutoRefresh) setSyncError("Tidak ada data ditemukan di Google Sheet.");
@@ -114,6 +124,8 @@ export default function App() {
         isSyncingRef.current = false;
         return;
       }
+
+      lastSyncTimeRef.current = Date.now();
 
       const currentDataStr = JSON.stringify(data);
       const prevDataStr = localStorage.getItem("rendemen_last_raw_data");
@@ -221,9 +233,9 @@ export default function App() {
         setTimeout(() => setSyncSuccess(false), 3000);
       }
     } catch (err: any) {
-      console.error("Sync Error:", err);
+      console.error("Sync Error:", err?.message || err);
       if (!isAutoRefresh) {
-        let message = err.message || "Gagal sinkronisasi data.";
+        let message = err?.message || "Gagal sinkronisasi data.";
         if (message === "Failed to fetch") {
           message = "Gagal terhubung ke Google Sheets. Pastikan Sheet sudah di-share (Anyone with the link can view) dan koneksi internet stabil.";
         }
@@ -235,15 +247,15 @@ export default function App() {
     }
   }, []);
 
-  // Automatic Sync & Polling (Interval 30s + Window Focus + Tab Visibility + Online event)
+  // Automatic Sync & Polling (Interval 45s + Window Focus + Tab Visibility + Online event)
   useEffect(() => {
     // Initial fetch on mount
     handleSync(true);
     
-    // Polling interval every 30 seconds
+    // Polling interval every 45 seconds to avoid Google Sheets rate limiting
     const interval = setInterval(() => {
       handleSync(true);
-    }, 30000);
+    }, 45000);
 
     // Auto-refresh when user returns to window/tab
     const handleVisibilityChange = () => {
