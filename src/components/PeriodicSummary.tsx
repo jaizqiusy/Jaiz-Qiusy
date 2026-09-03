@@ -9,16 +9,18 @@ interface PeriodicSummaryProps {
 }
 
 export default function PeriodicSummary({ history, selectedDate }: PeriodicSummaryProps) {
-  // Find reference values from the selected date
-  const referenceEntry = history.find(calc => {
-    const calcDate = calc.date.includes('T') ? calc.date.split('T')[0] : calc.date;
-    return calcDate === selectedDate;
-  });
-
-  const currentWeek = referenceEntry?.week;
-  const currentMonth = referenceEntry?.month;
-  const currentQuartal = referenceEntry?.quartal;
-  const currentYear = referenceEntry ? new Date(referenceEntry.date).getFullYear() : new Date(selectedDate).getFullYear();
+  const [yearStr, monthStr, dayStr] = selectedDate.split('-');
+  const currentYear = parseInt(yearStr, 10);
+  const currentMonth = parseInt(monthStr, 10);
+  const currentQuartal = Math.floor((currentMonth - 1) / 3) + 1;
+  
+  const getWeekNumber = (y: number, m: number, d: number) => {
+    const date = new Date(Date.UTC(y, m - 1, d));
+    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    return Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  };
+  const currentWeek = getWeekNumber(currentYear, currentMonth, parseInt(dayStr, 10));
 
   const getStats = (data: Calculation[]) => {
     // GAS logic: totalInput, totalOutput, totalUtama are from BS machines only
@@ -35,18 +37,35 @@ export default function PeriodicSummary({ history, selectedDate }: PeriodicSumma
   const weeklyStats = getStats(history.filter(calc => 
     currentWeek !== undefined && 
     calc.week === currentWeek && 
-    new Date(calc.date).getFullYear() === currentYear
+    calc.date.startsWith(currentYear.toString())
   ));
   const monthlyStats = getStats(history.filter(calc => 
     currentMonth !== undefined && 
     calc.month === currentMonth && 
-    new Date(calc.date).getFullYear() === currentYear
+    calc.date.startsWith(currentYear.toString())
   ));
-  const quarterlyStats = getStats(history.filter(calc => 
-    currentQuartal !== undefined && 
-    calc.quartal === currentQuartal && 
-    new Date(calc.date).getFullYear() === currentYear
-  ));
+  const getQuarterMonths = (q: number) => {
+    if (q === 1) return [1, 2, 3];
+    if (q === 2) return [4, 5, 6];
+    if (q === 3) return [7, 8, 9];
+    if (q === 4) return [10, 11, 12];
+    return [];
+  };
+  const validQuarterMonths = getQuarterMonths(currentQuartal);
+
+  const quarterlyStats = getStats(history.filter(calc => {
+    if (!calc.date.startsWith(currentYear.toString())) return false;
+    const calcMonth = calc.month || parseInt(calc.date.split('-')[1], 10);
+    return validQuarterMonths.includes(calcMonth);
+  }));
+
+  const getQuarterLabel = (q: number) => {
+    if (q === 1) return "Jan-Mar";
+    if (q === 2) return "Apr-Jun";
+    if (q === 3) return "Jul-Sep";
+    if (q === 4) return "Oct-Dec";
+    return "";
+  };
 
   return (
     <div className="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-200 rounded-3xl shadow-xl border border-white/60 p-5">
@@ -77,7 +96,7 @@ export default function PeriodicSummary({ history, selectedDate }: PeriodicSumma
         />
         <div className="h-px bg-indigo-200/60" />
         <SummaryBlock 
-          title={`Quarterly (Q${currentQuartal || "-"})`} 
+          title={`Quarterly (Q${currentQuartal || "-"} - ${getQuarterLabel(currentQuartal)})`} 
           stats={quarterlyStats} 
           color="indigo" 
         />

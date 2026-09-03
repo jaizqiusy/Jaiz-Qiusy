@@ -54,10 +54,23 @@ async function startServer() {
     }
   });
 
+  // Simple in-memory cache to make fetching lightning fast and avoid rate-limiting
+  const sheetsCache: Record<string, { data: string, timestamp: number }> = {};
+  const CACHE_TTL = 20000; // 20 seconds cache
+
   // API Proxy Route for Google Sheets CSV (ultra-fast cloud-to-cloud connection)
   app.get("/api/sheets-csv", async (req, res) => {
     try {
       const sheet = String(req.query.sheet || "DATABASE APPSCRIPT");
+      
+      // Serve from cache if valid
+      const now = Date.now();
+      if (sheetsCache[sheet] && (now - sheetsCache[sheet].timestamp < CACHE_TTL)) {
+        res.setHeader("Content-Type", "text/csv; charset=utf-8");
+        res.setHeader("X-Cache", "HIT");
+        return res.status(200).send(sheetsCache[sheet].data);
+      }
+
       const SHEET_ID = "1G7x3dtE2KFF338w6qdd4jrMkz-yrbThlzx5Vi0I8AqQ";
       const encSheet = encodeURIComponent(sheet);
       const urls = [
@@ -97,8 +110,12 @@ async function startServer() {
         return res.status(502).json({ error: "Gagal mengambil data dari Google Sheets", details: lastErr?.message });
       }
 
+      // Update cache
+      sheetsCache[sheet] = { data: csvText, timestamp: Date.now() };
+
       res.setHeader("Content-Type", "text/csv; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.setHeader("X-Cache", "MISS");
       return res.status(200).send(csvText);
     } catch (err: any) {
       console.error("Sheets proxy error:", err.message);

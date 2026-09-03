@@ -104,8 +104,10 @@ export default function App() {
     if (!isAutoRefresh) setSyncSuccess(false);
 
     try {
-      const data = await fetchSheetData();
-      const downtimeDataRes = await fetchDowntimeData().catch(() => []);
+      const [data, downtimeDataRes] = await Promise.all([
+        fetchSheetData(),
+        fetchDowntimeData().catch(() => [])
+      ]);
       
       let finalDowntime = downtimeDataRes;
       if (finalDowntime.length === 0) {
