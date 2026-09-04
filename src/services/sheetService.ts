@@ -31,6 +31,21 @@ export interface DowntimeData {
   waktu: string; // time
 }
 
+export interface OrderUrgentData {
+  ukuran: string;
+  panjang: string;
+  jo: string;
+  targetKebutuhan: number;
+  hariSebelumnya: number;
+  hariIni: number;
+  totalRealisasi: number;
+  statusKekurangan: number;
+  satuan: string;
+  progress: number;
+  todayLabel?: string;
+  yesterdayLabel?: string;
+}
+
 export interface OperatorData {
   id: string;
   nama_lengkap: string;
@@ -310,6 +325,160 @@ export async function fetchDowntimeData(): Promise<DowntimeData[]> {
       console.warn("Downtime Fetch: Permintaan timeout atau dibatalkan, menggunakan data lokal.");
     } else {
       console.warn("Downtime Fetch Note:", error?.message || error);
+    }
+    return [];
+  }
+}
+
+export async function fetchOrderUrgentData(selectedDateStr: string): Promise<OrderUrgentData[]> {
+  try {
+    const csvText = await fetchSheetCsvText("order urgent", 30000);
+    if (!csvText || csvText.trim().length === 0) {
+      return [];
+    }
+
+    return new Promise((resolve, reject) => {
+      Papa.parse(csvText, {
+        header: false,
+        dynamicTyping: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const rawData = results.data as any[][];
+          if (rawData.length < 3) {
+            resolve([]);
+            return;
+          }
+
+          const headers = rawData[1];
+          const dataRows = rawData.slice(2);
+
+          const parseNumber = (val: any): number => {
+            if (val === null || val === undefined || val === "") return 0;
+            if (typeof val === "number") return isNaN(val) ? 0 : val;
+            const cleaned = String(val).trim().replace(/\s/g, "").replace(/,/g, ".");
+            const num = parseFloat(cleaned);
+            return isNaN(num) ? 0 : num;
+          };
+
+          // Find all available date columns in headers
+          const dateCols: { idx: number; label: string }[] = [];
+          headers.forEach((h, idx) => {
+            if (typeof h === "string") {
+              const trimmed = h.trim();
+              if (/^\d{2}\s+[A-Za-z]{3}\s+\d{2}$/.test(trimmed)) {
+                dateCols.push({ idx, label: trimmed });
+              }
+            }
+          });
+
+          // Format selectedDate (e.g. 2026-09-04) to DD MMM YY (e.g. 04 Sep 26)
+          let todayStr = "";
+          let yesterdayStr = "";
+          try {
+            const parts = selectedDateStr.split("-").map(Number);
+            const dateObj = parts.length === 3 ? new Date(parts[0], parts[1] - 1, parts[2]) : new Date();
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const formatToSheet = (d: Date) => {
+              const day = String(d.getDate()).padStart(2, "0");
+              const month = months[d.getMonth()];
+              const year = String(d.getFullYear()).slice(-2);
+              return `${day} ${month} ${year}`;
+            };
+            todayStr = formatToSheet(dateObj);
+            const yest = new Date(dateObj);
+            yest.setDate(yest.getDate() - 1);
+            yesterdayStr = formatToSheet(yest);
+          } catch (_) {}
+
+          let todayIdx = -1;
+          let yesterdayIdx = -1;
+          let activeTodayLabel = todayStr;
+          let activeYesterdayLabel = yesterdayStr;
+
+          if (todayStr) {
+            todayIdx = headers.findIndex(h => typeof h === "string" && h.trim().toLowerCase() === todayStr.toLowerCase());
+          }
+          if (yesterdayStr) {
+            yesterdayIdx = headers.findIndex(h => typeof h === "string" && h.trim().toLowerCase() === yesterdayStr.toLowerCase());
+          }
+
+          // Fallback to latest date column if not matched
+          if (todayIdx === -1 && dateCols.length > 0) {
+            // Pick the column for today or latest active column
+            const latest = dateCols[dateCols.length - 1];
+            todayIdx = latest.idx;
+            activeTodayLabel = latest.label;
+            if (dateCols.length > 1) {
+              const prev = dateCols[dateCols.length - 2];
+              yesterdayIdx = prev.idx;
+              activeYesterdayLabel = prev.label;
+            }
+          } else if (todayIdx !== -1 && yesterdayIdx === -1 && todayIdx > 0) {
+            yesterdayIdx = todayIdx - 1;
+            activeYesterdayLabel = String(headers[yesterdayIdx] || "");
+          }
+
+          const mappedData: OrderUrgentData[] = [];
+
+          dataRows.forEach((row) => {
+            if (!row || row.length < 5) return;
+            const ukuran = String(row[1] || "").trim();
+            if (!ukuran) return; // Must have size (ukuran)
+
+            const panjang = String(row[2] !== undefined && row[2] !== null ? row[2] : "").trim();
+            const jo = String(row[3] || "").trim();
+
+            const targetKebutuhan = parseNumber(row[4]);
+            const totalRealisasi = parseNumber(row[64]);
+            
+            // Col 65 is Status & Kekurangan from sheet (negative = deficit, e.g. -592)
+            const rawKekurangan = row[65] !== undefined && row[65] !== null && String(row[65]).trim() !== ""
+              ? parseNumber(row[65])
+              : (totalRealisasi - targetKebutuhan);
+
+            // Dynamic days
+            const todayVal = todayIdx !== -1 ? parseNumber(row[todayIdx]) : 0;
+            const yesterdayVal = yesterdayIdx !== -1 ? parseNumber(row[yesterdayIdx]) : 0;
+
+            // Unit
+            let unit = "Pcs";
+            const rawUnit = String(row[66] || "").trim().toUpperCase();
+            if (rawUnit === "M3" || rawUnit === "M³") {
+              unit = "M³";
+            } else if (rawUnit === "BTG") {
+              unit = "Pcs";
+            } else if (rawUnit) {
+              unit = rawUnit;
+            }
+
+            const progress = targetKebutuhan > 0 ? (totalRealisasi / targetKebutuhan) * 100 : 0;
+
+            mappedData.push({
+              ukuran,
+              panjang: panjang !== "" ? panjang : "-",
+              jo,
+              targetKebutuhan,
+              hariSebelumnya: yesterdayVal,
+              hariIni: todayVal,
+              totalRealisasi,
+              statusKekurangan: rawKekurangan,
+              satuan: unit,
+              progress,
+              todayLabel: activeTodayLabel,
+              yesterdayLabel: activeYesterdayLabel
+            });
+          });
+
+          resolve(mappedData);
+        },
+        error: (error: any) => reject(new Error(`Gagal proses CSV order: ${error.message}`))
+      });
+    });
+  } catch (error: any) {
+    if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
+      console.warn("Order Fetch: Permintaan timeout atau dibatalkan.");
+    } else {
+      console.warn("Order Fetch Note:", error?.message || error);
     }
     return [];
   }

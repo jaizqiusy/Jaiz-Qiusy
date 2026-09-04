@@ -18,10 +18,11 @@ import {
   BarChart3,
   Package,
   Layers,
-  Clock
+  Clock,
+  Download
 } from "lucide-react";
 import { cn } from "./lib/utils";
-import { fetchSheetData, fetchDowntimeData, DowntimeData } from "./services/sheetService";
+import { fetchSheetData, fetchDowntimeData, fetchOrderUrgentData, DowntimeData, OrderUrgentData } from "./services/sheetService";
 
 // Components
 import Ranking from "./components/Ranking";
@@ -30,6 +31,7 @@ import History from "./components/History";
 import Performance from "./components/Performance";
 import Analysis from "./components/Analysis";
 import Downtime from "./components/Downtime";
+import OrderUrgent from "./components/OrderUrgent";
 import { sendWhatsAppNotification, sendDowntimeNotification } from "./services/notificationService";
 
 export type Calculation = {
@@ -56,13 +58,14 @@ export type Calculation = {
   timestamp: number;
 };
 
-const TABS = ["ranking", "dashboard", "analysis", "performance", "history", "downtime"] as const;
+const TABS = ["ranking", "dashboard", "analysis", "performance", "history", "downtime", "order"] as const;
 type TabType = typeof TABS[number];
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [history, setHistory] = useState<Calculation[]>([]);
   const [downtime, setDowntime] = useState<DowntimeData[]>([]);
+  const [orderUrgent, setOrderUrgent] = useState<OrderUrgentData[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncSuccess, setSyncSuccess] = useState<boolean>(false);
@@ -104,9 +107,13 @@ export default function App() {
     if (!isAutoRefresh) setSyncSuccess(false);
 
     try {
-      const [data, downtimeDataRes] = await Promise.all([
+      const currentDateStr = new Date().toISOString().split('T')[0];
+      const targetDateStr = selectedDate || currentDateStr;
+
+      const [data, downtimeDataRes, orderUrgentRes] = await Promise.all([
         fetchSheetData(),
-        fetchDowntimeData().catch(() => [])
+        fetchDowntimeData().catch(() => []),
+        fetchOrderUrgentData(targetDateStr).catch(() => [])
       ]);
       
       let finalDowntime = downtimeDataRes;
@@ -119,6 +126,19 @@ export default function App() {
         }
       }
       setDowntime(finalDowntime);
+
+      let finalOrderUrgent = orderUrgentRes;
+      if (finalOrderUrgent.length === 0) {
+        const prevOrderStr = localStorage.getItem("rendemen_last_order_data");
+        if (prevOrderStr) {
+          try {
+            finalOrderUrgent = JSON.parse(prevOrderStr);
+          } catch (_) {}
+        }
+      } else {
+        localStorage.setItem("rendemen_last_order_data", JSON.stringify(finalOrderUrgent));
+      }
+      setOrderUrgent(finalOrderUrgent);
       
       if (data.length === 0) {
         if (!isAutoRefresh) setSyncError("Tidak ada data ditemukan di Google Sheet.");
@@ -335,7 +355,7 @@ export default function App() {
         "text-white relative shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.1)] transition-colors duration-300",
         activeTab === "ranking"
           ? "bg-[#0C1524] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 z-20"
-          : activeTab === "analysis" 
+          : activeTab === "analysis" || activeTab === "order"
           ? "bg-gradient-to-b from-[#311B92] to-[#512DA8] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 rounded-b-2xl z-20" 
           : "bg-gradient-to-b from-[#311B92] to-[#512DA8] px-4 pt-[max(2rem,env(safe-area-inset-top))] pb-12 z-0"
       )}>
@@ -367,6 +387,45 @@ export default function App() {
             >
               <RefreshCw size={14} />
             </button>
+          </div>
+        ) : activeTab === "order" ? (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="bg-white/10 p-1 rounded-lg backdrop-blur-sm border border-white/20">
+                <Package size={16} className="text-white" />
+              </div>
+              <div>
+                <h1 className="text-xs font-black tracking-tight uppercase leading-none">RENDEMENKU</h1>
+                <p className="text-[9px] font-bold text-indigo-300 uppercase tracking-widest mt-0.5 whitespace-nowrap">Order Urgent</p>
+              </div>
+            </div>
+            
+            <div className="bg-white/10 px-2.5 py-1 rounded-lg border border-white/10 flex items-center justify-center backdrop-blur-sm">
+              <span className="text-[10px] font-black text-white uppercase tracking-wider">
+                {new Date(selectedDate).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase()}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button 
+                onClick={() => window.dispatchEvent(new CustomEvent('download-order-jpg'))}
+                className="p-1.5 text-white/80 hover:text-white transition-all rounded-full hover:bg-white/10 flex items-center justify-center active:scale-95"
+                title="Download JPG Data Terkini"
+              >
+                <Download size={14} />
+              </button>
+              <button 
+                onClick={() => handleSync(false)}
+                disabled={isSyncing}
+                className={cn(
+                  "p-1.5 text-white/70 hover:text-white transition-all rounded-full hover:bg-white/10 flex items-center justify-center",
+                  isSyncing && "animate-spin text-white"
+                )}
+                title="Sinkronisasi Data"
+              >
+                <RefreshCw size={14} />
+              </button>
+            </div>
           </div>
         ) : activeTab === "ranking" ? (
           <div className="flex items-center justify-between">
@@ -456,7 +515,7 @@ export default function App() {
       {/* Main Content */}
       <main className={cn(
         "flex-1 relative z-10 flex flex-col min-h-0",
-        activeTab === "analysis"
+        activeTab === "analysis" || activeTab === "order"
           ? "pt-2 pb-[max(5rem,calc(env(safe-area-inset-bottom)+4.2rem))] px-2 mt-0 h-full overflow-hidden" 
           : activeTab === "ranking"
           ? "pt-0 pb-[max(5rem,calc(env(safe-area-inset-bottom)+4.2rem))] px-0 mt-0 h-full overflow-hidden bg-[#0C1524]"
@@ -513,45 +572,52 @@ export default function App() {
           {activeTab === "performance" && <Performance history={history} selectedDate={selectedDate} />}
           {activeTab === "analysis" && <Analysis history={history} selectedDate={selectedDate} />}
           {activeTab === "downtime" && <Downtime downtimeList={downtime} selectedDate={selectedDate} />}
+          {activeTab === "order" && <OrderUrgent orderList={orderUrgent} selectedDate={selectedDate} lastSync={lastSync} />}
         </motion.div>
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="absolute bottom-0 left-0 right-0 w-full bg-white/90 backdrop-blur-md border-t border-gray-100 grid grid-cols-6 items-center z-20 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 px-1">
+      <nav className="absolute bottom-0 left-0 right-0 w-full bg-white/90 backdrop-blur-md border-t border-gray-100 grid grid-cols-7 items-center z-20 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 px-1 text-center">
         <NavButton 
           active={activeTab === "ranking"} 
           onClick={() => handleTabChange("ranking")}
-          icon={<Trophy size={18} className="sm:w-5 sm:h-5" />}
+          icon={<Trophy size={18} className="sm:w-5 sm:h-5 mx-auto" />}
           label="Ranking"
         />
         <NavButton 
           active={activeTab === "dashboard"} 
           onClick={() => handleTabChange("dashboard")}
-          icon={<LayoutDashboard size={18} className="sm:w-5 sm:h-5" />}
+          icon={<LayoutDashboard size={18} className="sm:w-5 sm:h-5 mx-auto" />}
           label="Beranda"
+        />
+        <NavButton 
+          active={activeTab === "order"} 
+          onClick={() => handleTabChange("order")}
+          icon={<Package size={18} className="sm:w-5 sm:h-5 mx-auto" />}
+          label="Order"
         />
         <NavButton 
           active={activeTab === "analysis"} 
           onClick={() => handleTabChange("analysis")}
-          icon={<BarChart3 size={18} className="sm:w-5 sm:h-5" />}
+          icon={<BarChart3 size={18} className="sm:w-5 sm:h-5 mx-auto" />}
           label="Review"
         />
         <NavButton 
           active={activeTab === "performance"} 
           onClick={() => handleTabChange("performance")}
-          icon={<TrendingUp size={18} className="sm:w-5 sm:h-5" />}
+          icon={<TrendingUp size={18} className="sm:w-5 sm:h-5 mx-auto" />}
           label="Performa"
         />
         <NavButton 
           active={activeTab === "history"} 
           onClick={() => handleTabChange("history")}
-          icon={<HistoryIcon size={18} className="sm:w-5 sm:h-5" />}
+          icon={<HistoryIcon size={18} className="sm:w-5 sm:h-5 mx-auto" />}
           label="Rekap"
         />
         <NavButton 
           active={activeTab === "downtime"} 
           onClick={() => handleTabChange("downtime")}
-          icon={<Clock size={18} className="sm:w-5 sm:h-5" />}
+          icon={<Clock size={18} className="sm:w-5 sm:h-5 mx-auto" />}
           label="Downtime"
         />
       </nav>
