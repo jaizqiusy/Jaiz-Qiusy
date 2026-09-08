@@ -113,61 +113,80 @@ export default function Ranking({ history }: RankingProps) {
     });
   }, [history]);
 
-  // Determine latest week and month from the newest records in the spreadsheet
-  const { latestSheetMonth, latestSheetWeek } = useMemo(() => {
-    // bsRecords inherits history sort order (newest timestamp first)
-    const validMonths = bsRecords.map(r => r.month).filter((m): m is number => typeof m === "number" && !isNaN(m) && m > 0);
-    const validWeeks = bsRecords.map(r => r.week).filter((w): w is number => typeof w === "number" && !isNaN(w) && w > 0);
-
+  // Hitung Bulan dan Minggu yang saat ini berjalan (Current Running Period)
+  const { currentRunningMonth, currentRunningWeek } = useMemo(() => {
     const d = new Date();
-    const fallbackMonth = d.getMonth() + 1;
+    const calMonth = d.getMonth() + 1; // 1-12 (e.g. 9 untuk September)
+
+    // Perhitungan nomor minggu kalender standar ISO
     const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     const dayNum = date.getUTCDay() || 7;
     date.setUTCDate(date.getUTCDate() + 4 - dayNum);
     const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-    const fallbackWeek = Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+    const calWeek = Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+
+    // Ambil data aktif di spreadsheet untuk fallback jika kalender berbeda
+    const activeRecords = bsRecords.filter(r => (r.input > 0 || r.output > 0 || r.utama > 0));
+    let activeMonth = calMonth;
+    let activeWeek = calWeek;
+    if (activeRecords.length > 0) {
+      const topActive = activeRecords[0];
+      if (typeof topActive.month === "number" && topActive.month > 0) {
+        activeMonth = topActive.month;
+      }
+      if (typeof topActive.week === "number" && topActive.week > 0) {
+        activeWeek = topActive.week;
+      }
+    }
 
     return {
-      latestSheetMonth: validMonths.length > 0 ? validMonths[0] : fallbackMonth,
-      latestSheetWeek: validWeeks.length > 0 ? validWeeks[0] : fallbackWeek
+      currentRunningMonth: calMonth >= 1 && calMonth <= 12 ? calMonth : activeMonth,
+      currentRunningWeek: calWeek >= 1 && calWeek <= 53 ? calWeek : activeWeek
     };
   }, [bsRecords]);
 
-  // Extract unique available periods from the spreadsheet
+  // Daftar bulan yang tersedia (dari bulan 1 sampai bulan yang saat ini berjalan)
   const uniqueMonths = useMemo(() => {
-    const rawMonths = bsRecords
+    const candidateMonths = bsRecords
+      .filter(item => (item.input > 0 || item.output > 0 || item.utama > 0) || (item.month <= currentRunningMonth))
       .map(item => item.month)
       .filter((m): m is number => typeof m === "number" && !isNaN(m) && m > 0);
-    const months = Array.from(new Set<number>(rawMonths));
-    if (months.length === 0) months.push(latestSheetMonth);
-    return months.sort((a: number, b: number) => b - a); // latest first
-  }, [bsRecords, latestSheetMonth]);
+    const months = Array.from(new Set<number>(candidateMonths));
+    if (!months.includes(currentRunningMonth)) {
+      months.push(currentRunningMonth);
+    }
+    return months.sort((a, b) => b - a); // Urutan terbaru ke terlama (contoh: 9, 8, 7...)
+  }, [bsRecords, currentRunningMonth]);
 
+  // Daftar minggu yang tersedia (dari minggu 1 sampai minggu yang saat ini berjalan)
   const uniqueWeeks = useMemo(() => {
-    const rawWeeks = bsRecords
+    const candidateWeeks = bsRecords
+      .filter(item => (item.input > 0 || item.output > 0 || item.utama > 0) || (item.week <= currentRunningWeek))
       .map(item => item.week)
       .filter((w): w is number => typeof w === "number" && !isNaN(w) && w > 0);
-    const weeks = Array.from(new Set<number>(rawWeeks));
-    if (weeks.length === 0) weeks.push(latestSheetWeek);
-    return weeks.sort((a: number, b: number) => b - a); // latest first
-  }, [bsRecords, latestSheetWeek]);
-
-  // Selected period state initialized to the latest data that entered the spreadsheet
-  const [selectedMonth, setSelectedMonth] = useState<number>(latestSheetMonth);
-  const [selectedWeek, setSelectedWeek] = useState<number>(latestSheetWeek);
-
-  // Auto-sync selection when latest spreadsheet data updates
-  useEffect(() => {
-    if (latestSheetMonth) {
-      setSelectedMonth(prev => (uniqueMonths.includes(prev) ? prev : latestSheetMonth));
+    const weeks = Array.from(new Set<number>(candidateWeeks));
+    if (!weeks.includes(currentRunningWeek)) {
+      weeks.push(currentRunningWeek);
     }
-  }, [latestSheetMonth, uniqueMonths]);
+    return weeks.sort((a, b) => b - a); // Urutan terbaru ke terlama (contoh: 37, 36, 35...)
+  }, [bsRecords, currentRunningWeek]);
+
+  // Inisialisasi tampilan awal dengan Bulan dan Minggu yang saat ini berjalan
+  const [selectedMonth, setSelectedMonth] = useState<number>(currentRunningMonth);
+  const [selectedWeek, setSelectedWeek] = useState<number>(currentRunningWeek);
+
+  // Sinkronisasi otomatis ke bulan & minggu berjalan saat komponen dimuat atau data terupdate
+  useEffect(() => {
+    if (currentRunningMonth) {
+      setSelectedMonth(prev => (prev && uniqueMonths.includes(prev) ? prev : currentRunningMonth));
+    }
+  }, [currentRunningMonth, uniqueMonths]);
 
   useEffect(() => {
-    if (latestSheetWeek) {
-      setSelectedWeek(prev => (uniqueWeeks.includes(prev) ? prev : latestSheetWeek));
+    if (currentRunningWeek) {
+      setSelectedWeek(prev => (prev && uniqueWeeks.includes(prev) ? prev : currentRunningWeek));
     }
-  }, [latestSheetWeek, uniqueWeeks]);
+  }, [currentRunningWeek, uniqueWeeks]);
 
   const activePeriodValue = periodType === "bulanan" ? selectedMonth : selectedWeek;
 
@@ -251,7 +270,12 @@ export default function Ranking({ history }: RankingProps) {
         <div className="flex items-center justify-center gap-2 w-full relative z-20">
           <div className="flex bg-[#1E2538] rounded-xl p-0.5 border border-indigo-950/40 shadow-inner">
             <button
-              onClick={() => setPeriodType("mingguan")}
+              onClick={() => {
+                setPeriodType("mingguan");
+                if (!selectedWeek || !uniqueWeeks.includes(selectedWeek)) {
+                  setSelectedWeek(currentRunningWeek);
+                }
+              }}
               className={cn(
                 "relative text-[9px] font-black px-3 py-1 rounded-lg uppercase tracking-wider transition-all duration-300",
                 periodType === "mingguan" 
@@ -265,7 +289,12 @@ export default function Ranking({ history }: RankingProps) {
               )}
             </button>
             <button
-              onClick={() => setPeriodType("bulanan")}
+              onClick={() => {
+                setPeriodType("bulanan");
+                if (!selectedMonth || !uniqueMonths.includes(selectedMonth)) {
+                  setSelectedMonth(currentRunningMonth);
+                }
+              }}
               className={cn(
                 "relative text-[9px] font-black px-3 py-1 rounded-lg uppercase tracking-wider transition-all duration-300",
                 periodType === "bulanan" 
@@ -296,11 +325,16 @@ export default function Ranking({ history }: RankingProps) {
             >
               {periodType === "bulanan" ? (
                 uniqueMonths.map(m => (
-                  <option key={m} value={m} className="text-black">{MONTH_NAMES[m] ? `${MONTH_NAMES[m]} (Bulan ${m})` : `Bulan ${m}`}</option>
+                  <option key={m} value={m} className="text-black">
+                    {MONTH_NAMES[m] ? `${MONTH_NAMES[m]} (Bulan ${m})` : `Bulan ${m}`}
+                    {m === currentRunningMonth ? " - Bulan Ini" : ""}
+                  </option>
                 ))
               ) : (
                 uniqueWeeks.map(w => (
-                  <option key={w} value={w} className="text-black">Minggu {w}</option>
+                  <option key={w} value={w} className="text-black">
+                    Minggu {w}{w === currentRunningWeek ? " - Minggu Ini" : ""}
+                  </option>
                 ))
               )}
             </select>

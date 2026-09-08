@@ -188,6 +188,19 @@ export default function OrderUrgent({ orderList, selectedDate, lastSync }: Order
     return { target, realisasi, kurang, progress };
   }, [exportOrders]);
 
+  // Aggregate totals for on-screen table footer
+  const displayTotals = useMemo(() => {
+    const target = displayOrders.reduce((s, o) => s + o.targetKebutuhan, 0);
+    const realisasi = displayOrders.reduce((s, o) => s + o.totalRealisasi, 0);
+    const kurang = displayOrders.reduce((s, o) => {
+      if (o.statusKekurangan < 0) return s + Math.abs(o.statusKekurangan);
+      if (o.targetKebutuhan > o.totalRealisasi) return s + (o.targetKebutuhan - o.totalRealisasi);
+      return s;
+    }, 0);
+    const progress = target > 0 ? (realisasi / target) * 100 : 0;
+    return { target, realisasi, kurang, progress };
+  }, [displayOrders]);
+
   // Fallback Canvas Export
   const exportViaCanvas = useCallback(() => {
     const canvas = document.createElement("canvas");
@@ -647,6 +660,28 @@ export default function OrderUrgent({ orderList, selectedDate, lastSync }: Order
                       );
                     })}
                   </tbody>
+                  <tfoot className="sticky bottom-0 bg-[#e0e7ff] font-black text-[10.5px] text-indigo-950 border-t-2 border-indigo-300 z-10 shadow-sm">
+                    <tr>
+                      <td colSpan={3} className="px-2.5 py-2 text-right uppercase tracking-wider border-r border-indigo-200/60">
+                        Total ({displayOrders.length} Order)
+                      </td>
+                      <td className="px-2.5 py-2 text-center border-r border-indigo-200/60 text-blue-800">
+                        {formatNum(displayTotals.target, 1)}
+                      </td>
+                      <td colSpan={2} className="px-2 py-2 text-center border-r border-indigo-200/60 text-indigo-400">
+                        -
+                      </td>
+                      <td className="px-2.5 py-2 text-center border-r border-indigo-200/60 text-emerald-800">
+                        {formatNum(displayTotals.realisasi, 1)}
+                      </td>
+                      <td className="px-2.5 py-2 text-center border-r border-indigo-200/60 text-rose-700">
+                        {displayTotals.kurang > 0 ? `Kurang ${formatNum(displayTotals.kurang, 1)}` : "Selesai"}
+                      </td>
+                      <td className="px-2.5 py-2 text-center text-indigo-950 font-mono">
+                        {Math.round(displayTotals.progress)}%
+                      </td>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
             </div>

@@ -418,6 +418,40 @@ export async function fetchOrderUrgentData(selectedDateStr: string): Promise<Ord
             activeYesterdayLabel = String(headers[yesterdayIdx] || "");
           }
 
+          // Dynamically detect Total, Kekurangan, and Satuan columns
+          let totalColIdx = -1;
+          let kekuranganColIdx = -1;
+          let satuanColIdx = headers.findIndex(h => typeof h === "string" && h.trim().toLowerCase() === "satuan");
+
+          const explicitTotalIdx = headers.findIndex(h => typeof h === "string" && h.trim().toLowerCase() === "total");
+          const explicitKurangIdx = headers.findIndex(h => typeof h === "string" && (h.trim().toLowerCase().includes("kurang") || h.trim().toLowerCase().includes("sisa")));
+
+          const lastDateIdx = dateCols.length > 0 ? dateCols[dateCols.length - 1].idx : -1;
+
+          if (explicitTotalIdx !== -1) {
+            totalColIdx = explicitTotalIdx;
+          } else if (satuanColIdx !== -1 && satuanColIdx >= 2) {
+            totalColIdx = satuanColIdx - 2;
+          } else if (lastDateIdx !== -1) {
+            totalColIdx = lastDateIdx + 1;
+          } else {
+            totalColIdx = 67;
+          }
+
+          if (explicitKurangIdx !== -1) {
+            kekuranganColIdx = explicitKurangIdx;
+          } else if (satuanColIdx !== -1 && satuanColIdx >= 1) {
+            kekuranganColIdx = satuanColIdx - 1;
+          } else if (lastDateIdx !== -1) {
+            kekuranganColIdx = lastDateIdx + 2;
+          } else {
+            kekuranganColIdx = 68;
+          }
+
+          if (satuanColIdx === -1) {
+            satuanColIdx = lastDateIdx !== -1 ? lastDateIdx + 3 : 69;
+          }
+
           const mappedData: OrderUrgentData[] = [];
 
           dataRows.forEach((row) => {
@@ -429,11 +463,15 @@ export async function fetchOrderUrgentData(selectedDateStr: string): Promise<Ord
             const jo = String(row[3] || "").trim();
 
             const targetKebutuhan = parseNumber(row[4]);
-            const totalRealisasi = parseNumber(row[64]);
             
-            // Col 65 is Status & Kekurangan from sheet (negative = deficit, e.g. -592)
-            const rawKekurangan = row[65] !== undefined && row[65] !== null && String(row[65]).trim() !== ""
-              ? parseNumber(row[65])
+            // Total column from spreadsheet (Kolom Total)
+            const totalRealisasi = totalColIdx !== -1 && row[totalColIdx] !== undefined && row[totalColIdx] !== null && String(row[totalColIdx]).trim() !== ""
+              ? parseNumber(row[totalColIdx])
+              : 0;
+            
+            // Kekurangan column from spreadsheet (Kolom Kekurangan / Selisih)
+            const rawKekurangan = kekuranganColIdx !== -1 && row[kekuranganColIdx] !== undefined && row[kekuranganColIdx] !== null && String(row[kekuranganColIdx]).trim() !== ""
+              ? parseNumber(row[kekuranganColIdx])
               : (totalRealisasi - targetKebutuhan);
 
             // Dynamic days
@@ -442,7 +480,9 @@ export async function fetchOrderUrgentData(selectedDateStr: string): Promise<Ord
 
             // Unit
             let unit = "Pcs";
-            const rawUnit = String(row[66] || "").trim().toUpperCase();
+            const rawUnit = satuanColIdx !== -1 && row[satuanColIdx] !== undefined
+              ? String(row[satuanColIdx] || "").trim().toUpperCase()
+              : "";
             if (rawUnit === "M3" || rawUnit === "M³") {
               unit = "M³";
             } else if (rawUnit === "BTG") {
@@ -451,7 +491,9 @@ export async function fetchOrderUrgentData(selectedDateStr: string): Promise<Ord
               unit = rawUnit;
             }
 
-            const progress = targetKebutuhan > 0 ? (totalRealisasi / targetKebutuhan) * 100 : 0;
+            const progress = targetKebutuhan > 0 
+              ? (totalRealisasi / targetKebutuhan) * 100 
+              : (totalRealisasi > 0 ? 100 : 0);
 
             mappedData.push({
               ukuran,
