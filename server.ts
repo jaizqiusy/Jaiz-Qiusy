@@ -16,6 +16,11 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Health check endpoint
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok" });
+  });
+
   // API Route for Fonnte WhatsApp Notification
   app.post("/api/notify-wa", async (req, res) => {
     try {
@@ -63,9 +68,10 @@ async function startServer() {
     try {
       const sheet = String(req.query.sheet || "DATABASE APPSCRIPT");
       
-      // Serve from cache if valid
+      // Serve from cache if valid (unless force refresh requested)
       const now = Date.now();
-      if (sheetsCache[sheet] && (now - sheetsCache[sheet].timestamp < CACHE_TTL)) {
+      const forceRefresh = req.query.refresh === "1" || req.query.refresh === "true";
+      if (!forceRefresh && sheetsCache[sheet] && (now - sheetsCache[sheet].timestamp < CACHE_TTL)) {
         res.setHeader("Content-Type", "text/csv; charset=utf-8");
         res.setHeader("X-Cache", "HIT");
         return res.status(200).send(sheetsCache[sheet].data);

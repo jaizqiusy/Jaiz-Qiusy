@@ -1,6 +1,6 @@
 {
   "name": "RendemenKu",
-  "description": "Aplikasi kalkulator rendemen tebu dan estimasi hasil panen untuk petani dan industri gula.",
+  "description": "Aplikasi monitoring produksi, rendemen, downtime, dan order urgent industri perkayuan.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

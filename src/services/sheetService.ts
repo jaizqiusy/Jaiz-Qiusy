@@ -143,29 +143,65 @@ export async function fetchSheetData(): Promise<SheetData[]> {
             return;
           }
 
+          const headerRow = rawData[0];
+          const headers = headerRow.map((h: any) => String(h || "").trim().toLowerCase());
+
+          // Dynamic column index finder by header name pattern
+          const findCol = (predicate: (h: string) => boolean, fallback: number) => {
+            const idx = headers.findIndex(predicate);
+            return idx !== -1 ? idx : fallback;
+          };
+
+          const colTanggal = findCol(h => h.includes("tanggal"), 0);
+          const colMesin = findCol(h => h.includes("mesin"), 1);
+          const colLine = findCol(h => h === "line", 2);
+          const colInput = findCol(h => h === "input", 3);
+          const colUtama = findCol(h => h === "utama", 4);
+          const colYieldPrimary = findCol(h => h === "yield_primary", 5);
+          const colTurunan = findCol(h => h === "turunan", 6);
+          const colYieldSecondary = findCol(h => h === "yield_secondary", 7);
+          const colLokal = findCol(h => h === "lokal" || h.startsWith("lokal"), 8);
+          // Note: col 9 in updated sheet is "yield_lokal"
+          const colTotal = findCol(h => h === "total", 10);
+          const colYieldTotal = findCol(h => h === "yield_total", 11);
+          const colTarget = findCol(h => h === "target total" || h.includes("target"), 12);
+          const colAchievement = findCol(h => h === "achievement", 13);
+          const colWeek = findCol(h => h === "week", 14);
+          const colMonth = findCol(h => h === "month", 15);
+          const colQuartal = findCol(h => h === "quartal", 16);
+          const colPoint = findCol(h => h === "point", 17);
+          const colUtamaNonPilot = findCol(h => h.includes("utama non pilot"), 20);
+
+          const parseNum = (val: any): number => {
+            if (val === null || val === undefined || val === "") return 0;
+            if (typeof val === "number") return isNaN(val) ? 0 : val;
+            const cleaned = String(val).trim().replace(/\s/g, "").replace(/,/g, ".");
+            const num = parseFloat(cleaned);
+            return isNaN(num) ? 0 : num;
+          };
+
           const dataRows = rawData.slice(1); // Skip header row
           
           const mappedData: SheetData[] = dataRows.map((row) => {
-            // Ensure we have enough columns (at least up to index 15 for quartal)
-            if (!row || row.length < 10) return null;
+            if (!row || row.length < 5) return null;
 
-            const input = Number(row[3]) || 0;
-            const utama = Number(row[4]) || 0;
-            const yield_primary = Number(row[5]) || 0;
-            const turunan = Number(row[6]) || 0;
-            const yield_secondary = Number(row[7]) || 0;
-            const lokal = Number(row[8]) || 0;
-            const output = Number(row[9]) || 0;
-            const yield_total = Number(row[10]) || 0;
-            const target = Number(row[11]) || 0;
-            const achievement = Number(row[12]) || 0;
-            let week = Number(row[13]) || 0;
-            let month = Number(row[14]) || 0;
-            let quartal = Number(row[15]) || 0;
-            const point = Number(row[16]) || 0;
-            const utama_non_pilot_ladder = Number(row[19]) || 0;
+            const input = parseNum(row[colInput]);
+            const utama = parseNum(row[colUtama]);
+            const yield_primary = parseNum(row[colYieldPrimary]);
+            const turunan = parseNum(row[colTurunan]);
+            const yield_secondary = parseNum(row[colYieldSecondary]);
+            const lokal = parseNum(row[colLokal]);
+            const output = parseNum(row[colTotal]); // Kolom "total" produksi
+            const yield_total = parseNum(row[colYieldTotal]);
+            const target = parseNum(row[colTarget]);
+            const achievement = parseNum(row[colAchievement]);
+            let week = Math.round(parseNum(row[colWeek]));
+            let month = Math.round(parseNum(row[colMonth]));
+            let quartal = Math.round(parseNum(row[colQuartal]));
+            const point = parseNum(row[colPoint]);
+            const utama_non_pilot_ladder = parseNum(row[colUtamaNonPilot]);
             
-            let rawDate = row[0];
+            let rawDate = row[colTanggal];
             let dateStr = "";
             
             if (rawDate) {
@@ -180,12 +216,12 @@ export async function fetchSheetData(): Promise<SheetData[]> {
                   } else {
                     const parts = String(rawDate).split(/[/.-]/);
                     if (parts.length === 3) {
-                      dateStr = String(rawDate); 
+                      dateStr = String(rawDate).trim(); 
                     }
                   }
                 }
               } catch (e) {
-                dateStr = String(rawDate);
+                dateStr = String(rawDate).trim();
               }
             }
 
@@ -204,10 +240,18 @@ export async function fetchSheetData(): Promise<SheetData[]> {
               }
             }
 
+            // Standardize machine naming (e.g. "Bs1" -> "BS 1", "Poni A" -> "PONI A")
+            let rawMesin = row[colMesin] ? String(row[colMesin]).trim() : "UNKNOWN";
+            let normalizedMesin = rawMesin.toUpperCase();
+            const bsMatch = rawMesin.replace(/\s+/g, "").match(/^BS([1-8])$/i);
+            if (bsMatch) {
+              normalizedMesin = `BS ${bsMatch[1]}`;
+            }
+
             return {
               tanggal: dateStr,
-              mesin: row[1] ? String(row[1]).trim().toUpperCase() : "UNKNOWN",
-              line: row[2] ? String(row[2]) : "-",
+              mesin: normalizedMesin,
+              line: row[colLine] ? String(row[colLine]).trim() : "-",
               input,
               utama,
               yield_primary,
@@ -244,7 +288,14 @@ export async function fetchSheetData(): Promise<SheetData[]> {
 
 export async function fetchDowntimeData(): Promise<DowntimeData[]> {
   try {
-    const csvText = await fetchSheetCsvText("Downtime", 30000);
+    // Downtime data is embedded in the primary DATABASE APPSCRIPT sheet
+    let csvText = "";
+    try {
+      csvText = await fetchSheetCsvText("DATABASE APPSCRIPT", 30000);
+    } catch {
+      // Fallback in case a dedicated Downtime sheet is ever created
+      csvText = await fetchSheetCsvText("Downtime", 30000);
+    }
 
     if (!csvText || csvText.trim().length === 0) {
       return [];
@@ -262,14 +313,31 @@ export async function fetchDowntimeData(): Promise<DowntimeData[]> {
             return;
           }
 
-          const dataRows = rawData.slice(1);
-          
-          const mappedData: DowntimeData[] = [];
-          
-          dataRows.forEach((row, rowIndex) => {
-            if (!row || row.length < 20) return;
+          const headerRow = rawData[0];
+          const headers = headerRow.map((h: any) => String(h || "").trim().toLowerCase());
 
-            let rawDate = row[0];
+          const colTanggal = headers.findIndex(h => h.includes("tanggal"));
+          const colMesin = headers.findIndex(h => h.includes("mesin"));
+          const colDowntime = headers.findIndex(h => h === "downtime");
+
+          // Identify individual reason category columns for fallback
+          const reasonCols: { idx: number; label: string }[] = [];
+          for (let i = 0; i < headers.length; i++) {
+            const h = headers[i];
+            if (["pln", "istirahat", "shift off", "preventif", "project", "briefing", "meeting", "training", "repro", "gergaji", "setting", "bersih", "ppm", "cukup", "gudang", "mesin lain"].some(k => h.includes(k))) {
+              let label = String(rawData[0][i] || "").trim();
+              label = label.charAt(0).toUpperCase() + label.slice(1);
+              reasonCols.push({ idx: i, label });
+            }
+          }
+
+          const mappedData: DowntimeData[] = [];
+          const dataRows = rawData.slice(1);
+
+          dataRows.forEach((row, rowIndex) => {
+            if (!row || row.length < 5) return;
+
+            let rawDate = row[colTanggal !== -1 ? colTanggal : 0];
             let dateStr = "";
             if (rawDate) {
               try {
@@ -281,38 +349,66 @@ export async function fetchDowntimeData(): Promise<DowntimeData[]> {
                   if (!isNaN(dateObj.getTime())) {
                     dateStr = dateObj.toISOString().split('T')[0];
                   } else {
-                     dateStr = String(rawDate);
+                    dateStr = String(rawDate).trim();
                   }
                 }
               } catch {
-                dateStr = String(rawDate);
+                dateStr = String(rawDate).trim();
               }
             }
 
-            const rawDowntime = row[19] ? String(row[19]) : "";
-            const events = rawDowntime.split(',').map(e => e.trim()).filter(e => e !== "");
-            
-            events.forEach((evt, evtIndex) => {
-              // format is typically "Keterangan=XXmnt"
-              let keterangan = evt;
-              let durasi = "0mnt";
-              
-              if (evt.includes("=")) {
+            if (!dateStr) return;
+
+            let rawMesin = row[colMesin !== -1 ? colMesin : 1] ? String(row[colMesin !== -1 ? colMesin : 1]).trim() : "UNKNOWN";
+            let mesin = rawMesin;
+            const bsMatch = rawMesin.replace(/\s+/g, "").match(/^BS([1-8])$/i);
+            if (bsMatch) {
+              mesin = `BS ${bsMatch[1]}`;
+            } else if (/^PONI\s*A$/i.test(rawMesin)) {
+              mesin = "PONI A";
+            } else if (/^PONI\s*B$/i.test(rawMesin)) {
+              mesin = "PONI B";
+            } else if (/^BREAK(DOWN)?$/i.test(rawMesin)) {
+              mesin = "BREAKDOWN";
+            }
+
+            // 1. Check formatted downtime summary column
+            const rawDowntime = colDowntime !== -1 && row[colDowntime] ? String(row[colDowntime]).trim() : "";
+            const events = rawDowntime.split(',').map(e => e.trim()).filter(e => e && e.includes("="));
+
+            if (events.length > 0) {
+              events.forEach((evt, evtIndex) => {
                 const parts = evt.split("=");
-                keterangan = parts[0].trim();
-                durasi = parts[1].trim();
-              }
-              
-              mappedData.push({
-                id: `downtime-${dateStr}-${rowIndex}-${evtIndex}`,
-                tanggal: dateStr,
-                mesin: row[1] ? String(row[1]).trim().toUpperCase() : "-",
-                keterangan: keterangan,
-                durasi: durasi,
-                jenis: "maintenance", // simple default
-                waktu: "00:00", // not provided directly, maybe not needed
+                const ket = parts[0].trim();
+                const dur = parts[1].trim();
+                mappedData.push({
+                  id: `downtime-${dateStr}-${mesin.replace(/\s+/g, "")}-${rowIndex}-${evtIndex}`,
+                  tanggal: dateStr,
+                  mesin,
+                  keterangan: ket,
+                  durasi: dur.endsWith("mnt") || dur.endsWith("jam") ? dur : `${dur}mnt`,
+                  jenis: "maintenance",
+                  waktu: "00:00"
+                });
               });
-            });
+            } else if (reasonCols.length > 0) {
+              // 2. Fallback to individual reason columns
+              reasonCols.forEach((rc, rcIndex) => {
+                const val = row[rc.idx];
+                if (val && parseFloat(String(val).replace(/,/g, ".")) > 0) {
+                  const durNum = parseFloat(String(val).replace(/,/g, "."));
+                  mappedData.push({
+                    id: `downtime-${dateStr}-${mesin.replace(/\s+/g, "")}-${rowIndex}-${rcIndex}`,
+                    tanggal: dateStr,
+                    mesin,
+                    keterangan: rc.label,
+                    durasi: `${durNum}mnt`,
+                    jenis: "maintenance",
+                    waktu: "00:00"
+                  });
+                }
+              });
+            }
           });
           
           resolve(mappedData);
@@ -478,15 +574,13 @@ export async function fetchOrderUrgentData(selectedDateStr: string): Promise<Ord
             const todayVal = todayIdx !== -1 ? parseNumber(row[todayIdx]) : 0;
             const yesterdayVal = yesterdayIdx !== -1 ? parseNumber(row[yesterdayIdx]) : 0;
 
-            // Unit
+            // Unit from spreadsheet
             let unit = "Pcs";
             const rawUnit = satuanColIdx !== -1 && row[satuanColIdx] !== undefined
               ? String(row[satuanColIdx] || "").trim().toUpperCase()
               : "";
             if (rawUnit === "M3" || rawUnit === "M³") {
               unit = "M³";
-            } else if (rawUnit === "BTG") {
-              unit = "Pcs";
             } else if (rawUnit) {
               unit = rawUnit;
             }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion } from "motion/react";
 import { Clock, AlertCircle, Wrench, AlertTriangle, Zap, Search } from "lucide-react";
 import { cn } from "../lib/utils";
@@ -12,14 +12,23 @@ interface DowntimeProps {
 export default function Downtime({ downtimeList, selectedDate }: DowntimeProps) {
   const [selectedMachine, setSelectedMachine] = useState("ALL");
   
-  const machines = ["ALL", "BS 1", "BS 2", "BS 3", "BS 4", "BS 5", "BS 6", "BS 7", "BS 8"];
-  
   // Filter by selected date
-  const todaysData = downtimeList.filter(d => d.tanggal === selectedDate);
+  const todaysData = useMemo(() => {
+    return downtimeList.filter(d => d.tanggal === selectedDate);
+  }, [downtimeList, selectedDate]);
 
-  const filteredData = selectedMachine === "ALL" 
-    ? todaysData 
-    : todaysData.filter(d => d.mesin === selectedMachine);
+  const machines = useMemo(() => {
+    const defaultList = ["ALL", "BS 1", "BS 2", "BS 3", "BS 4", "BS 5", "BS 6", "BS 7", "BS 8"];
+    const otherMachines = Array.from(new Set(todaysData.map(d => d.mesin)))
+      .filter((m): m is string => Boolean(m) && !defaultList.some(def => def.replace(/\s+/g, "").toUpperCase() === String(m).replace(/\s+/g, "").toUpperCase()));
+    return [...defaultList, ...otherMachines];
+  }, [todaysData]);
+
+  const filteredData = useMemo(() => {
+    if (selectedMachine === "ALL") return todaysData;
+    const target = selectedMachine.replace(/\s+/g, "").toUpperCase();
+    return todaysData.filter(d => d.mesin.replace(/\s+/g, "").toUpperCase() === target);
+  }, [todaysData, selectedMachine]);
 
   // Stats
   const totalDowntimeEvents = filteredData.length;
@@ -34,28 +43,34 @@ export default function Downtime({ downtimeList, selectedDate }: DowntimeProps) 
   };
 
   const calculateMinutes = (durasi: string) => {
+    if (!durasi) return 0;
     let totalMinutes = 0;
-    const durationStr = durasi.toLowerCase();
-    const match = durationStr.match(/(\d+)\s*(m|j|h|menit|jam|hour)/);
+    const durationStr = durasi.toLowerCase().trim();
+    const match = durationStr.match(/([\d.,]+)\s*(mnt|menit|m|jam|h|hour)?/);
     if (match) {
-      const val = parseInt(match[1]);
-      if (durationStr.includes("jam") || durationStr.includes("h")) {
-        totalMinutes += val * 60;
-      } else {
-        totalMinutes += val;
+      const val = parseFloat(match[1].replace(/,/g, "."));
+      if (!isNaN(val)) {
+        const unit = match[2] || "";
+        if (unit.startsWith("j") || unit.startsWith("h")) {
+          totalMinutes += Math.round(val * 60);
+        } else {
+          totalMinutes += Math.round(val);
+        }
       }
     }
     return totalMinutes;
   };
 
-  const groupedByMachine = Object.entries(
-    filteredData.reduce((acc, curr) => {
-      const m = curr.mesin;
-      if (!acc[m]) acc[m] = [];
-      acc[m].push(curr);
-      return acc;
-    }, {} as Record<string, DowntimeData[]>)
-  ).sort((a, b) => a[0].localeCompare(b[0]));
+  const groupedByMachine = useMemo(() => {
+    return Object.entries(
+      filteredData.reduce((acc, curr) => {
+        const m = curr.mesin;
+        if (!acc[m]) acc[m] = [];
+        acc[m].push(curr);
+        return acc;
+      }, {} as Record<string, DowntimeData[]>)
+    ).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [filteredData]);
 
 
   const getIconForType = (type: string) => {
@@ -138,7 +153,7 @@ export default function Downtime({ downtimeList, selectedDate }: DowntimeProps) 
         ) : (
           groupedByMachine.map(([machineName, events], index) => {
             const totalMinutes = events.reduce((sum, item) => sum + calculateMinutes(item.durasi), 0);
-            const formattedName = machineName.charAt(0).toUpperCase() + machineName.slice(1).toLowerCase().replace(' ', '');
+            const formattedName = machineName;
             
             return (
               <motion.div 
