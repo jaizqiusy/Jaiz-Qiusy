@@ -59,24 +59,37 @@ async function startServer() {
     }
   });
 
-  // Simple in-memory cache to make fetching lightning fast and avoid rate-limiting
+  // In-memory cache and in-flight promise deduplication
   const sheetsCache: Record<string, { data: string, timestamp: number }> = {};
-  const CACHE_TTL = 20000; // 20 seconds cache
+  const inFlightRequests = new Map<string, Promise<string>>();
+  const CACHE_TTL = 30000; // 30 seconds fresh cache
 
-  // API Proxy Route for Google Sheets CSV (ultra-fast cloud-to-cloud connection)
+  // Clear cache endpoint
+  app.post("/api/clear-cache", (req, res) => {
+    const sheetCount = Object.keys(sheetsCache).length;
+    for (const key in sheetsCache) {
+      delete sheetsCache[key];
+    }
+    inFlightRequests.clear();
+    console.log(`Cache cleared (${sheetCount} entries)`);
+    res.json({ success: true, message: "Cache successfully cleared" });
+  });
+
+  // API Proxy Route for Google Sheets CSV (ultra-fast cloud-to-cloud connection with deduplication & stale fallback)
   app.get("/api/sheets-csv", async (req, res) => {
-    try {
-      const sheet = String(req.query.sheet || "DATABASE APPSCRIPT");
-      
-      // Serve from cache if valid (unless force refresh requested)
-      const now = Date.now();
-      const forceRefresh = req.query.refresh === "1" || req.query.refresh === "true";
-      if (!forceRefresh && sheetsCache[sheet] && (now - sheetsCache[sheet].timestamp < CACHE_TTL)) {
-        res.setHeader("Content-Type", "text/csv; charset=utf-8");
-        res.setHeader("X-Cache", "HIT");
-        return res.status(200).send(sheetsCache[sheet].data);
-      }
+    const sheet = String(req.query.sheet || "DATABASE APPSCRIPT").trim();
+    const forceRefresh = req.query.refresh === "1" || req.query.refresh === "true";
+    const now = Date.now();
 
+    // 1. Serve from memory cache if fresh and not force-refreshing
+    if (!forceRefresh && sheetsCache[sheet] && (now - sheetsCache[sheet].timestamp < CACHE_TTL)) {
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
+      res.setHeader("X-Cache", "HIT");
+      return res.status(200).send(sheetsCache[sheet].data);
+    }
+
+    // 2. Helper to fetch raw CSV from Google Sheets with fallbacks
+    const fetchFromGoogle = async (): Promise<string> => {
       const SHEET_ID = "1G7x3dtE2KFF338w6qdd4jrMkz-yrbThlzx5Vi0I8AqQ";
       const encSheet = encodeURIComponent(sheet);
       const urls = [
@@ -84,13 +97,12 @@ async function startServer() {
         `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&sheet=${encSheet}&_t=${Date.now()}`
       ];
 
-      let csvText = "";
       let lastErr: any = null;
 
       for (const url of urls) {
         try {
           const response = await axios.get(url, {
-            timeout: 25000,
+            timeout: 12000, // 12 seconds per attempt
             responseType: "text",
             headers: {
               Accept: "text/csv, text/plain, */*",
@@ -102,30 +114,58 @@ async function startServer() {
             response.status === 200 &&
             response.data &&
             typeof response.data === "string" &&
-            !response.data.includes("<!DOCTYPE html>")
+            !response.data.includes("<!DOCTYPE html>") &&
+            !response.data.includes("<html")
           ) {
-            csvText = response.data;
-            break;
+            return response.data;
           }
         } catch (e) {
           lastErr = e;
         }
       }
 
-      if (!csvText) {
-        return res.status(502).json({ error: "Gagal mengambil data dari Google Sheets", details: lastErr?.message });
+      throw lastErr || new Error(`Gagal mengambil data dari Google Sheets untuk sheet: ${sheet}`);
+    };
+
+    try {
+      let csvPromise: Promise<string>;
+
+      // Deduplicate concurrent in-flight requests for the same sheet
+      if (!forceRefresh && inFlightRequests.has(sheet)) {
+        csvPromise = inFlightRequests.get(sheet)!;
+      } else {
+        csvPromise = fetchFromGoogle();
+        inFlightRequests.set(sheet, csvPromise);
       }
 
-      // Update cache
-      sheetsCache[sheet] = { data: csvText, timestamp: Date.now() };
+      try {
+        const csvText = await csvPromise;
+        // Update cache
+        sheetsCache[sheet] = { data: csvText, timestamp: Date.now() };
 
-      res.setHeader("Content-Type", "text/csv; charset=utf-8");
-      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-      res.setHeader("X-Cache", "MISS");
-      return res.status(200).send(csvText);
+        res.setHeader("Content-Type", "text/csv; charset=utf-8");
+        res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        res.setHeader("X-Cache", forceRefresh ? "REFRESH" : "MISS");
+        return res.status(200).send(csvText);
+      } finally {
+        inFlightRequests.delete(sheet);
+      }
     } catch (err: any) {
-      console.error("Sheets proxy error:", err.message);
-      res.status(500).json({ error: err.message });
+      console.warn(`Sheets fetch warning for [${sheet}]:`, err?.message || err);
+
+      // Stale cache fallback: if previous data exists, serve it seamlessly!
+      if (sheetsCache[sheet]?.data) {
+        console.log(`Serving stale cached data for [${sheet}]`);
+        res.setHeader("Content-Type", "text/csv; charset=utf-8");
+        res.setHeader("X-Cache", "STALE-FALLBACK");
+        return res.status(200).send(sheetsCache[sheet].data);
+      }
+
+      res.status(502).json({ 
+        error: "Gagal mengambil data dari Google Sheets", 
+        sheet, 
+        details: err?.message || "Timeout / connection error" 
+      });
     }
   });
 

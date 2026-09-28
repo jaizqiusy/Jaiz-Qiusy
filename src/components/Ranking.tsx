@@ -508,7 +508,7 @@ export default function Ranking({ history }: RankingProps) {
       </div>
 
       {/* Leaderboard List (Rank 4-8) */}
-      <div id="leaderboard_list" className="flex-1 flex flex-col space-y-1.5 px-2 min-h-0 overflow-y-auto pb-1">
+      <div id="leaderboard_list" className="flex-1 flex flex-col space-y-1.5 px-2 min-h-0 overflow-y-auto pb-24">
         {remainingRanks.length > 0 ? (
           remainingRanks.map((op, idx) => {
             const rankNum = idx + 4;

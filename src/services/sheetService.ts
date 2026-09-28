@@ -57,75 +57,126 @@ export interface OperatorData {
 
 const SHEET_ID = "1G7x3dtE2KFF338w6qdd4jrMkz-yrbThlzx5Vi0I8AqQ";
 
+// In-memory cache and promise deduplication on client
+const clientCsvCache: Record<string, { text: string; timestamp: number }> = {};
+const clientInFlight = new Map<string, Promise<string>>();
+const CLIENT_CACHE_TTL = 30000; // 30 seconds memory cache
+
 /**
- * Robust CSV fetcher with multi-layer fallback:
- * 1. Internal server proxy /api/sheets-csv (avoids CORS, browser timeout, carrier throttling)
- * 2. Google Sheets gviz API (direct)
- * 3. Google Sheets export CSV endpoint (direct fallback)
+ * Robust CSV fetcher with multi-layer fallback, deduplication, and caching:
+ * 1. Client memory cache & in-flight request sharing
+ * 2. Internal server proxy /api/sheets-csv (avoids CORS, browser timeout, carrier throttling)
+ * 3. Google Sheets gviz API (direct)
+ * 4. Google Sheets export CSV endpoint (direct fallback)
+ * 5. LocalStorage offline cache fallback
  */
-async function fetchSheetCsvText(sheetName: string, timeoutMs: number = 30000): Promise<string> {
+export async function fetchSheetCsvText(
+  sheetName: string, 
+  timeoutMs: number = 20000,
+  forceRefresh: boolean = false
+): Promise<string> {
   const encSheet = encodeURIComponent(sheetName);
-  const candidateUrls = [
-    // 1. Same-origin backend proxy (runs directly on cloud server, bypassing local network issues)
-    `/api/sheets-csv?sheet=${encSheet}&_t=${Date.now()}`,
-    // 2. Direct gviz/tq endpoint
-    `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encSheet}&_t=${Date.now()}`,
-    // 3. Direct export format endpoint
-    `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&sheet=${encSheet}&_t=${Date.now()}`
-  ];
+  const now = Date.now();
 
-  let lastError: any = null;
+  // 1. Serve from client memory cache if valid and not force refresh
+  if (!forceRefresh && clientCsvCache[sheetName] && (now - clientCsvCache[sheetName].timestamp < CLIENT_CACHE_TTL)) {
+    return clientCsvCache[sheetName].text;
+  }
 
-  for (let i = 0; i < candidateUrls.length; i++) {
-    const url = candidateUrls[i];
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
+  // 2. Share existing in-flight promise if another request for the same sheet is pending
+  if (!forceRefresh && clientInFlight.has(sheetName)) {
+    return clientInFlight.get(sheetName)!;
+  }
+
+  const fetchPromise = (async () => {
+    const refreshQuery = forceRefresh ? "&refresh=1" : "";
+    const candidateUrls = [
+      // 1. Same-origin backend proxy
+      `/api/sheets-csv?sheet=${encSheet}${refreshQuery}&_t=${Date.now()}`,
+      // 2. Direct gviz/tq endpoint
+      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encSheet}&_t=${Date.now()}`,
+      // 3. Direct export format endpoint
+      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&sheet=${encSheet}&_t=${Date.now()}`
+    ];
+
+    let lastError: any = null;
+
+    for (let i = 0; i < candidateUrls.length; i++) {
+      const url = candidateUrls[i];
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        try {
+          controller.abort();
+        } catch (_) {}
+      }, timeoutMs);
+
       try {
-        controller.abort();
-      } catch (_) {}
-    }, timeoutMs);
+        const response = await fetch(url, {
+          signal: controller.signal,
+          cache: 'no-store',
+          headers: {
+            'Accept': 'text/csv, text/plain, */*',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        });
+        clearTimeout(timeoutId);
 
-    try {
-      const response = await fetch(url, {
-        signal: controller.signal,
-        cache: 'no-store',
-        headers: {
-          'Accept': 'text/csv, text/plain, */*',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            throw new Error("Akses Google Sheet ditolak. Pastikan sheet disetel ke 'Siapa saja yang memiliki link dapat melihat'.");
+          }
+          continue;
         }
-      });
-      clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          throw new Error("Akses Google Sheet ditolak. Pastikan sheet disetel ke 'Siapa saja yang memiliki link dapat melihat'.");
-        }
-        continue;
+        const csvText = await response.text();
+        if (!csvText || csvText.trim().length === 0) continue;
+        if (csvText.includes("<!DOCTYPE html>") || csvText.includes("<html")) continue;
+
+        // Cache in memory
+        clientCsvCache[sheetName] = { text: csvText, timestamp: Date.now() };
+
+        // Save to localStorage as offline fallback if reasonably sized (< 2MB)
+        try {
+          if (csvText.length < 2000000) {
+            localStorage.setItem(`rendemen_csv_cache_${sheetName}`, csvText);
+          }
+        } catch (_) {}
+
+        return csvText;
+      } catch (err: any) {
+        clearTimeout(timeoutId);
+        lastError = err;
       }
-
-      const csvText = await response.text();
-      if (!csvText || csvText.trim().length === 0) continue;
-      if (csvText.includes("<!DOCTYPE html>") || csvText.includes("<html")) continue;
-
-      return csvText;
-    } catch (err: any) {
-      clearTimeout(timeoutId);
-      lastError = err;
-      // Continue to next fallback
     }
-  }
 
-  if (lastError?.name === 'AbortError' || lastError?.message?.includes('aborted')) {
-    throw new Error("Koneksi ke Google Sheets lambat atau timeout (30 detik). Silakan periksa koneksi internet Anda.");
-  }
+    // Fallback: load last cached CSV from localStorage if available
+    try {
+      const savedOfflineCsv = localStorage.getItem(`rendemen_csv_cache_${sheetName}`);
+      if (savedOfflineCsv && savedOfflineCsv.trim().length > 0) {
+        console.warn(`Menggunakan cache lokal tersimpan untuk sheet [${sheetName}]`);
+        return savedOfflineCsv;
+      }
+    } catch (_) {}
 
-  throw lastError || new Error("Gagal mengambil data dari Google Sheets.");
+    if (lastError?.name === 'AbortError' || lastError?.message?.includes('aborted')) {
+      throw new Error(`Koneksi ke Google Sheets timeout (${sheetName}).`);
+    }
+
+    throw lastError || new Error(`Gagal mengambil data dari Google Sheets (${sheetName}).`);
+  })();
+
+  clientInFlight.set(sheetName, fetchPromise);
+  try {
+    return await fetchPromise;
+  } finally {
+    clientInFlight.delete(sheetName);
+  }
 }
 
-export async function fetchSheetData(): Promise<SheetData[]> {
+export async function fetchSheetData(forceRefresh: boolean = false): Promise<SheetData[]> {
   try {
-    const csvText = await fetchSheetCsvText("DATABASE APPSCRIPT", 30000);
+    const csvText = await fetchSheetCsvText("DATABASE APPSCRIPT", 25000, forceRefresh);
     
     return new Promise((resolve, reject) => {
       Papa.parse(csvText, {
@@ -286,15 +337,15 @@ export async function fetchSheetData(): Promise<SheetData[]> {
   }
 }
 
-export async function fetchDowntimeData(): Promise<DowntimeData[]> {
+export async function fetchDowntimeData(forceRefresh: boolean = false): Promise<DowntimeData[]> {
   try {
     // Downtime data is embedded in the primary DATABASE APPSCRIPT sheet
     let csvText = "";
     try {
-      csvText = await fetchSheetCsvText("DATABASE APPSCRIPT", 30000);
+      csvText = await fetchSheetCsvText("DATABASE APPSCRIPT", 25000, forceRefresh);
     } catch {
       // Fallback in case a dedicated Downtime sheet is ever created
-      csvText = await fetchSheetCsvText("Downtime", 30000);
+      csvText = await fetchSheetCsvText("Downtime", 25000, forceRefresh);
     }
 
     if (!csvText || csvText.trim().length === 0) {
@@ -426,9 +477,9 @@ export async function fetchDowntimeData(): Promise<DowntimeData[]> {
   }
 }
 
-export async function fetchOrderUrgentData(selectedDateStr: string): Promise<OrderUrgentData[]> {
+export async function fetchOrderUrgentData(selectedDateStr: string, forceRefresh: boolean = false): Promise<OrderUrgentData[]> {
   try {
-    const csvText = await fetchSheetCsvText("order urgent", 30000);
+    const csvText = await fetchSheetCsvText("ORDER URGENT", 25000, forceRefresh);
     if (!csvText || csvText.trim().length === 0) {
       return [];
     }
@@ -620,9 +671,9 @@ export async function fetchOrderUrgentData(selectedDateStr: string): Promise<Ord
   }
 }
 
-export async function fetchOperatorData(): Promise<OperatorData[]> {
+export async function fetchOperatorData(forceRefresh: boolean = false): Promise<OperatorData[]> {
   try {
-    const csvText = await fetchSheetCsvText("Operator bs", 30000);
+    const csvText = await fetchSheetCsvText("Operator bs", 25000, forceRefresh);
 
     if (!csvText || csvText.trim().length === 0) {
       return [];
@@ -668,4 +719,157 @@ export async function fetchOperatorData(): Promise<OperatorData[]> {
     return [];
   }
 }
+
+export interface RealtimeTodayData {
+  tanggal: string;
+  mesin: string;
+  inputAktual: number;
+  utama: number;
+  persenUtama: string;
+  turunan: number;
+  persenTurunan: string;
+  lokal: number;
+  persenLokal: string;
+  total: number;
+  persenTotal: string;
+  m3PerJam: number;
+}
+
+export async function fetchRealtimeTodayData(forceRefresh: boolean = false): Promise<RealtimeTodayData[]> {
+  try {
+    let csvText = "";
+    const sheetCandidates = ["realtime today", "Realtime Today"];
+    
+    for (const sheetName of sheetCandidates) {
+      try {
+        csvText = await fetchSheetCsvText(sheetName, 20000, forceRefresh);
+        if (csvText && csvText.trim().length > 0 && !csvText.includes("<!DOCTYPE")) {
+          break;
+        }
+      } catch (_) {
+        // try next
+      }
+    }
+
+    if (!csvText || csvText.trim().length === 0) {
+      // Fallback to cached realtime data from localStorage
+      const cached = localStorage.getItem("rendemen_last_realtime_data");
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch (_) {}
+      }
+      return [];
+    }
+
+    return new Promise((resolve, reject) => {
+      Papa.parse(csvText, {
+        header: false,
+        dynamicTyping: false,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const rawData = results.data as any[][];
+          if (rawData.length < 2) {
+            resolve([]);
+            return;
+          }
+
+          const headerRow = rawData[0];
+          const headers = headerRow.map((h: any) => String(h || "").trim().toLowerCase());
+
+          // Find column indices by header name
+          const colTanggal = headers.findIndex(h => h.includes("tanggal"));
+          const colMesin = headers.findIndex(h => h.includes("mesin"));
+          const colInput = headers.findIndex(h => h.includes("input"));
+          const colUtama = headers.findIndex(h => h.includes("utama"));
+          const colTurunan = headers.findIndex(h => h.includes("turunan"));
+          const colLokal = headers.findIndex(h => h.includes("lokal"));
+          const colTotal = headers.findIndex(h => h.includes("total"));
+          const colM3H = headers.findIndex(h => h.includes("m3/h") || h.includes("m3") || h.includes("/h"));
+
+          // Helper to parse float safely
+          const parseNum = (val: any): number => {
+            if (val === undefined || val === null) return 0;
+            const s = String(val).replace(/,/g, ".").replace(/[^0-9.-]/g, "").trim();
+            const n = parseFloat(s);
+            return isNaN(n) ? 0 : n;
+          };
+
+          // Helper to parse percentage
+          const parsePct = (val: any, fallbackCalc = "0.00%"): string => {
+            if (val === undefined || val === null) return fallbackCalc;
+            const s = String(val).trim();
+            if (s.includes("%")) return s;
+            const n = parseFloat(s.replace(/,/g, "."));
+            if (!isNaN(n)) {
+              return (n <= 1 && n > 0 ? (n * 100).toFixed(2) : n.toFixed(2)) + "%";
+            }
+            return fallbackCalc;
+          };
+
+          const dataRows = rawData.slice(1);
+          const mappedData: RealtimeTodayData[] = [];
+
+          dataRows.forEach(row => {
+            if (!row || row.length < 3) return;
+
+            const rawMesin = String(row[colMesin !== -1 ? colMesin : 1] || "").trim();
+            if (!rawMesin) return;
+
+            // Normalize machine name (BS.1, BS 1 -> BS 1)
+            let mesin = rawMesin;
+            const bsMatch = rawMesin.replace(/\s+/g, "").match(/^BS\.?([1-8])$/i);
+            if (bsMatch) {
+              mesin = `BS ${bsMatch[1]}`;
+            }
+
+            const rawTanggal = String(row[colTanggal !== -1 ? colTanggal : 0] || "").trim();
+            const inputAktual = parseNum(row[colInput !== -1 ? colInput : 2]);
+            const utama = parseNum(row[colUtama !== -1 ? colUtama : 3]);
+            
+            // % Utama is adjacent
+            const pUtamaIdx = colUtama !== -1 ? colUtama + 1 : 4;
+            const persenUtama = parsePct(row[pUtamaIdx]);
+
+            const turunan = parseNum(row[colTurunan !== -1 ? colTurunan : 5]);
+            const pTurunanIdx = colTurunan !== -1 ? colTurunan + 1 : 6;
+            const persenTurunan = parsePct(row[pTurunanIdx]);
+
+            const lokal = parseNum(row[colLokal !== -1 ? colLokal : 7]);
+            const pLokalIdx = colLokal !== -1 ? colLokal + 1 : 8;
+            const persenLokal = parsePct(row[pLokalIdx]);
+
+            const total = parseNum(row[colTotal !== -1 ? colTotal : 9]);
+            const pTotalIdx = colTotal !== -1 ? colTotal + 1 : 10;
+            const persenTotal = parsePct(row[pTotalIdx]);
+
+            const m3PerJam = parseNum(row[colM3H !== -1 ? colM3H : 11]);
+
+            mappedData.push({
+              tanggal: rawTanggal,
+              mesin,
+              inputAktual,
+              utama,
+              persenUtama,
+              turunan,
+              persenTurunan,
+              lokal,
+              persenLokal,
+              total,
+              persenTotal,
+              m3PerJam
+            });
+          });
+
+          resolve(mappedData);
+        },
+        error: (error: any) => reject(new Error(`Gagal proses CSV realtime: ${error.message}`))
+      });
+    });
+  } catch (error: any) {
+    console.warn("Realtime Fetch Note:", error?.message || error);
+    return [];
+  }
+}
+
 

@@ -19,10 +19,19 @@ import {
   Package,
   Layers,
   Clock,
-  Download
+  Download,
+  Zap
 } from "lucide-react";
 import { cn } from "./lib/utils";
-import { fetchSheetData, fetchDowntimeData, fetchOrderUrgentData, DowntimeData, OrderUrgentData } from "./services/sheetService";
+import { 
+  fetchSheetData, 
+  fetchDowntimeData, 
+  fetchOrderUrgentData, 
+  fetchRealtimeTodayData,
+  DowntimeData, 
+  OrderUrgentData,
+  RealtimeTodayData 
+} from "./services/sheetService";
 
 // Components
 import Ranking from "./components/Ranking";
@@ -32,6 +41,8 @@ import Performance from "./components/Performance";
 import Analysis from "./components/Analysis";
 import Downtime from "./components/Downtime";
 import OrderUrgent from "./components/OrderUrgent";
+import RealtimeToday from "./components/RealtimeToday";
+import RealtimeBottomBar from "./components/RealtimeBottomBar";
 import { sendWhatsAppNotification, sendDowntimeNotification } from "./services/notificationService";
 
 export type Calculation = {
@@ -58,14 +69,43 @@ export type Calculation = {
   timestamp: number;
 };
 
-const TABS = ["ranking", "dashboard", "analysis", "performance", "history", "downtime", "order"] as const;
+const TABS = ["ranking", "dashboard", "realtime", "order", "analysis", "performance", "history", "downtime"] as const;
 type TabType = typeof TABS[number];
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
-  const [history, setHistory] = useState<Calculation[]>([]);
-  const [downtime, setDowntime] = useState<DowntimeData[]>([]);
-  const [orderUrgent, setOrderUrgent] = useState<OrderUrgentData[]>([]);
+  const [history, setHistory] = useState<Calculation[]>(() => {
+    try {
+      const saved = localStorage.getItem("rendemen_history");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [downtime, setDowntime] = useState<DowntimeData[]>(() => {
+    try {
+      const saved = localStorage.getItem("rendemen_last_downtime_data");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [orderUrgent, setOrderUrgent] = useState<OrderUrgentData[]>(() => {
+    try {
+      const saved = localStorage.getItem("rendemen_last_order_data");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [realtimeData, setRealtimeData] = useState<RealtimeTodayData[]>(() => {
+    try {
+      const saved = localStorage.getItem("rendemen_last_realtime_data");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncSuccess, setSyncSuccess] = useState<boolean>(false);
@@ -109,11 +149,16 @@ export default function App() {
     try {
       const currentDateStr = new Date().toISOString().split('T')[0];
       const targetDateStr = selectedDate || currentDateStr;
+      const forceRefresh = !isAutoRefresh;
 
-      const [data, downtimeDataRes, orderUrgentRes] = await Promise.all([
-        fetchSheetData(),
-        fetchDowntimeData().catch(() => []),
-        fetchOrderUrgentData(targetDateStr).catch(() => [])
+      const [data, downtimeDataRes, orderUrgentRes, realtimeRes] = await Promise.all([
+        fetchSheetData(forceRefresh).catch((err) => {
+          console.warn("fetchSheetData warning:", err?.message || err);
+          return [];
+        }),
+        fetchDowntimeData(forceRefresh).catch(() => []),
+        fetchOrderUrgentData(targetDateStr, forceRefresh).catch(() => []),
+        fetchRealtimeTodayData(forceRefresh).catch(() => [])
       ]);
       
       let finalDowntime = downtimeDataRes;
@@ -124,6 +169,8 @@ export default function App() {
             finalDowntime = JSON.parse(prevDowntimeStr);
           } catch (_) {}
         }
+      } else {
+        localStorage.setItem("rendemen_last_downtime_data", JSON.stringify(finalDowntime));
       }
       setDowntime(finalDowntime);
 
@@ -139,9 +186,25 @@ export default function App() {
         localStorage.setItem("rendemen_last_order_data", JSON.stringify(finalOrderUrgent));
       }
       setOrderUrgent(finalOrderUrgent);
+
+      let finalRealtime = realtimeRes;
+      if (finalRealtime.length === 0) {
+        const prevRealtimeStr = localStorage.getItem("rendemen_last_realtime_data");
+        if (prevRealtimeStr) {
+          try {
+            finalRealtime = JSON.parse(prevRealtimeStr);
+          } catch (_) {}
+        }
+      } else {
+        localStorage.setItem("rendemen_last_realtime_data", JSON.stringify(finalRealtime));
+      }
+      setRealtimeData(finalRealtime);
       
       if (data.length === 0) {
-        if (!isAutoRefresh) setSyncError("Tidak ada data ditemukan di Google Sheet.");
+        // If we already have history from cache, keep it smoothly
+        if (!isAutoRefresh && history.length === 0) {
+          setSyncError("Tidak ada data ditemukan di Google Sheet.");
+        }
         setIsSyncing(false);
         isSyncingRef.current = false;
         return;
@@ -154,6 +217,9 @@ export default function App() {
       
       const currentDowntimeStr = JSON.stringify(downtimeDataRes);
       const prevDowntimeStr = localStorage.getItem("rendemen_last_downtime_data");
+
+      const currentRealtimeStr = JSON.stringify(realtimeRes);
+      const prevRealtimeCache = localStorage.getItem("rendemen_last_realtime_data");
       
       const todayDateStr = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
       const lastDailyNotifDate = localStorage.getItem("rendemen_last_daily_notif_date");
@@ -162,7 +228,7 @@ export default function App() {
       // Kirim notif harian otomatis jika auto refresh, waktu >= 19:00, dan belum dikirim hari ini
       const isDailyNotifDue = isAutoRefresh && currentHour >= 19 && lastDailyNotifDate !== todayDateStr;
 
-      if (isAutoRefresh && !isDailyNotifDue && prevDataStr === currentDataStr && prevDowntimeStr === currentDowntimeStr) {
+      if (isAutoRefresh && !isDailyNotifDue && prevDataStr === currentDataStr && prevDowntimeStr === currentDowntimeStr && prevRealtimeCache === currentRealtimeStr) {
         setLastSync(new Date().toLocaleString("id-ID", { 
           day: '2-digit', 
           month: '2-digit', 
@@ -355,6 +421,8 @@ export default function App() {
         "text-white relative shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.1)] transition-colors duration-300",
         activeTab === "ranking"
           ? "bg-[#0C1524] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 z-20"
+          : activeTab === "realtime"
+          ? "bg-[#0C1524] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 z-20 border-b border-emerald-900/30"
           : activeTab === "analysis" || activeTab === "order"
           ? "bg-gradient-to-b from-[#311B92] to-[#512DA8] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 rounded-b-2xl z-20" 
           : "bg-gradient-to-b from-[#311B92] to-[#512DA8] px-4 pt-[max(2rem,env(safe-area-inset-top))] pb-12 z-0"
@@ -426,6 +494,36 @@ export default function App() {
                 <RefreshCw size={14} />
               </button>
             </div>
+          </div>
+        ) : activeTab === "realtime" ? (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="bg-emerald-500/20 p-1.5 rounded-lg border border-emerald-500/30">
+                <Zap size={16} className="text-emerald-400 fill-emerald-400" />
+              </div>
+              <div>
+                <h1 className="text-xs font-black tracking-tight uppercase leading-none text-white">RENDEMENKU</h1>
+                <p className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest mt-0.5 whitespace-nowrap">Realtime Setengah Hari</p>
+              </div>
+            </div>
+            
+            <div className="bg-white/10 px-2.5 py-1 rounded-lg border border-white/10 flex items-center justify-center backdrop-blur-sm">
+              <span className="text-[10px] font-black text-emerald-300 uppercase tracking-wider">
+                {realtimeData.length > 0 && realtimeData[0].tanggal ? realtimeData[0].tanggal : "Hari Ini"}
+              </span>
+            </div>
+
+            <button 
+              onClick={() => handleSync(false)}
+              disabled={isSyncing}
+              className={cn(
+                "p-1.5 text-white/70 hover:text-white transition-all rounded-full hover:bg-white/10 flex items-center justify-center",
+                isSyncing && "animate-spin text-white"
+              )}
+              title="Perbarui Data Realtime"
+            >
+              <RefreshCw size={14} />
+            </button>
           </div>
         ) : activeTab === "ranking" ? (
           <div className="flex items-center justify-between">
@@ -519,6 +617,8 @@ export default function App() {
           ? "pt-2 pb-[max(5rem,calc(env(safe-area-inset-bottom)+4.2rem))] px-2 mt-0 h-full overflow-hidden" 
           : activeTab === "ranking"
           ? "pt-0 pb-[max(5rem,calc(env(safe-area-inset-bottom)+4.2rem))] px-0 mt-0 h-full overflow-hidden bg-[#0C1524]"
+          : activeTab === "realtime"
+          ? "pt-0 pb-[max(5.5rem,calc(env(safe-area-inset-bottom)+4.5rem))] px-0 mt-0 h-full overflow-y-auto bg-[#0C1524]"
           : "overflow-y-auto pb-32 px-4 -mt-6"
       )}>
         {syncError && (
@@ -568,6 +668,14 @@ export default function App() {
               onDateChange={setSelectedDate}
             />
           )}
+          {activeTab === "realtime" && (
+            <RealtimeToday 
+              data={realtimeData}
+              onRefresh={() => handleSync(false)}
+              isSyncing={isSyncing}
+              lastSync={lastSync}
+            />
+          )}
           {activeTab === "history" && <History history={history} selectedDate={selectedDate} onDelete={deleteCalculation} />}
           {activeTab === "performance" && <Performance history={history} selectedDate={selectedDate} />}
           {activeTab === "analysis" && <Analysis history={history} selectedDate={selectedDate} />}
@@ -576,48 +684,67 @@ export default function App() {
         </motion.div>
       </main>
 
+      {/* Realtime Bottom Bar (Floating sticky bar across other tabs) */}
+      <RealtimeBottomBar 
+        data={realtimeData}
+        onOpenRealtime={() => handleTabChange("realtime")}
+        isVisible={activeTab !== "realtime" && activeTab !== "analysis" && activeTab !== "order"}
+      />
+
       {/* Bottom Navigation */}
-      <nav className="absolute bottom-0 left-0 right-0 w-full bg-white/90 backdrop-blur-md border-t border-gray-100 grid grid-cols-7 items-center z-20 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 px-1 text-center">
+      <nav className="absolute bottom-0 left-0 right-0 w-full bg-white/90 backdrop-blur-md border-t border-gray-100 grid grid-cols-8 items-center z-20 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 px-0.5 text-center">
         <NavButton 
           active={activeTab === "ranking"} 
           onClick={() => handleTabChange("ranking")}
-          icon={<Trophy size={18} className="sm:w-5 sm:h-5 mx-auto" />}
+          icon={<Trophy size={16} className="sm:w-5 sm:h-5 mx-auto" />}
           label="Ranking"
         />
         <NavButton 
           active={activeTab === "dashboard"} 
           onClick={() => handleTabChange("dashboard")}
-          icon={<LayoutDashboard size={18} className="sm:w-5 sm:h-5 mx-auto" />}
+          icon={<LayoutDashboard size={16} className="sm:w-5 sm:h-5 mx-auto" />}
           label="Beranda"
+        />
+        <NavButton 
+          active={activeTab === "realtime"} 
+          onClick={() => handleTabChange("realtime")}
+          icon={
+            <div className="relative inline-block">
+              <Zap size={16} className={cn("sm:w-5 sm:h-5 mx-auto transition-transform", activeTab === "realtime" ? "fill-emerald-600 text-emerald-600 scale-110" : "text-amber-500 fill-amber-500/50")} />
+              <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+              <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-emerald-500" />
+            </div>
+          }
+          label="Realtime"
         />
         <NavButton 
           active={activeTab === "order"} 
           onClick={() => handleTabChange("order")}
-          icon={<Package size={18} className="sm:w-5 sm:h-5 mx-auto" />}
+          icon={<Package size={16} className="sm:w-5 sm:h-5 mx-auto" />}
           label="Order"
         />
         <NavButton 
           active={activeTab === "analysis"} 
           onClick={() => handleTabChange("analysis")}
-          icon={<BarChart3 size={18} className="sm:w-5 sm:h-5 mx-auto" />}
+          icon={<BarChart3 size={16} className="sm:w-5 sm:h-5 mx-auto" />}
           label="Review"
         />
         <NavButton 
           active={activeTab === "performance"} 
           onClick={() => handleTabChange("performance")}
-          icon={<TrendingUp size={18} className="sm:w-5 sm:h-5 mx-auto" />}
+          icon={<TrendingUp size={16} className="sm:w-5 sm:h-5 mx-auto" />}
           label="Performa"
         />
         <NavButton 
           active={activeTab === "history"} 
           onClick={() => handleTabChange("history")}
-          icon={<HistoryIcon size={18} className="sm:w-5 sm:h-5 mx-auto" />}
+          icon={<HistoryIcon size={16} className="sm:w-5 sm:h-5 mx-auto" />}
           label="Rekap"
         />
         <NavButton 
           active={activeTab === "downtime"} 
           onClick={() => handleTabChange("downtime")}
-          icon={<Clock size={18} className="sm:w-5 sm:h-5 mx-auto" />}
+          icon={<Clock size={16} className="sm:w-5 sm:h-5 mx-auto" />}
           label="Downtime"
         />
       </nav>
