@@ -55,6 +55,34 @@ export default function RealtimeToday({
     });
   }, [data]);
 
+  // Helper to compute metrics with 62% assumed input log
+  const getMetrics = (item: RealtimeTodayData) => {
+    // Asumsi perhitungan input log = Output / 62% (0.62)
+    const inputLog = item.inputAktual > 0 
+      ? item.inputAktual 
+      : (item.total > 0 ? item.total / 0.62 : 0);
+
+    const rendUtama = inputLog > 0 ? (item.utama / inputLog) * 100 : 0;
+    const rendTurunan = inputLog > 0 ? (item.turunan / inputLog) * 100 : 0;
+    const rendLokal = inputLog > 0 ? (item.lokal / inputLog) * 100 : 0;
+    const rendTotal = inputLog > 0 ? (item.total / inputLog) * 100 : 0;
+
+    const utamaShare = item.total > 0 ? (item.utama / item.total) * 100 : 0;
+    const turunanShare = item.total > 0 ? (item.turunan / item.total) * 100 : 0;
+    const lokalShare = item.total > 0 ? (item.lokal / item.total) * 100 : 0;
+
+    return {
+      inputLog,
+      rendUtama,
+      rendTurunan,
+      rendLokal,
+      rendTotal,
+      utamaShare,
+      turunanShare,
+      lokalShare
+    };
+  };
+
   // Aggregate metrics
   const summary = useMemo(() => {
     if (data.length === 0) {
@@ -64,6 +92,10 @@ export default function RealtimeToday({
         totalTurunan: 0,
         totalLokal: 0,
         totalInput: 0,
+        rendUtama: 0,
+        rendTurunan: 0,
+        rendLokal: 0,
+        rendTotal: 0,
         avgSpeed: 0,
         topMachine: null as RealtimeTodayData | null,
         machineCount: 0
@@ -84,7 +116,13 @@ export default function RealtimeToday({
       totalUtama += item.utama;
       totalTurunan += item.turunan;
       totalLokal += item.lokal;
-      totalInput += item.inputAktual;
+
+      // Input log asumsi: Output / 62%
+      const itemInput = item.inputAktual > 0 
+        ? item.inputAktual 
+        : (item.total > 0 ? item.total / 0.62 : 0);
+      totalInput += itemInput;
+
       if (item.m3PerJam > 0) {
         sumSpeed += item.m3PerJam;
         validSpeedCount++;
@@ -94,6 +132,10 @@ export default function RealtimeToday({
       }
     });
 
+    const rendUtama = totalInput > 0 ? (totalUtama / totalInput) * 100 : 0;
+    const rendTurunan = totalInput > 0 ? (totalTurunan / totalInput) * 100 : 0;
+    const rendLokal = totalInput > 0 ? (totalLokal / totalInput) * 100 : 0;
+    const rendTotal = totalInput > 0 ? (totalOutput / totalInput) * 100 : 0;
     const avgSpeed = validSpeedCount > 0 ? sumSpeed / validSpeedCount : 0;
 
     return {
@@ -102,6 +144,10 @@ export default function RealtimeToday({
       totalTurunan,
       totalLokal,
       totalInput,
+      rendUtama,
+      rendTurunan,
+      rendLokal,
+      rendTotal,
       avgSpeed,
       topMachine,
       machineCount: data.length
@@ -248,30 +294,56 @@ export default function RealtimeToday({
 
       {/* Exportable Container */}
       <div ref={exportRef} className="space-y-4">
+        {/* Assumption Notice Banner */}
+        <div className="bg-gradient-to-r from-emerald-950/60 via-slate-900/60 to-emerald-950/60 border border-emerald-500/30 rounded-2xl p-3 sm:px-4 text-xs shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span className="text-white/90">
+              <strong className="text-emerald-300">Asumsi Perhitungan:</strong> Input Log dihitung dari <strong>Output ÷ 62%</strong> (Output / 0.62) menyesuaikan setiap mesin. Rendemen Utama, Turunan, dan Lokal diselaraskan terhadap nilai input log tersebut.
+            </span>
+          </div>
+          <span className="inline-flex items-center gap-1 font-mono text-[11px] font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-lg shrink-0">
+            Target Rendemen Total: 62.00%
+          </span>
+        </div>
+
         {/* KPI Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
-          {/* Card 1: Total Setengah Hari */}
-          <div className="col-span-2 sm:col-span-1 lg:col-span-2 bg-gradient-to-br from-emerald-600 to-teal-800 text-white p-4 rounded-2xl shadow-md border border-emerald-400/20 relative overflow-hidden">
+          {/* Card 1: Total Setengah Hari & Input Log */}
+          <div className="col-span-2 sm:col-span-1 lg:col-span-2 bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-900 text-white p-4 rounded-2xl shadow-md border border-emerald-400/20 relative overflow-hidden flex flex-col justify-between">
             <div className="absolute top-0 right-0 p-3 opacity-15 pointer-events-none">
               <Zap size={64} />
             </div>
-            <div className="flex items-center justify-between text-emerald-100 text-xs font-bold tracking-wider uppercase mb-1">
-              <span>Total Hasil Setengah Hari</span>
-              <span className="bg-emerald-400/30 text-white px-2 py-0.5 rounded-full text-[10px] font-bold">
-                {summary.machineCount} Mesin
-              </span>
+            <div>
+              <div className="flex items-center justify-between text-emerald-100 text-xs font-bold tracking-wider uppercase mb-1">
+                <span>Total Output Setengah Hari</span>
+                <span className="bg-emerald-400/30 text-white px-2 py-0.5 rounded-full text-[10px] font-bold">
+                  {summary.machineCount} Mesin
+                </span>
+              </div>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-3xl sm:text-4xl font-black tracking-tight">
+                  {summary.totalOutput.toFixed(2)}
+                </span>
+                <span className="text-sm font-bold text-emerald-200">M³</span>
+              </div>
             </div>
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-3xl sm:text-4xl font-black tracking-tight">
-                {summary.totalOutput.toFixed(2)}
-              </span>
-              <span className="text-sm font-bold text-emerald-200">M³</span>
-            </div>
-            <div className="mt-2 text-[11px] text-emerald-100/80 flex items-center gap-1.5">
-              <TrendingUp size={13} className="text-emerald-300" />
-              <span>
-                Top: <strong className="text-white">{summary.topMachine?.mesin || "-"}</strong> ({summary.topMachine?.total.toFixed(2)} m³)
-              </span>
+
+            <div className="mt-3 pt-2.5 border-t border-white/15 space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-emerald-100 font-medium">Asumsi Input Log (/62%):</span>
+                <span className="font-mono font-black text-white text-sm">{summary.totalInput.toFixed(2)} M³</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-emerald-100/90">
+                <span>Rendemen Total Asumsi:</span>
+                <span className="font-mono font-bold text-amber-300">{summary.rendTotal.toFixed(2)}%</span>
+              </div>
+              <div className="text-[11px] text-emerald-100/80 flex items-center gap-1.5 pt-0.5">
+                <TrendingUp size={13} className="text-emerald-300 shrink-0" />
+                <span className="truncate">
+                  Top: <strong className="text-white">{summary.topMachine?.mesin || "-"}</strong> ({summary.topMachine?.total.toFixed(2)} m³)
+                </span>
+              </div>
             </div>
           </div>
 
@@ -285,10 +357,14 @@ export default function RealtimeToday({
               <span className="text-2xl font-black text-slate-800">{summary.totalUtama.toFixed(2)}</span>
               <span className="text-xs font-semibold text-slate-400">m³</span>
             </div>
-            <div className="mt-1 text-[11px] font-medium text-slate-500">
-              Porsi: <strong className="text-blue-600 font-bold">
-                {summary.totalOutput > 0 ? ((summary.totalUtama / summary.totalOutput) * 100).toFixed(1) : 0}%
-              </strong>
+            <div className="mt-2 pt-2 border-t border-slate-100 space-y-0.5">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-slate-500 font-medium">Rendemen:</span>
+                <strong className="text-blue-700 font-bold font-mono">{summary.rendUtama.toFixed(2)}%</strong>
+              </div>
+              <div className="text-[10px] text-slate-400">
+                Porsi: {summary.totalOutput > 0 ? ((summary.totalUtama / summary.totalOutput) * 100).toFixed(1) : 0}%
+              </div>
             </div>
           </div>
 
@@ -302,10 +378,14 @@ export default function RealtimeToday({
               <span className="text-2xl font-black text-slate-800">{summary.totalTurunan.toFixed(2)}</span>
               <span className="text-xs font-semibold text-slate-400">m³</span>
             </div>
-            <div className="mt-1 text-[11px] font-medium text-slate-500">
-              Porsi: <strong className="text-purple-600 font-bold">
-                {summary.totalOutput > 0 ? ((summary.totalTurunan / summary.totalOutput) * 100).toFixed(1) : 0}%
-              </strong>
+            <div className="mt-2 pt-2 border-t border-slate-100 space-y-0.5">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-slate-500 font-medium">Rendemen:</span>
+                <strong className="text-purple-700 font-bold font-mono">{summary.rendTurunan.toFixed(2)}%</strong>
+              </div>
+              <div className="text-[10px] text-slate-400">
+                Porsi: {summary.totalOutput > 0 ? ((summary.totalTurunan / summary.totalOutput) * 100).toFixed(1) : 0}%
+              </div>
             </div>
           </div>
 
@@ -319,10 +399,14 @@ export default function RealtimeToday({
               <span className="text-2xl font-black text-slate-800">{summary.totalLokal.toFixed(2)}</span>
               <span className="text-xs font-semibold text-slate-400">m³</span>
             </div>
-            <div className="mt-1 text-[11px] font-medium text-slate-500">
-              Porsi: <strong className="text-amber-600 font-bold">
-                {summary.totalOutput > 0 ? ((summary.totalLokal / summary.totalOutput) * 100).toFixed(1) : 0}%
-              </strong>
+            <div className="mt-2 pt-2 border-t border-slate-100 space-y-0.5">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-slate-500 font-medium">Rendemen:</span>
+                <strong className="text-amber-700 font-bold font-mono">{summary.rendLokal.toFixed(2)}%</strong>
+              </div>
+              <div className="text-[10px] text-slate-400">
+                Porsi: {summary.totalOutput > 0 ? ((summary.totalLokal / summary.totalOutput) * 100).toFixed(1) : 0}%
+              </div>
             </div>
           </div>
 
@@ -336,7 +420,7 @@ export default function RealtimeToday({
               <span className="text-2xl font-black text-slate-800">{summary.avgSpeed.toFixed(2)}</span>
               <span className="text-xs font-semibold text-slate-400">m³/h</span>
             </div>
-            <div className="mt-1 text-[11px] font-medium text-slate-500 truncate">
+            <div className="mt-2 pt-2 border-t border-slate-100 text-[11px] font-medium text-slate-500 truncate">
               Max: <strong className="text-cyan-700 font-bold">{summary.topMachine ? summary.topMachine.m3PerJam.toFixed(2) : 0}</strong>
             </div>
           </div>
@@ -435,9 +519,7 @@ export default function RealtimeToday({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {processedData.map((item, idx) => {
               const isTop = item.total === summary.topMachine?.total;
-              const utamaShare = item.total > 0 ? (item.utama / item.total) * 100 : 0;
-              const turunanShare = item.total > 0 ? (item.turunan / item.total) * 100 : 0;
-              const lokalShare = item.total > 0 ? (item.lokal / item.total) * 100 : 0;
+              const m = getMetrics(item);
 
               return (
                 <div
@@ -481,12 +563,21 @@ export default function RealtimeToday({
                       </div>
                     </div>
 
-                    {/* Total Volume */}
-                    <div className="bg-slate-50 rounded-xl p-2.5 my-2.5 border border-slate-100 flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Total Hasil</span>
-                      <div className="text-right">
-                        <span className="text-xl font-black text-emerald-600">{item.total.toFixed(2)}</span>
-                        <span className="text-[11px] font-bold text-slate-400 ml-1">m³</span>
+                    {/* Output & Assumed Input Volume */}
+                    <div className="bg-slate-50 rounded-xl p-2.5 my-2.5 border border-slate-100 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Total Output</span>
+                        <div className="text-right">
+                          <span className="text-xl font-black text-emerald-600">{item.total.toFixed(2)}</span>
+                          <span className="text-[11px] font-bold text-slate-400 ml-1">m³</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-xs pt-1.5 border-t border-slate-200/70">
+                        <span className="text-[11px] font-medium text-slate-500">Input Log (Asumsi /62%):</span>
+                        <div className="text-right">
+                          <span className="font-mono font-bold text-slate-800">{m.inputLog.toFixed(2)}</span>
+                          <span className="text-[10px] font-medium text-slate-400 ml-1">m³</span>
+                        </div>
                       </div>
                     </div>
 
@@ -499,51 +590,72 @@ export default function RealtimeToday({
                       <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden flex">
                         <div 
                           className="bg-blue-500 h-full transition-all duration-500" 
-                          style={{ width: `${utamaShare}%` }} 
-                          title={`Utama: ${item.utama.toFixed(2)} m³ (${utamaShare.toFixed(1)}%)`}
+                          style={{ width: `${m.utamaShare}%` }} 
+                          title={`Utama: ${item.utama.toFixed(2)} m³ (Rendemen: ${m.rendUtama.toFixed(2)}% • Porsi: ${m.utamaShare.toFixed(1)}%)`}
                         />
                         <div 
                           className="bg-purple-500 h-full transition-all duration-500" 
-                          style={{ width: `${turunanShare}%` }} 
-                          title={`Turunan: ${item.turunan.toFixed(2)} m³ (${turunanShare.toFixed(1)}%)`}
+                          style={{ width: `${m.turunanShare}%` }} 
+                          title={`Turunan: ${item.turunan.toFixed(2)} m³ (Rendemen: ${m.rendTurunan.toFixed(2)}% • Porsi: ${m.turunanShare.toFixed(1)}%)`}
                         />
                         <div 
                           className="bg-amber-500 h-full transition-all duration-500" 
-                          style={{ width: `${lokalShare}%` }} 
-                          title={`Lokal: ${item.lokal.toFixed(2)} m³ (${lokalShare.toFixed(1)}%)`}
+                          style={{ width: `${m.lokalShare}%` }} 
+                          title={`Lokal: ${item.lokal.toFixed(2)} m³ (Rendemen: ${m.rendLokal.toFixed(2)}% • Porsi: ${m.lokalShare.toFixed(1)}%)`}
                         />
                       </div>
                     </div>
 
-                    {/* Detail Pills */}
+                    {/* Detail Pills: Rendemen adjusted to assumed input */}
                     <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
                       {/* Utama */}
-                      <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-1.5">
-                        <div className="text-[9px] font-black uppercase text-blue-700">Utama</div>
-                        <div className="font-black text-slate-800 text-[13px]">{item.utama.toFixed(2)}</div>
-                        <div className="text-[9px] font-bold text-blue-600">{utamaShare.toFixed(0)}%</div>
+                      <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-1.5 flex flex-col justify-between">
+                        <div>
+                          <div className="text-[9px] font-black uppercase text-blue-700">Utama</div>
+                          <div className="font-black text-slate-800 text-[13px]">{item.utama.toFixed(2)}</div>
+                        </div>
+                        <div className="mt-1 space-y-0.5">
+                          <div className="text-[10px] font-bold text-blue-700 bg-blue-100/70 py-0.5 px-1 rounded font-mono">
+                            Rend {m.rendUtama.toFixed(2)}%
+                          </div>
+                          <div className="text-[9px] text-slate-400">Porsi {m.utamaShare.toFixed(0)}%</div>
+                        </div>
                       </div>
 
                       {/* Turunan */}
-                      <div className="bg-purple-50/70 border border-purple-100 rounded-xl p-1.5">
-                        <div className="text-[9px] font-black uppercase text-purple-700">Turunan</div>
-                        <div className="font-black text-slate-800 text-[13px]">{item.turunan.toFixed(2)}</div>
-                        <div className="text-[9px] font-bold text-purple-600">{turunanShare.toFixed(0)}%</div>
+                      <div className="bg-purple-50/70 border border-purple-100 rounded-xl p-1.5 flex flex-col justify-between">
+                        <div>
+                          <div className="text-[9px] font-black uppercase text-purple-700">Turunan</div>
+                          <div className="font-black text-slate-800 text-[13px]">{item.turunan.toFixed(2)}</div>
+                        </div>
+                        <div className="mt-1 space-y-0.5">
+                          <div className="text-[10px] font-bold text-purple-700 bg-purple-100/70 py-0.5 px-1 rounded font-mono">
+                            Rend {m.rendTurunan.toFixed(2)}%
+                          </div>
+                          <div className="text-[9px] text-slate-400">Porsi {m.turunanShare.toFixed(0)}%</div>
+                        </div>
                       </div>
 
                       {/* Lokal */}
-                      <div className="bg-amber-50/70 border border-amber-100 rounded-xl p-1.5">
-                        <div className="text-[9px] font-black uppercase text-amber-700">Lokal</div>
-                        <div className="font-black text-slate-800 text-[13px]">{item.lokal.toFixed(2)}</div>
-                        <div className="text-[9px] font-bold text-amber-600">{lokalShare.toFixed(0)}%</div>
+                      <div className="bg-amber-50/70 border border-amber-100 rounded-xl p-1.5 flex flex-col justify-between">
+                        <div>
+                          <div className="text-[9px] font-black uppercase text-amber-700">Lokal</div>
+                          <div className="font-black text-slate-800 text-[13px]">{item.lokal.toFixed(2)}</div>
+                        </div>
+                        <div className="mt-1 space-y-0.5">
+                          <div className="text-[10px] font-bold text-amber-700 bg-amber-100/70 py-0.5 px-1 rounded font-mono">
+                            Rend {m.rendLokal.toFixed(2)}%
+                          </div>
+                          <div className="text-[9px] text-slate-400">Porsi {m.lokalShare.toFixed(0)}%</div>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Footer note: Input aktual if available */}
-                  <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-medium">
-                    <span>Input Aktual</span>
-                    <span className="font-bold text-slate-600">{item.inputAktual.toFixed(2)} m³</span>
+                  {/* Footer note: Rendemen total & Input Log */}
+                  <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500 font-medium">
+                    <span>Rendemen Total: <strong className="text-emerald-700 font-mono font-bold">{m.rendTotal.toFixed(2)}%</strong></span>
+                    <span>Input Log: <strong className="text-slate-800 font-mono">{m.inputLog.toFixed(2)} m³</strong></span>
                   </div>
                 </div>
               );
@@ -559,68 +671,111 @@ export default function RealtimeToday({
                 <thead>
                   <tr className="bg-slate-900 text-white font-bold tracking-wider text-[11px] uppercase">
                     <th className="py-3 px-3">Mesin</th>
-                    <th className="py-3 px-2 text-right">Input (M³)</th>
+                    <th className="py-3 px-2 text-right text-emerald-300">Output (M³)</th>
+                    <th className="py-3 px-2 text-right">Input Log (M³)*</th>
                     <th className="py-3 px-2 text-right text-blue-300">Utama (M³)</th>
-                    <th className="py-3 px-2 text-right text-blue-300">% Utama</th>
+                    <th className="py-3 px-2 text-right text-blue-300">Rend Utama</th>
                     <th className="py-3 px-2 text-right text-purple-300">Turunan (M³)</th>
-                    <th className="py-3 px-2 text-right text-purple-300">% Turunan</th>
+                    <th className="py-3 px-2 text-right text-purple-300">Rend Turunan</th>
                     <th className="py-3 px-2 text-right text-amber-300">Lokal (M³)</th>
-                    <th className="py-3 px-2 text-right text-amber-300">% Lokal</th>
-                    <th className="py-3 px-2 text-right text-emerald-300">Total (M³)</th>
-                    <th className="py-3 px-2 text-right text-emerald-300">% Total</th>
+                    <th className="py-3 px-2 text-right text-amber-300">Rend Lokal</th>
+                    <th className="py-3 px-2 text-right text-emerald-300">Rend Total</th>
                     <th className="py-3 px-3 text-right text-cyan-300">Speed (M³/H)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {processedData.map((row, idx) => (
-                    <tr 
-                      key={row.mesin + idx}
-                      className={cn(
-                        "hover:bg-slate-50 transition-colors font-medium",
-                        idx % 2 === 1 ? "bg-slate-50/50" : "bg-white"
-                      )}
-                    >
-                      <td className="py-2.5 px-3 font-black text-slate-800 flex items-center gap-1.5">
-                        <span className="w-6 h-6 rounded-lg bg-slate-800 text-white font-bold text-[11px] flex items-center justify-center">
-                          {row.mesin.replace("BS", "").replace(".", "").trim()}
-                        </span>
-                        <span>{row.mesin}</span>
-                      </td>
-                      <td className="py-2.5 px-2 text-right font-mono text-slate-600">{row.inputAktual.toFixed(2)}</td>
-                      <td className="py-2.5 px-2 text-right font-mono font-bold text-blue-700 bg-blue-50/30">{row.utama.toFixed(2)}</td>
-                      <td className="py-2.5 px-2 text-right font-mono text-blue-600 bg-blue-50/30">{row.persenUtama}</td>
-                      <td className="py-2.5 px-2 text-right font-mono font-bold text-purple-700 bg-purple-50/30">{row.turunan.toFixed(2)}</td>
-                      <td className="py-2.5 px-2 text-right font-mono text-purple-600 bg-purple-50/30">{row.persenTurunan}</td>
-                      <td className="py-2.5 px-2 text-right font-mono font-bold text-amber-700 bg-amber-50/30">{row.lokal.toFixed(2)}</td>
-                      <td className="py-2.5 px-2 text-right font-mono text-amber-600 bg-amber-50/30">{row.persenLokal}</td>
-                      <td className="py-2.5 px-2 text-right font-mono font-black text-emerald-700 bg-emerald-50/40 text-sm">{row.total.toFixed(2)}</td>
-                      <td className="py-2.5 px-2 text-right font-mono text-emerald-600 bg-emerald-50/40">{row.persenTotal}</td>
-                      <td className="py-2.5 px-3 text-right font-mono font-black text-cyan-800 bg-cyan-50/30">{row.m3PerJam.toFixed(2)}</td>
-                    </tr>
-                  ))}
+                  {processedData.map((row, idx) => {
+                    const m = getMetrics(row);
+                    return (
+                      <tr 
+                        key={row.mesin + idx}
+                        className={cn(
+                          "hover:bg-slate-50 transition-colors font-medium",
+                          idx % 2 === 1 ? "bg-slate-50/50" : "bg-white"
+                        )}
+                      >
+                        <td className="py-2.5 px-3 font-black text-slate-800 flex items-center gap-1.5">
+                          <span className="w-6 h-6 rounded-lg bg-slate-800 text-white font-bold text-[11px] flex items-center justify-center">
+                            {row.mesin.replace("BS", "").replace(".", "").trim()}
+                          </span>
+                          <span>{row.mesin}</span>
+                        </td>
+                        <td className="py-2.5 px-2 text-right font-mono font-black text-emerald-700 bg-emerald-50/40 text-sm">
+                          {row.total.toFixed(2)}
+                        </td>
+                        <td className="py-2.5 px-2 text-right font-mono font-bold text-slate-700 bg-slate-50/70">
+                          {m.inputLog.toFixed(2)}
+                        </td>
+                        <td className="py-2.5 px-2 text-right font-mono font-bold text-blue-700 bg-blue-50/30">
+                          {row.utama.toFixed(2)}
+                        </td>
+                        <td className="py-2.5 px-2 text-right font-mono font-bold text-blue-600 bg-blue-50/30">
+                          {m.rendUtama.toFixed(2)}%
+                        </td>
+                        <td className="py-2.5 px-2 text-right font-mono font-bold text-purple-700 bg-purple-50/30">
+                          {row.turunan.toFixed(2)}
+                        </td>
+                        <td className="py-2.5 px-2 text-right font-mono font-bold text-purple-600 bg-purple-50/30">
+                          {m.rendTurunan.toFixed(2)}%
+                        </td>
+                        <td className="py-2.5 px-2 text-right font-mono font-bold text-amber-700 bg-amber-50/30">
+                          {row.lokal.toFixed(2)}
+                        </td>
+                        <td className="py-2.5 px-2 text-right font-mono font-bold text-amber-600 bg-amber-50/30">
+                          {m.rendLokal.toFixed(2)}%
+                        </td>
+                        <td className="py-2.5 px-2 text-right font-mono font-black text-emerald-700 bg-emerald-50/40">
+                          {m.rendTotal.toFixed(2)}%
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-mono font-black text-cyan-800 bg-cyan-50/30">
+                          {row.m3PerJam.toFixed(2)}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
                 <tfoot>
                   <tr className="bg-slate-900 text-white font-black text-xs border-t-2 border-slate-800">
                     <td className="py-3 px-3 uppercase tracking-wider text-emerald-400">TOTAL</td>
-                    <td className="py-3 px-2 text-right font-mono">{summary.totalInput.toFixed(2)}</td>
-                    <td className="py-3 px-2 text-right font-mono text-blue-300">{summary.totalUtama.toFixed(2)}</td>
+                    <td className="py-3 px-2 text-right font-mono text-emerald-300 text-sm font-black">
+                      {summary.totalOutput.toFixed(2)}
+                    </td>
+                    <td className="py-3 px-2 text-right font-mono text-slate-200">
+                      {summary.totalInput.toFixed(2)}
+                    </td>
                     <td className="py-3 px-2 text-right font-mono text-blue-300">
-                      {summary.totalOutput > 0 ? ((summary.totalUtama / summary.totalOutput) * 100).toFixed(1) : 0}%
+                      {summary.totalUtama.toFixed(2)}
                     </td>
-                    <td className="py-3 px-2 text-right font-mono text-purple-300">{summary.totalTurunan.toFixed(2)}</td>
+                    <td className="py-3 px-2 text-right font-mono text-blue-300 font-bold">
+                      {summary.rendUtama.toFixed(2)}%
+                    </td>
                     <td className="py-3 px-2 text-right font-mono text-purple-300">
-                      {summary.totalOutput > 0 ? ((summary.totalTurunan / summary.totalOutput) * 100).toFixed(1) : 0}%
+                      {summary.totalTurunan.toFixed(2)}
                     </td>
-                    <td className="py-3 px-2 text-right font-mono text-amber-300">{summary.totalLokal.toFixed(2)}</td>
+                    <td className="py-3 px-2 text-right font-mono text-purple-300 font-bold">
+                      {summary.rendTurunan.toFixed(2)}%
+                    </td>
                     <td className="py-3 px-2 text-right font-mono text-amber-300">
-                      {summary.totalOutput > 0 ? ((summary.totalLokal / summary.totalOutput) * 100).toFixed(1) : 0}%
+                      {summary.totalLokal.toFixed(2)}
                     </td>
-                    <td className="py-3 px-2 text-right font-mono text-emerald-300 text-sm font-black">{summary.totalOutput.toFixed(2)}</td>
-                    <td className="py-3 px-2 text-right font-mono text-emerald-300">100%</td>
-                    <td className="py-3 px-3 text-right font-mono text-cyan-300">{summary.avgSpeed.toFixed(2)} (Avg)</td>
+                    <td className="py-3 px-2 text-right font-mono text-amber-300 font-bold">
+                      {summary.rendLokal.toFixed(2)}%
+                    </td>
+                    <td className="py-3 px-2 text-right font-mono text-emerald-300 font-black">
+                      {summary.rendTotal.toFixed(2)}%
+                    </td>
+                    <td className="py-3 px-3 text-right font-mono text-cyan-300">
+                      {summary.avgSpeed.toFixed(2)} (Avg)
+                    </td>
                   </tr>
                 </tfoot>
               </table>
+            </div>
+
+            {/* Table Footnote */}
+            <div className="p-3 bg-slate-50 border-t border-slate-200/80 text-[11px] text-slate-500 flex items-center justify-between">
+              <span>* Asumsi Input Log masing-masing mesin dihitung dari <strong>Output ÷ 62%</strong> (Output / 0.62). Rendemen utama, turunan, dan lokal disesuaikan terhadap nilai asumsi input tersebut.</span>
+              <span className="font-semibold text-emerald-700 shrink-0 ml-2">Rendemen Total Standar: 62.00%</span>
             </div>
           </div>
         )}
@@ -632,13 +787,14 @@ export default function RealtimeToday({
               <BarChart2 size={16} className="text-emerald-600" />
               Perbandingan Output per Mesin (BS 1 - BS 8)
             </h3>
-            <span className="text-xs text-slate-400 font-medium">Satuan: M³</span>
+            <span className="text-xs text-slate-400 font-medium">Asumsi Rendemen 62%</span>
           </div>
 
           <div className="space-y-2.5">
             {processedData.map((item) => {
               const pct = (item.total / maxOutput) * 100;
               const isTop = item.total === summary.topMachine?.total;
+              const m = getMetrics(item);
 
               return (
                 <div key={"chart-" + item.mesin} className="space-y-1">
@@ -649,6 +805,7 @@ export default function RealtimeToday({
                     </span>
                     <div className="flex items-center gap-2 font-mono">
                       <span className="text-slate-400 text-[11px]">{item.m3PerJam.toFixed(2)} m³/h</span>
+                      <span className="text-slate-500 text-[11px]">Input: {m.inputLog.toFixed(2)} m³</span>
                       <span className="font-black text-slate-900">{item.total.toFixed(2)} m³</span>
                     </div>
                   </div>

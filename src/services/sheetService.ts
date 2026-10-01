@@ -824,26 +824,33 @@ export async function fetchRealtimeTodayData(forceRefresh: boolean = false): Pro
             }
 
             const rawTanggal = String(row[colTanggal !== -1 ? colTanggal : 0] || "").trim();
-            const inputAktual = parseNum(row[colInput !== -1 ? colInput : 2]);
+            const rawInput = parseNum(row[colInput !== -1 ? colInput : 2]);
             const utama = parseNum(row[colUtama !== -1 ? colUtama : 3]);
-            
-            // % Utama is adjacent
-            const pUtamaIdx = colUtama !== -1 ? colUtama + 1 : 4;
-            const persenUtama = parsePct(row[pUtamaIdx]);
-
             const turunan = parseNum(row[colTurunan !== -1 ? colTurunan : 5]);
-            const pTurunanIdx = colTurunan !== -1 ? colTurunan + 1 : 6;
-            const persenTurunan = parsePct(row[pTurunanIdx]);
-
             const lokal = parseNum(row[colLokal !== -1 ? colLokal : 7]);
-            const pLokalIdx = colLokal !== -1 ? colLokal + 1 : 8;
-            const persenLokal = parsePct(row[pLokalIdx]);
-
             const total = parseNum(row[colTotal !== -1 ? colTotal : 9]);
-            const pTotalIdx = colTotal !== -1 ? colTotal + 1 : 10;
-            const persenTotal = parsePct(row[pTotalIdx]);
-
             const m3PerJam = parseNum(row[colM3H !== -1 ? colM3H : 11]);
+
+            // Asumsi perhitungan: Input Log = Output / 62% (0.62)
+            // Menyesuaikan input log masing-masing mesin.
+            // Rendemen utama, turunan, dan lokal disesuaikan terhadap asumsi inputnya.
+            const inputAktual = total > 0 ? total / 0.62 : (rawInput > 0 ? rawInput : 0);
+
+            const persenUtama = inputAktual > 0
+              ? ((utama / inputAktual) * 100).toFixed(2) + "%"
+              : "0.00%";
+
+            const persenTurunan = inputAktual > 0
+              ? ((turunan / inputAktual) * 100).toFixed(2) + "%"
+              : "0.00%";
+
+            const persenLokal = inputAktual > 0
+              ? ((lokal / inputAktual) * 100).toFixed(2) + "%"
+              : "0.00%";
+
+            const persenTotal = inputAktual > 0
+              ? ((total / inputAktual) * 100).toFixed(2) + "%"
+              : "0.00%";
 
             mappedData.push({
               tanggal: rawTanggal,

@@ -165,7 +165,7 @@ export default function RealtimeBottomBar({
                   </div>
                   <div className="text-right">
                     <div className="font-black text-emerald-400 text-xs">{item.total.toFixed(2)} m³</div>
-                    <div className="text-[9px] text-white/40">{item.m3PerJam.toFixed(2)} m³/h</div>
+                    <div className="text-[9px] text-white/50">Log: {(item.total > 0 ? (item.total / 0.62).toFixed(2) : "0.00")} m³</div>
                   </div>
                 </div>
               ))}
